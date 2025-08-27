@@ -3,219 +3,108 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Juego del Impostor - Edición Fútbol (v3)</title>
+  <title>Juego del Impostor - Edición Fútbol</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Arial', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
-    .container { background: white; border-radius: 20px; padding: 40px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); text-align: center; max-width: 720px; width: 100%; min-height: 560px; display: flex; flex-direction: column; justify-content: center; transition: all .5s ease; position: relative; }
-    h1, h2 { color: #333; margin-bottom: 24px; font-size: 2.2em; text-shadow: 2px 2px 4px rgba(0,0,0,0.1); }
-
-    .setup-screen, .player-setup-screen, .order-screen, .transfer-screen, .game-screen, .discussion-screen, .results-screen { display: none; }
-    .setup-screen { display: block; }
-
-    input, select { width: 100%; padding: 12px; margin: 10px 0; border: 2px solid #ddd; border-radius: 10px; font-size: 16px; transition: all .3s ease; }
-    input:focus, select:focus { outline: none; border-color: #667eea; box-shadow: 0 0 10px rgba(102,126,234,.3); }
-
-    button { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 14px 24px; border-radius: 25px; font-size: 16px; font-weight: bold; cursor: pointer; margin: 8px 0; width: 100%; transition: all .3s ease; box-shadow: 0 5px 15px rgba(0,0,0,.2); }
-    button:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,.3); }
-    button:active { transform: translateY(0); }
-    .btn-secondary { background: #6c757d; }
-    .btn-warning { background: #ffc107; color: #111; }
-    .btn-success { background: #28a745; }
-    .btn-danger { background: #dc3545; }
-
-    .role-card { background: #f8f9fa; border: 3px solid #ddd; border-radius: 15px; padding: 32px; margin: 16px 0; font-size: 22px; font-weight: bold; min-height: 200px; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: transform .5s ease; user-select: none; touch-action: manipulation; }
-    .role-card.reveal { transform: scale(1.03); }
-    .impostor-card { background: linear-gradient(135deg, #ff6b6b, #ee5a52); color: white; border-color: #ff4757; animation: pulse 2s infinite; }
-    .innocent-card { background: linear-gradient(135deg, #51cf66, #40c057); color: white; border-color: #37b24d; }
-
-    @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255, 107, 107, .7);} 70% { box-shadow: 0 0 0 10px rgba(255, 107, 107, 0);} 100% { box-shadow: 0 0 0 0 rgba(255, 107, 107, 0);} }
-
-    .timer { font-size: 44px; font-weight: bold; color: #ff4757; margin: 16px 0; text-shadow: 2px 2px 4px rgba(0,0,0,.3); }
-
-    .warning, .success, .danger { padding: 12px; border-radius: 10px; margin: 12px 0; font-weight: bold; }
-    .warning { background: #fff3cd; border: 1px solid #ffeaa7; color: #856404; }
-    .success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
-    .danger { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
-
-    .player-names-container { max-height: 300px; overflow-y: auto; margin: 16px 0; text-align: left; }
-    .names-row { display: grid; grid-template-columns: 1fr; gap: 8px; }
-
-    .count-controls { display: flex; gap: 8px; margin: 8px 0 16px; }
-
-    .player-image { max-width: 70%; border-radius: 10px; }
-
-    .order-preview { text-align: left; margin-top: 8px; border: 1px dashed #ddd; border-radius: 12px; padding: 12px; }
-    .order-preview ol { margin-left: 20px; }
-
-    .actions-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 8px; }
-    .triple-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-top: 8px; }
-    .center { display: flex; justify-content: center; gap: 8px; }
-
-    /* Panel secreto (sin foto) */
-    .secret-hints { position: absolute; left: 50%; bottom: 24px; transform: translateX(-50%); width: calc(100% - 48px); max-width: 680px; background: #111; color: #fff; border-radius: 16px; box-shadow: 0 14px 34px rgba(0,0,0,.35); padding: 16px 16px 12px; text-align: left; opacity: 0; pointer-events: none; transition: opacity .2s ease, transform .2s ease; transform-origin: bottom center; z-index: 10; }
-    .secret-hints.visible { opacity: 1; pointer-events: auto; }
-    .secret-hints h3 { font-size: 18px; margin-bottom: 8px; }
-    .secret-hints p { font-size: 14px; margin: 4px 0; line-height: 1.4; }
-    .secret-row { display: grid; grid-template-columns: 120px 1fr; gap: 8px; align-items: center; }
-    .secret-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; }
-    .btn-ghost { background: #222; color: #fff; border-radius: 10px; padding: 8px 12px; width: auto; box-shadow: none; }
-    .hint-chip { display: inline-block; border: 1px solid #333; padding: 2px 8px; border-radius: 999px; font-size: 12px; margin-right: 6px; }
-    .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.2); border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* Pequeña pista visual para vos (no obvia) */
-    .finish-pressable::after { content: '\00a0'; }
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{font-family:Arial, sans-serif; background:linear-gradient(135deg,#667eea,#764ba2); min-height:100vh; display:flex; justify-content:center; align-items:center; padding:20px;}
+    .container{background:#fff; border-radius:20px; padding:30px; box-shadow:0 20px 40px rgba(0,0,0,0.1); text-align:center; max-width:720px; width:100%; min-height:560px; display:flex; flex-direction:column; justify-content:center;}
+    h1,h2{color:#333; margin-bottom:20px;}
+    input,select{width:100%; padding:10px; margin:8px 0; border:2px solid #ddd; border-radius:10px; font-size:16px;}
+    button{background:linear-gradient(135deg,#667eea,#764ba2); color:#fff; border:none; padding:12px 20px; border-radius:20px; cursor:pointer; margin:6px 0; width:100%;}
+    button:hover{opacity:0.9;}
+    .btn-secondary{background:#6c757d;}
+    .btn-success{background:#28a745;}
+    .btn-warning{background:#ffc107; color:#111;}
+    .btn-danger{background:#dc3545;}
+    .role-card{border:2px solid #ddd; border-radius:15px; padding:20px; margin:10px 0; min-height:160px; display:flex; flex-direction:column; justify-content:center;}
+    .impostor-card{background:linear-gradient(135deg,#ff6b6b,#ee5a52); color:#fff;}
+    .innocent-card{background:linear-gradient(135deg,#51cf66,#40c057); color:#fff;}
+    .timer{font-size:32px; font-weight:bold; color:#ff4757; margin:16px 0;}
+    .warning{background:#fff3cd; border:1px solid #ffeaa7; color:#856404; padding:10px; border-radius:10px;}
+    .player-image{max-width:70%; border-radius:10px; margin-top:10px;}
+    .secret-hints{position:fixed; bottom:70px; right:10px; width:300px; background:#111; color:#fff; border-radius:10px; padding:10px; display:none; z-index:10; font-size:14px;}
+    .secret-hints.visible{display:block;}
+    .stealth-btn{position:fixed; bottom:10px; right:10px; width:16px; height:16px; border-radius:50%; background:#000; opacity:0.5; cursor:pointer; z-index:20; display:none;}
   </style>
 </head>
 <body>
   <div class="container">
-    <!-- Pantalla inicial -->
+    <!-- Pantallas -->
     <div class="setup-screen" id="setupScreen">
-      <h1>🕵️ Juego del Impostor - Edición Fútbol (v3)</h1>
-      <p>Elegí el modo de jugadores antes de empezar: "De todo", "Históricos", "Actuales", "Retirados" o "Demasiado famosos".</p>
-
-      <label for="playerPoolMode" style="text-align:left;display:block;margin-top:12px;font-weight:bold;">Seleccioná el modo de jugadores:</label>
-      <select id="playerPoolMode" onchange="onModeChange()">
-        <option value="all" selected>De todo (mezcla)</option>
-        <option value="historical">Históricos (leyendas clásicas)</option>
-        <option value="current">Actuales (estrellas en activo)</option>
-        <option value="retired">Retirados (figuras recientes retiradas)</option>
-        <option value="famous">Demasiado famosos (solo los más icónicos)</option>
+      <h1>🕵️ Juego del Impostor - Fútbol</h1>
+      <p>Elegí el modo de jugadores</p>
+      <select id="playerPoolMode">
+        <option value="all" selected>De todo</option>
+        <option value="historical">Históricos</option>
+        <option value="current">Actuales</option>
+        <option value="retired">Retirados</option>
+        <option value="famous">Demasiado famosos</option>
       </select>
-
-      <select id="playerCount" style="margin-top:18px">
-        <option value="3">3 Jugadores</option>
-        <option value="4">4 Jugadores</option>
-        <option value="5" selected>5 Jugadores</option>
-        <option value="6">6 Jugadores</option>
-        <option value="7">7 Jugadores</option>
-        <option value="8">8 Jugadores</option>
-        <option value="9">9 Jugadores</option>
-        <option value="10">10 Jugadores</option>
+      <select id="playerCount">
+        <option value="3">3 Jugadores</option><option value="4">4</option><option value="5" selected>5</option>
+        <option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option>
       </select>
       <button onclick="setupPlayers()">🚀 Configurar Jugadores</button>
     </div>
 
-    <!-- Resto de pantallas iguales -->
-    <div class="player-setup-screen" id="playerSetupScreen">
+    <div class="player-setup-screen" id="playerSetupScreen" style="display:none;">
       <h2>📝 Nombres de Jugadores</h2>
-      <p>Dejá en blanco para usar "Jugador X" por defecto.</p>
-      <div class="count-controls center">
-        <button class="btn-secondary" style="width:auto" onclick="removePlayerInput()">➖ Quitar</button>
-        <div id="countLabel" style="font-weight:bold"></div>
-        <button class="btn-secondary" style="width:auto" onclick="addPlayerInput()">➕ Agregar</button>
-      </div>
-      <div class="player-names-container" id="playerNamesContainer"></div>
-      <div class="actions-row">
-        <button class="btn-success" onclick="continueToOrderSelection()">✅ Continuar</button>
-        <button class="btn-secondary" onclick="goHome()">🏠 Inicio</button>
-      </div>
+      <div id="playerNamesContainer"></div>
+      <button class="btn-success" onclick="continueToOrderSelection()">✅ Continuar</button>
+      <button class="btn-secondary" onclick="goHome()">🏠 Inicio</button>
     </div>
 
-    <div class="order-screen" id="orderScreen">
+    <div class="order-screen" id="orderScreen" style="display:none;">
       <h2>🧭 Elegí quién empieza</h2>
       <select id="startPlayerSelect"></select>
-      <div class="order-preview">
-        <strong>Orden de esta ronda:</strong>
-        <ol id="orderPreviewList"></ol>
-      </div>
-      <div class="triple-row">
-        <button class="btn-success" onclick="startRoundFromOrder()">▶️ Iniciar Ronda</button>
-        <button class="btn-warning" onclick="shuffleOrder()">🎲 Orden Aleatorio</button>
-        <button class="btn-secondary" onclick="managePlayers()">👤 Cambiar Jugadores</button>
-      </div>
+      <ol id="orderPreviewList"></ol>
+      <button class="btn-success" onclick="startRoundFromOrder()">▶️ Iniciar Ronda</button>
     </div>
 
-    <div class="transfer-screen" id="transferScreen">
-      <h2>📱 Pasar el Teléfono</h2>
-      <div style="font-size: 100px; margin: 24px 0;">🤐</div>
-      <div class="warning">
-        <strong>¡ATENCIÓN!</strong><br />
-        Pasá el teléfono a <span id="nextPlayerName">Jugador X</span><br />
-        SIN que vea la pantalla
-      </div>
-      <p style="font-size: 18px; margin: 16px 0;">
-        <strong id="receivingPlayer">Jugador X</strong>: Cuando tengas el teléfono, presioná para descubrir tu rol.
-      </p>
+    <div class="transfer-screen" id="transferScreen" style="display:none;">
+      <h2>📱 Pasar Teléfono</h2>
+      <div class="warning">Pasá el teléfono a <span id="nextPlayerName"></span></div>
       <button class="btn-success" onclick="showPlayerRole()">🔍 Descubrir Mi Rol</button>
     </div>
 
-    <div class="game-screen" id="gameScreen">
-      <h2 id="playerTitle">Jugador 1</h2>
-      <div class="role-card" id="roleCard">
-        <div id="roleText"></div>
-        <div id="themeText"></div>
-        <div id="themeImage" style="margin-top: 16px;"></div>
-      </div>
-      <div class="warning">
-        <strong>¡Memorizá tu rol!</strong><br /> Cuando termines, presioná "Listo" para borrar y continuar.
-      </div>
-      <button class="btn-danger" onclick="finishPlayerTurn()" id="finishButton">✅ Listo - Borrar y Continuar</button>
-
-      <div id="secretHints" class="secret-hints" aria-hidden="true">
-        <h3 id="secretTitle">🔍 Pistas</h3>
-        <div class="secret-row"><span class="hint-chip">Posición</span><p id="hintPosition">—</p></div>
-        <div class="secret-row"><span class="hint-chip">Nacionalidad</span><p id="hintNation">—</p></div>
-        <div class="secret-row"><span class="hint-chip">Estado</span><p id="hintStatus">—</p></div>
-        <div class="secret-row"><span class="hint-chip">Equipos</span><p id="hintTeams">—</p></div>
-        <div class="secret-row"><span class="hint-chip">Títulos</span><p id="hintTitles">—</p></div>
-        <div class="secret-actions">
-          <button class="btn-ghost" id="hideHintsBtn" type="button">Ocultar</button>
-        </div>
-      </div>
+    <div class="game-screen" id="gameScreen" style="display:none;">
+      <h2 id="playerTitle"></h2>
+      <div class="role-card" id="roleCard"><div id="roleText"></div><div id="themeText"></div><div id="themeImage"></div></div>
+      <button class="btn-danger" onclick="finishPlayerTurn()" id="finishButton">✅ Listo</button>
     </div>
 
-    <div class="discussion-screen" id="discussionScreen">
-      <h2>💬 Tiempo de Discusión</h2>
+    <div class="discussion-screen" id="discussionScreen" style="display:none;">
+      <h2>💬 Discusión</h2>
       <div class="timer" id="discussionTimer">3:00</div>
-      <div class="warning">Discutan hechos, características, carrera y detalles sobre el jugador secreto. ¡El impostor intentará mezclarse sin saber quién es!</div>
       <button class="btn-warning" onclick="showResults()">🎭 Revelar Resultados</button>
     </div>
 
-    <div class="results-screen" id="resultsScreen">
+    <div class="results-screen" id="resultsScreen" style="display:none;">
       <h2>🎭 Resultados</h2>
       <div id="resultsContent"></div>
-      <div class="actions-row">
-        <button class="btn-success" onclick="nextRound()">🔁 Nueva Ronda (mismos jugadores)</button>
-        <button class="btn-secondary" onclick="managePlayers()">👤 Cambiar Jugadores</button>
-      </div>
-      <button class="btn-danger" onclick="hardReset()">🧹 Reinicio Total</button>
+      <button class="btn-success" onclick="nextRound()">🔁 Nueva Ronda</button>
+      <button class="btn-danger" onclick="hardReset()">🧹 Reinicio</button>
     </div>
   </div>
 
+  <!-- Botón stealth -->
+  <div id="stealthBtn" class="stealth-btn"></div>
+
+  <!-- Panel secreto -->
+  <div id="secretHints" class="secret-hints">
+    <h3>🔍 Pistas</h3>
+    <p id="hintPosition">Posición: —</p>
+    <p id="hintNation">Nacionalidad: —</p>
+    <p id="hintStatus">Estado: —</p>
+    <p id="hintTeams">Equipos: —</p>
+    <p id="hintTitles">Títulos: —</p>
+    <button onclick="hideSecretHints()">Ocultar</button>
+  </div>
+
   <script>
-    // ===========================
-    // --- Estado del juego ---
-    // ===========================
-    let gameData = {
-      theme: '',
-      playerCount: 5,
-      playerNames: [],          // 1-indexado
-      playerOrder: [],          // índices absolutos [1..N]
-      startingPlayerIndex: 1,   // índice absoluto [1..N]
-      currentPlayer: 0,         // cantidad ya revelados (0..N)
-      impostorIndex: -1,        // índice absoluto [1..N]
-      discussionTimer: null,
-      timeLeft: 180,
-      usedThemes: new Set()     // evitar repetir jugador secreto (reseteable al cambiar modo)
-    };
-
-    // ===========================
-    // --- Utilidades UI ---
-    // ===========================
-    const screens = ['setupScreen','playerSetupScreen','orderScreen','transferScreen','gameScreen','discussionScreen','resultsScreen'];
-    function showScreen(id) {
-      screens.forEach(s => document.getElementById(s).style.display = (s === id ? 'block' : 'none'));
-      if (id !== 'gameScreen') hideSecretHints();
-    }
-    function goHome(){ showScreen('setupScreen'); }
-
-    // ===========================
-    // --- Listas / Modos ---
-    // ===========================
-    // Base: "de todo" contiene la lista amplia usada previamente (acorde v2)
-// ===== Pools completos =====
+  // =================== Pools ===================
+  // (Pego aquí el bloque completo de pools grandes que hicimos antes)
+ // ===== Pools completos =====
 
 // ~340 jugadores, con 200 europeos + Argentina, Brasil, Uruguay, México, Colombia, Chile, etc.
 const allPlayers = [
@@ -301,776 +190,43 @@ const superFamous = [
   "Samuel Eto’o","George Weah","Eusébio","Andriy Shevchenko","Arjen Robben","Dennis Bergkamp","Eric Cantona","Zlatan Ibrahimović","Michael Owen","Peter Schmeichel"
 ];
 
-    // Normalizar y desduplicar pools
-    function buildPlayerPool(mode){
-      const modeKey = mode || document.getElementById('playerPoolMode')?.value || 'all';
-      let pool = [];
-      if (modeKey === 'all') {
-        pool = allPlayers.slice();
-      } else if (modeKey === 'historical') {
-        pool = historicalPlayers.slice();
-      } else if (modeKey === 'current') {
-        pool = currentPlayers.slice();
-      } else if (modeKey === 'retired') {
-        pool = retiredPlayers.slice();
-      } else if (modeKey === 'famous') {
-        pool = superFamous.slice();
-      } else {
-        pool = allPlayers.slice();
-      }
-      // Deduplicate while preserving order using Map
-      const out = [];
-      const seen = new Set();
-      for (const p of pool){
-        const key = (p||'').toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu,'').trim();
-        if (!seen.has(key)){
-          seen.add(key);
-          out.push(p);
-        }
-      }
-      return out;
-    }
-
-    function onModeChange(){
-      // Cuando el usuario cambia modo, reseteamos el historial de temas usados para que no interfiera
-      gameData.usedThemes.clear();
-      // También puedes mostrar un aviso o actualizar un contador (opcional)
-      // console.log('Modo cambiado a', document.getElementById('playerPoolMode').value);
-    }
-
-    // ===========================
-    // --- Flujo inicial ---
-    // ===========================
-    function setupPlayers(){
-      gameData.playerCount = parseInt(document.getElementById('playerCount').value);
-      gameData.playerNames = new Array(gameData.playerCount + 1);
-      renderPlayerInputs();
-      showScreen('playerSetupScreen');
-    }
-
-    function renderPlayerInputs(){
-      const container = document.getElementById('playerNamesContainer');
-      container.innerHTML = '';
-      for (let i = 1; i <= gameData.playerCount; i++) {
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.id = `playerName${i}`;
-        input.placeholder = `Nombre del Jugador ${i} (opcional)`;
-        if (gameData.playerNames[i]) input.value = gameData.playerNames[i];
-        container.appendChild(input);
-      }
-      document.getElementById('countLabel').textContent = `${gameData.playerCount} jugadores`;
-    }
-
-    function addPlayerInput(){
-      if (gameData.playerCount >= 10) return;
-      gameData.playerCount++;
-      renderPlayerInputs();
-    }
-
-    function removePlayerInput(){
-      if (gameData.playerCount <= 3) return;
-      gameData.playerCount--;
-      gameData.playerNames.length = gameData.playerCount + 1;
-      renderPlayerInputs();
-    }
-
-    function continueToOrderSelection(){
-      for (let i = 1; i <= gameData.playerCount; i++) {
-        const name = (document.getElementById(`playerName${i}`)?.value || '').trim();
-        gameData.playerNames[i] = name || `Jugador ${i}`;
-      }
-      buildDefaultOrder();
-      populateStartSelect();
-      updateOrderPreview(gameData.startingPlayerIndex);
-      showScreen('orderScreen');
-    }
-
-    // ===========================
-    // --- Orden e inicio ---
-    // ===========================
-    function buildDefaultOrder(){
-      gameData.playerOrder = Array.from({length: gameData.playerCount}, (_, i) => i + 1);
-    }
-
-    function rotateOrderStartingAt(startAbsIndex){
-      const order = Array.from({length: gameData.playerCount}, (_, i) => i + 1);
-      const pos = order.indexOf(startAbsIndex);
-      if (pos < 0) return order;
-      return order.slice(pos).concat(order.slice(0, pos));
-    }
-
-    function populateStartSelect(){
-      const sel = document.getElementById('startPlayerSelect');
-      sel.innerHTML = '';
-      for (let i = 1; i <= gameData.playerCount; i++) {
-        const opt = document.createElement('option');
-        opt.value = String(i);
-        opt.textContent = gameData.playerNames[i];
-        if (i === gameData.startingPlayerIndex) opt.selected = true;
-        sel.appendChild(opt);
-      }
-      sel.onchange = () => updateOrderPreview(parseInt(sel.value));
-    }
-
-    function updateOrderPreview(startAbsIndex){
-      gameData.startingPlayerIndex = startAbsIndex;
-      const order = rotateOrderStartingAt(startAbsIndex);
-      const list = document.getElementById('orderPreviewList');
-      list.innerHTML = '';
-      order.forEach(idx => {
-        const li = document.createElement('li');
-        li.textContent = gameData.playerNames[idx];
-        list.appendChild(li);
-      });
-    }
-
-    function shuffleOrder(){
-      const arr = Array.from({length: gameData.playerCount}, (_, i) => i + 1);
-      for (let i = arr.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [arr[i], arr[j]] = [arr[j], arr[i]];
-      }
-      gameData.playerOrder = arr.slice();
-      gameData.startingPlayerIndex = arr[0];
-      const sel = document.getElementById('startPlayerSelect');
-      sel.value = String(gameData.startingPlayerIndex);
-      const list = document.getElementById('orderPreviewList');
-      list.innerHTML = '';
-      arr.forEach(idx => {
-        const li = document.createElement('li');
-        li.textContent = gameData.playerNames[idx];
-        list.appendChild(li);
-      });
-    }
-
-    function startRoundFromOrder(){
-      gameData.playerOrder = rotateOrderStartingAt(gameData.startingPlayerIndex);
-      prepareRound();
-    }
-
-    function prepareRound(){
-      gameData.currentPlayer = 0; // reset revelados
-      pickNewThemeNoRepeat();
-      gameData.impostorIndex = Math.floor(Math.random() * gameData.playerCount) + 1; // absoluto
-      showTransferScreenForRole();
-    }
-
-    // ===========================
-    // --- Elección del secreto ---
-    // ===========================
-    function pickNewThemeNoRepeat(){
-      // Construir pool según el modo actual
-      const pool = buildPlayerPool();
-      let candidates = pool.filter(p => !gameData.usedThemes.has(p));
-      if (candidates.length === 0){
-        // si se agotaron en este modo, limpiar usado y volver a empezar
-        gameData.usedThemes.clear();
-        candidates = pool.slice();
-      }
-      // Si el pool es más pequeño que la cantidad de jugadores, permitimos repetición entre rondas (pero no en la misma ronda)
-      if (candidates.length === 0) {
-        // fallback simple a allPlayers si algo raro pasó
-        candidates = allPlayers.slice();
-      }
-      const choice = candidates[Math.floor(Math.random() * candidates.length)];
-      gameData.theme = choice;
-      gameData.usedThemes.add(choice);
-    }
-
-    // ===========================
-    // --- Transferencias / roles ---
-    // ===========================
-    function showTransferScreenForRole(){
-      if (gameData.currentPlayer < gameData.playerCount){
-        const nextAbs = gameData.playerOrder[gameData.currentPlayer];
-        document.getElementById('nextPlayerName').textContent = gameData.playerNames[nextAbs];
-        document.getElementById('receivingPlayer').textContent = gameData.playerNames[nextAbs];
-        showScreen('transferScreen');
-      } else {
-        startDiscussion();
-      }
-    }
-
-    function showPlayerRole(){
-      gameData.currentPlayer++; // revela al siguiente
-      showScreen('gameScreen');
-      updatePlayerScreen();
-    }
-
-    // Fetch image helper with timeout and improved fallbacks (v2/v3)
-    async function fetchWithTimeout(url, opts = {}, ms = 6000){
-      const controller = new AbortController();
-      const id = setTimeout(() => controller.abort(), ms);
-      try{
-        const res = await fetch(url, {...opts, signal: controller.signal});
-        clearTimeout(id);
-        return res;
-      }catch(err){
-        clearTimeout(id);
-        throw err;
-      }
-    }
-
-    async function fetchPlayerImage(title){
-      const langs = ['en','es'];
-      for (const lang of langs){
-        try {
-          // 1) REST summary thumbnail
-          const restUrl = `https://${lang}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`;
-          const restResp = await fetchWithTimeout(restUrl, {}, 5000).catch(()=>null);
-          if (restResp && restResp.ok){
-            const restJson = await restResp.json();
-            if (restJson?.thumbnail?.source) return restJson.thumbnail.source;
-          }
-
-          // 2) API pageimages pithumbsize
-          const piUrl = `https://${lang}.wikipedia.org/w/api.php?action=query&prop=pageimages&format=json&pithumbsize=400&titles=${encodeURIComponent(title)}&origin=*`;
-          const piResp = await fetchWithTimeout(piUrl, {}, 5000).catch(()=>null);
-          if (piResp && piResp.ok){
-            const piJson = await piResp.json();
-            const pages = piJson?.query?.pages || {};
-            const pid = Object.keys(pages)[0];
-            const thumb = pages[pid]?.thumbnail?.source;
-            if (thumb) return thumb;
-          }
-
-          // 3) query images then imageinfo
-          const imagesUrl = `https://${lang}.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(title)}&prop=images&format=json&origin=*`;
-          const imgResp = await fetchWithTimeout(imagesUrl, {}, 6000).catch(()=>null);
-          if (imgResp && imgResp.ok){
-            const imgJson = await imgResp.json();
-            const pages = imgJson?.query?.pages || {};
-            const pid = Object.keys(pages)[0];
-            const imgs = pages[pid]?.images || [];
-            const candidate = imgs.map(i => i.title).find(t => /\.(jpe?g|png|svg)$/i.test(t));
-            if (candidate){
-              const iiUrl = `https://commons.wikimedia.org/w/api.php?action=query&titles=${encodeURIComponent(candidate)}&prop=imageinfo&iiprop=url&format=json&origin=*`;
-              const iiResp = await fetchWithTimeout(iiUrl, {}, 6000).catch(()=>null);
-              if (iiResp && iiResp.ok){
-                const iiJson = await iiResp.json();
-                const ent = iiJson?.query?.pages || {};
-                const key = Object.keys(ent)[0];
-                const info = ent[key]?.imageinfo?.[0]?.url;
-                if (info) return info;
-              }
-            }
-          }
-        } catch (err){
-          console.warn('fetchPlayerImage attempt failed for', title, lang, err);
-        }
-      }
-      return '';
-    }
-
-    async function updatePlayerScreen(){
-      const playerTitle = document.getElementById('playerTitle');
-      const roleCard = document.getElementById('roleCard');
-      const roleText = document.getElementById('roleText');
-      const themeText = document.getElementById('themeText');
-      const themeImage = document.getElementById('themeImage');
-      const finishButton = document.getElementById('finishButton');
-
-      const absIndex = gameData.playerOrder[gameData.currentPlayer - 1];
-      const currentName = gameData.playerNames[absIndex];
-      playerTitle.textContent = currentName;
-      themeImage.innerHTML = '';
-
-      if (absIndex === gameData.impostorIndex){
-        roleCard.className = 'role-card impostor-card reveal';
-        roleText.textContent = '🎭 ERES EL IMPOSTOR';
-        themeText.textContent = '¡No sabes quién es el jugador secreto! Descúbrelo sin que te noten.';
-      } else {
-        roleCard.className = 'role-card innocent-card reveal';
-        roleText.textContent = '👥 ERES INOCENTE';
-        themeText.textContent = `El jugador secreto es: ${gameData.theme.toUpperCase()}`;
-        const imageUrl = await fetchPlayerImage(gameData.theme);
-        if (imageUrl){
-          themeImage.innerHTML = `<img src="${imageUrl}" alt="${gameData.theme}" class="player-image">`;
-        }
-      }
-
-      finishButton.textContent = (gameData.currentPlayer === gameData.playerCount) ? '✅ Listo - Iniciar Discusión' : '✅ Listo - Borrar y Continuar';
-
-      attachSecretModeIfNeeded(currentName);
-    }
-
-    function finishPlayerTurn(){
-      document.getElementById('roleCard').classList.remove('reveal');
-      hideSecretHints();
-      showTransferScreenForRole();
-    }
-
-    // ===========================
-    // --- Discusión / temporizador ---
-    // ===========================
-    function startDiscussion(){
-      showScreen('discussionScreen');
-      startTimer();
-    }
-
-    function startTimer(){
-      gameData.timeLeft = 180;
-      const timerElement = document.getElementById('discussionTimer');
-      clearInterval(gameData.discussionTimer);
-      gameData.discussionTimer = setInterval(() => {
-        const minutes = Math.floor(gameData.timeLeft / 60);
-        const seconds = gameData.timeLeft % 60;
-        timerElement.textContent = `${minutes}:${seconds.toString().padStart(2,'0')}`;
-        if (gameData.timeLeft <= 0){
-          clearInterval(gameData.discussionTimer);
-          timerElement.textContent = '¡TIEMPO!';
-          showResults();
-        }
-        gameData.timeLeft--;
-      }, 1000);
-    }
-
-    async function showResults(){
-      clearInterval(gameData.discussionTimer);
-      showScreen('resultsScreen');
-      const resultsContent = document.getElementById('resultsContent');
-      let html = `<h3>🎭 El impostor era: <span style="color:#ff4757;">${gameData.playerNames[gameData.impostorIndex]}</span></h3>`;
-      html += `<p><strong>Jugador secreto:</strong> ${gameData.theme}</p><div id="resultsImage" style="margin-top: 12px;"></div>`;
-      resultsContent.innerHTML = html;
-
-      const resultsImage = document.getElementById('resultsImage');
-      if (resultsImage){
-        const imageUrl = await fetchPlayerImage(gameData.theme);
-        if (imageUrl){
-          resultsImage.innerHTML = `<img src="${imageUrl}" alt="${gameData.theme}" class="player-image">`;
-        }
-      }
-    }
-
-    // ===========================
-    // --- Navegación desde resultados ---
-    // ===========================
-    function nextRound(){
-      populateStartSelect();
-      updateOrderPreview(gameData.startingPlayerIndex);
-      showScreen('orderScreen');
-    }
-
-    function managePlayers(){
-      renderPlayerInputs();
-      showScreen('playerSetupScreen');
-    }
-
-    // ===========================
-    // --- Reseteo ---
-    // ===========================
-    function hardReset(){
-      gameData = { theme:'', playerCount:5, playerNames:[], playerOrder:[], startingPlayerIndex:1, currentPlayer:0, impostorIndex:-1, discussionTimer:null, timeLeft:180, usedThemes: new Set() };
-      document.getElementById('playerCount').value = '5';
-      document.getElementById('playerPoolMode').value = 'all';
-      hideSecretHints();
-      showScreen('setupScreen');
-    }
-
-    // =====================================================
-    // === MODO SECRETO (solo "Feli" / "Felipe") ========
-    // =====================================================
-
-    const SECRET_NAMES = new Set(['feli','felipe']);
-    const hintsCache = new Map(); // nombreJugadorSecreto -> hints
-
-    function normalizeName(s){
-      return (s || '')
-        .toLowerCase()
-        .normalize('NFD').replace(/\p{Diacritic}/gu,'')
-        .trim()
-        .replace(/\s+/g,' ');
-    }
-
-    function isSecretUser(name){
-      return SECRET_NAMES.has(normalizeName(name));
-    }
-
-    function attachSecretModeIfNeeded(currentName){
-      const finishButton = document.getElementById('finishButton');
-      const roleCard = document.getElementById('roleCard');
-
-      finishButton.onmousedown = finishButton.ontouchstart = null;
-      window.onmouseup = window.ontouchend = null;
-
-      if (roleCard._secretHandler) {
-        roleCard.removeEventListener('click', roleCard._secretHandler);
-        roleCard.removeEventListener('touchstart', roleCard._secretHandler);
-        roleCard._secretHandler = null;
-      }
-
-      if (!isSecretUser(currentName)){
-        hideSecretHints();
-        return;
-      }
-
-      let tapCountLocal = 0;
-      let tapTimerLocal = null;
-      const handler = async (e) => {
-        try{ e.preventDefault && e.preventDefault(); }catch(e){}
-        tapCountLocal++;
-        if (tapTimerLocal) {
-          clearTimeout(tapTimerLocal);
-          tapTimerLocal = null;
-        }
-        if (tapCountLocal >= 3){
-          tapCountLocal = 0;
-          try {
-            await showSecretHintsFor(gameData.theme);
-          } catch (err) {
-            console.error('Error mostrando pistas secretas:', err);
-          }
-        } else {
-          tapTimerLocal = setTimeout(() => { tapCountLocal = 0; tapTimerLocal = null; }, 1200);
-        }
-      };
-
-      roleCard._secretHandler = handler;
-      roleCard.addEventListener('click', handler, { passive: false });
-      roleCard.addEventListener('touchstart', handler, { passive: false });
-
-      document.getElementById('hideHintsBtn').onclick = hideSecretHints;
-    }
-
-    function hideSecretHints(){
-      const box = document.getElementById('secretHints');
-      if (!box) return;
-      box.classList.remove('visible');
-      box.setAttribute('aria-hidden','true');
-    }
-
-    async function showSecretHintsFor(playerName){
-      const titleEl = document.getElementById('secretTitle');
-      const posEl = document.getElementById('hintPosition');
-      const natEl = document.getElementById('hintNation');
-      const stEl  = document.getElementById('hintStatus');
-      const tmEl  = document.getElementById('hintTeams');
-      const titlesEl = document.getElementById('hintTitles');
-      const box   = document.getElementById('secretHints');
-
-      titleEl.textContent = `🔍 Pistas de ${playerName}:`;
-      posEl.innerHTML = '<span class="spinner"></span> Cargando…';
-      natEl.textContent = 'Cargando…';
-      stEl.textContent = 'Cargando…';
-      tmEl.textContent = 'Cargando…';
-      titlesEl.textContent = 'Cargando…';
-
-      box.classList.add('visible');
-      box.setAttribute('aria-hidden','false');
-
-      try {
-        const hints = await getHints(playerName);
-        posEl.textContent = hints.position || '—';
-        natEl.textContent = hints.nationality || '—';
-        stEl.textContent  = hints.status || '—';
-        tmEl.textContent  = hints.teams && hints.teams.length ? hints.teams.join(', ') : '—';
-        titlesEl.textContent = hints.titles && hints.titles.length ? hints.titles.join(' · ') : '—';
-      } catch (err){
-        posEl.textContent = 'No disponible';
-        natEl.textContent = '—';
-        stEl.textContent  = '—';
-        tmEl.textContent  = '—';
-        titlesEl.textContent = '—';
-        console.error(err);
-      }
-    }
-
-    // ===========================
-    // === Wikipedia / Wikidata ===
-    // ===========================
-
-    async function getHints(playerName){
-      const key = normalizeName(playerName);
-      if (hintsCache.has(key)) return hintsCache.get(key);
-
-      const summary = await fetchWikiSummaryAny(playerName);
-      const qid = await getWikidataIdFromAny(playerName, summary?.title);
-      let wd = null;
-      if (qid) {
-        try {
-          wd = await fetchWikidataEntity(qid);
-        } catch (err) {
-          console.warn('Wikidata fetch failed', err);
-          wd = null;
-        }
-      }
-
-      const hints = buildHintsFromSources(playerName, summary, wd);
-      hintsCache.set(key, hints);
-      return hints;
-    }
-
-    async function fetchWikiSummaryAny(title){
-      let sum = await fetchWikiSummary(title, 'en');
-      if (!sum) sum = await fetchWikiSummary(title, 'es');
-      return sum;
-    }
-
-    async function fetchWikiSummary(title, lang){
-      try {
-        const directResp = await fetchWithTimeout(`https://${lang}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`, {}, 6000).catch(()=>null);
-        const direct = directResp && directResp.ok ? await directResp.json() : null;
-        if (direct && !direct.title?.includes('may refer to')) return direct;
-
-        const srResp = await fetchWithTimeout(`https://${lang}.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(title)}&format=json&origin=*`, {}, 6000).catch(()=>null);
-        const sr = srResp && srResp.ok ? await srResp.json() : null;
-        const best = sr?.query?.search?.[0]?.title;
-        if (!best) return direct;
-        const bestResp = await fetchWithTimeout(`https://${lang}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(best)}`, {}, 6000).catch(()=>null);
-        return bestResp && bestResp.ok ? await bestResp.json() : direct;
-      } catch (err) {
-        console.warn('fetchWikiSummary error', err);
-        return null;
-      }
-    }
-
-    async function getWikidataIdFromAny(title, resolvedTitle){
-      const fromEn = await getWikidataIdFromWikiTitle(resolvedTitle || title, 'en');
-      if (fromEn) return fromEn;
-      return getWikidataIdFromWikiTitle(resolvedTitle || title, 'es');
-    }
-
-    async function getWikidataIdFromWikiTitle(title, lang){
-      try{
-        const url = `https://${lang}.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(title)}&prop=pageprops&format=json&origin=*`;
-        const dataResp = await fetchWithTimeout(url, {}, 6000);
-        if (!dataResp.ok) return null;
-        const data = await dataResp.json();
-        const pages = data?.query?.pages || {};
-        const pid = Object.keys(pages)[0];
-        const qid = pages?.[pid]?.pageprops?.wikibase_item;
-        return qid || null;
-      }catch(err){
-        console.warn('getWikidataIdFromWikiTitle error', err);
-        return null;
-      }
-    }
-
-    async function fetchWikidataEntity(qid){
-      try{
-        const base = `https://www.wikidata.org/w/api.php?action=wbgetentities&format=json&origin=*`;
-        const entResp = await fetchWithTimeout(`${base}&ids=${qid}&props=claims|labels&languages=es|en`, {}, 8000);
-        if (!entResp.ok) return null;
-        const ent = await entResp.json();
-        const entity = ent?.entities?.[qid];
-        if (!entity) return null;
-
-        const refIds = new Set();
-        const claims = entity.claims || {};
-        const takeIds = (p) => (claims[p]||[]).forEach(st => {
-          const dv = st?.mainsnak?.datavalue?.value;
-          const id = dv?.id || (Array.isArray(dv) ? dv[0]?.id : null);
-          if (id) refIds.add(id);
-        });
-        takeIds('P413'); // posición
-        takeIds('P27');  // ciudadanía
-        (claims['P54']||[]).forEach(st => {
-          const id = st?.mainsnak?.datavalue?.value?.id; if (id) refIds.add(id);
-          const q = st?.qualifiers || {};
-          (q['P413']||[]).forEach(qv => { const id2 = qv?.datavalue?.value?.id; if (id2) refIds.add(id2); });
-        });
-        takeIds('P166'); // awards received
-        takeIds('P1346'); // winner of
-        takeIds('P1344'); // participant in
-        const labels = await resolveLabels(Array.from(refIds));
-        return { qid, claims, labels };
-      }catch(err){ console.warn('Wikidata error', err); return null; }
-    }
-
-    async function resolveLabels(ids){
-      if (!ids || !ids.length) return {};
-      const chunks = [];
-      for (let i = 0; i < ids.length; i += 45) chunks.push(ids.slice(i, i+45));
-      const out = {};
-      const base = `https://www.wikidata.org/w/api.php?action=wbgetentities&format=json&origin=*&props=labels&languages=es|en`;
-      for (const chunk of chunks){
-        try{
-          const dataResp = await fetchWithTimeout(`${base}&ids=${chunk.join('|')}`, {}, 8000);
-          if (!dataResp.ok) continue;
-          const data = await dataResp.json();
-          Object.entries(data.entities||{}).forEach(([id, ent]) => {
-            const lbl = ent?.labels?.es?.value || ent?.labels?.en?.value;
-            if (lbl) out[id] = lbl;
-          });
-        }catch(err){
-          console.warn('resolveLabels chunk failed', err);
-        }
-      }
-      return out;
-    }
-
-    function buildHintsFromSources(playerName, summary, wd){
-      let position = '';
-      let nationality = '';
-      let status = '';
-      let teams = [];
-      let titles = [];
-
-      const KEYWORDS = ['world cup','fifa world cup','champions league','uefa champions','ballon','ballon d\'or','copa américa','copa del mundo','copa libertadores','premier league','la liga','serie a','bundesliga','fa cup','coppa italia','copa del rey','uefa european championship','euros','gold cup','olympic gold'];
-
-      if (summary){
-        const extract = summary.extract || '';
-        const desc = summary.description || '';
-        nationality = mapNationality(desc) || nationalityFromText(extract) || '';
-        position = mapPositionFromText(extract);
-        status = /former|retired/i.test(extract) ? 'Retirado' : 'Activo';
-        const club = currentClubFromText(extract);
-        if (club) teams.push(club);
-
-        try {
-          const found = [];
-          const low = extract.toLowerCase();
-          for (const kw of KEYWORDS){
-            if (low.includes(kw)) {
-              const idx = low.indexOf(kw);
-              const start = Math.max(0, idx - 40);
-              const frag = extract.substring(start, Math.min(extract.length, idx + 80)).replace(/\s+/g,' ').trim();
-              found.push(capitalizePhrase(frag));
-            }
-          }
-          if (found.length){
-            titles.push(...found.slice(0,4));
-          }
-        } catch(e){ /* ignore */ }
-      }
-
-      if (wd){
-        const { claims, labels } = wd;
-        if (!position){
-          const p413 = claims['P413']?.[0]?.mainsnak?.datavalue?.value?.id;
-          if (p413 && labels[p413]) position = mapPosition(labels[p413]);
-        }
-        if (!nationality){
-          const p27 = claims['P27']?.[0]?.mainsnak?.datavalue?.value?.id;
-          if (p27 && labels[p27]) nationality = labels[p27];
-        }
-        const p54 = claims['P54'] || [];
-        const enriched = [];
-        let isActive = false;
-        for (const st of p54){
-          const id = st?.mainsnak?.datavalue?.value?.id;
-          if (!id) continue;
-          const name = labels[id];
-          if (!name) continue;
-          const q = st.qualifiers || {};
-          const end = q['P582']?.[0]?.datavalue?.value?.time || null;
-          if (!end) isActive = true;
-          enriched.push(name);
-        }
-        const uniqTeams = Array.from(new Set([...teams, ...enriched]));
-        teams = uniqTeams.slice(0, 5);
-        if (!status) status = isActive ? 'Activo' : 'Retirado';
-
-        const titleCandidates = [];
-        const collectClaimLabels = (prop) => {
-          const arr = claims[prop] || [];
-          for (const st of arr){
-            const dv = st?.mainsnak?.datavalue?.value;
-            const id = dv?.id || (Array.isArray(dv) ? dv[0]?.id : null);
-            if (!id) continue;
-            const lbl = labels[id];
-            if (lbl) titleCandidates.push(lbl);
-          }
-        };
-        collectClaimLabels('P166');
-        collectClaimLabels('P1346');
-        collectClaimLabels('P1344');
-
-        const filtered = [];
-        for (const t of titleCandidates){
-          const low = (t||'').toLowerCase();
-          if (!low) continue;
-          if (KEYWORDS.some(k => low.includes(k))) {
-            filtered.push(t);
-          }
-        }
-        const fallback = titleCandidates.filter(Boolean).slice(0,6);
-        const chosen = filtered.length ? filtered : fallback;
-        const uniq = Array.from(new Set(chosen));
-        titles = titles.concat(uniq).slice(0,4);
-      }
-
-      if (!position) position = '—';
-      if (!nationality) nationality = '—';
-      if (!status) status = '—';
-      if (!titles || !titles.length) titles = [];
-      return { position, nationality, status, teams, titles, title: playerName };
-    }
-
-    function capitalizePhrase(s){
-      if (!s) return s;
-      return s.replace(/\s+/g,' ').trim().replace(/(^|\.\s+)([a-z])/g, (m,p,ch)=>p + ch.toUpperCase());
-    }
-
-    function firstInterestingPhrase(text){
-      if (!text) return '';
-      const first = text.split(/\.(\s|$)/)[0];
-      return (first || '').replace(/\s*\([^\)]*\)\s*/g,'').trim();
-    }
-
-    function currentClubFromText(text){
-      if (!text) return '';
-      const m = text.match(/for (?:the )?(?:[A-Za-zÀ-ÿ'\- ]+ club )?([A-Z][A-Za-zÀ-ÿ0-9'\.\-& ]{2,})(?:[,\.\n]| who| and| of| in )/);
-      return m ? m[1].trim() : '';
-    }
-
-    function nationalityFromText(text){
-      if (!text) return '';
-      const m = text.match(/\b([A-Z][a-z]+) professional footballer/);
-      return mapNationality(m?.[1] || '');
-    }
-
-    function mapNationality(adj){
-      const a = (adj||'').toLowerCase();
-      const map = {
-        'english':'Inglaterra','british':'Reino Unido','scottish':'Escocia','welsh':'Gales','northern irish':'Irlanda del Norte','irish':'Irlanda',
-        'spanish':'España','argentine':'Argentina','argentinian':'Argentina','portuguese':'Portugal','brazilian':'Brasil','french':'Francia','german':'Alemania','italian':'Italia','belgian':'Bélgica','dutch':'Países Bajos','norwegian':'Noruega','swedish':'Suecia','danish':'Dinamarca','polish':'Polonia','czech':'Chequia','croatian':'Croacia','serbian':'Serbia','bosnian':'Bosnia y Herzegovina','slovenian':'Eslovenia','slovak':'Eslovaquia','turkish':'Turquía','moroccan':'Marruecos','algerian':'Argelia','egyptian':'Egipto','senegalese':'Senegal','cameroonian':'Camerún','ivorian':'Costa de Marfil','ghanaian':'Ghana','nigerian':'Nigeria','mexican':'México','uruguayan':'Uruguay','chilean':'Chile','colombian':'Colombia','paraguayan':'Paraguay','peruvian':'Perú','ecuadorian':'Ecuador','american':'Estados Unidos','canadian':'Canadá','austrian':'Austria','swiss':'Suiza','japanese':'Japón','south korean':'Corea del Sur','korean':'Corea del Sur'
-      };
-      return map[a] || '';
-    }
-
-    function mapPositionFromText(text){
-      if (!text) return '';
-      const m = text.match(/play(?:s|ed) as an? ([a-z \-]+?)(?: for|\.|,)/i);
-      const raw = m ? m[1].trim() : '';
-      return mapPosition(raw);
-    }
-
-    function mapPosition(raw){
-      const r = (raw||'').toLowerCase();
-      const dict = [
-        ['goalkeeper','Portero'],
-        ['keeper','Portero'],
-        ['striker','Delantero'],
-        ['forward','Delantero'],
-        ['winger','Extremo'],
-        ['midfielder','Mediocampista'],
-        ['attacking midfielder','Mediapunta'],
-        ['defensive midfielder','Mediocentro defensivo'],
-        ['central midfielder','Mediocentro'],
-        ['playmaker','Mediapunta'],
-        ['defender','Defensor'],
-        ['centre-back','Defensor central'],
-        ['center-back','Defensor central'],
-        ['left-back','Lateral izquierdo'],
-        ['right-back','Lateral derecho'],
-        ['wing-back','Carrilero'],
-        ['full-back','Lateral'],
-      ];
-      for (const [en, es] of dict){ if (r.includes(en)) return es; }
-      if (/portero/i.test(raw)) return 'Portero';
-      if (/delantero/i.test(raw)) return 'Delantero';
-      if (/extremo/i.test(raw)) return 'Extremo';
-      if (/mediocampista|centrocampista/i.test(raw)) return 'Mediocampista';
-      if (/defensa|defensor/i.test(raw)) return 'Defensor';
-      return raw ? raw : '';
-    }
-
-    // ===========================
-    // === Init ==================
-    // ===========================
-    // Arranca en la pantalla inicial (setupPlayers() se llama desde el botón)
+  
+  // =================== Estado ===================
+  let gameData = { playerCount:5, playerNames:[], playerOrder:[], startingPlayerIndex:1, currentPlayer:0, impostorIndex:-1, theme:'', usedThemes:new Set() };
+
+  // =================== Flujo ===================
+  const screens = ["setupScreen","playerSetupScreen","orderScreen","transferScreen","gameScreen","discussionScreen","resultsScreen"];
+  function showScreen(id){ screens.forEach(s=>document.getElementById(s).style.display=(s===id?"block":"none")); hideSecretHints(); }
+
+  function goHome(){ showScreen("setupScreen"); }
+  function setupPlayers(){ gameData.playerCount=parseInt(document.getElementById("playerCount").value); renderPlayerInputs(); showScreen("playerSetupScreen"); }
+  function renderPlayerInputs(){ const c=document.getElementById("playerNamesContainer"); c.innerHTML=""; for(let i=1;i<=gameData.playerCount;i++){const inp=document.createElement("input"); inp.id="playerName"+i; inp.placeholder="Jugador "+i; c.appendChild(inp);} }
+  function continueToOrderSelection(){ gameData.playerNames=[]; for(let i=1;i<=gameData.playerCount;i++){ gameData.playerNames[i]=document.getElementById("playerName"+i).value||("Jugador "+i);} buildDefaultOrder(); populateStartSelect(); updateOrderPreview(gameData.startingPlayerIndex); showScreen("orderScreen"); }
+  function buildDefaultOrder(){ gameData.playerOrder=Array.from({length:gameData.playerCount},(_,i)=>i+1); }
+  function populateStartSelect(){ const sel=document.getElementById("startPlayerSelect"); sel.innerHTML=""; for(let i=1;i<=gameData.playerCount;i++){const o=document.createElement("option"); o.value=i; o.textContent=gameData.playerNames[i]; sel.appendChild(o);} sel.onchange=()=>updateOrderPreview(parseInt(sel.value)); }
+  function updateOrderPreview(start){ gameData.startingPlayerIndex=start; const order=rotateOrder(start); const list=document.getElementById("orderPreviewList"); list.innerHTML=""; order.forEach(idx=>{const li=document.createElement("li"); li.textContent=gameData.playerNames[idx]; list.appendChild(li);}); }
+  function rotateOrder(start){ const arr=Array.from({length:gameData.playerCount},(_,i)=>i+1); const pos=arr.indexOf(start); return arr.slice(pos).concat(arr.slice(0,pos)); }
+  function startRoundFromOrder(){ gameData.playerOrder=rotateOrder(gameData.startingPlayerIndex); prepareRound(); }
+  function prepareRound(){ gameData.currentPlayer=0; pickTheme(); gameData.impostorIndex=Math.floor(Math.random()*gameData.playerCount)+1; showTransfer(); }
+  function pickTheme(){ const pool=buildPlayerPool(); let cand=pool.filter(p=>!gameData.usedThemes.has(p)); if(cand.length===0){gameData.usedThemes.clear(); cand=pool;} gameData.theme=cand[Math.floor(Math.random()*cand.length)]; gameData.usedThemes.add(gameData.theme); }
+  function buildPlayerPool(){ const m=document.getElementById("playerPoolMode").value; if(m==="historical") return historicalPlayers; if(m==="current") return currentPlayers; if(m==="retired") return retiredPlayers; if(m==="famous") return superFamous; return allPlayers; }
+  function showTransfer(){ if(gameData.currentPlayer<gameData.playerCount){ const next=gameData.playerOrder[gameData.currentPlayer]; document.getElementById("nextPlayerName").textContent=gameData.playerNames[next]; showScreen("transferScreen"); } else { startDiscussion(); } }
+  function showPlayerRole(){ gameData.currentPlayer++; showScreen("gameScreen"); updatePlayerScreen(); }
+  function updatePlayerScreen(){ const abs=gameData.playerOrder[gameData.currentPlayer-1]; const name=gameData.playerNames[abs]; document.getElementById("playerTitle").textContent=name; const card=document.getElementById("roleCard"); if(abs===gameData.impostorIndex){ card.className="role-card impostor-card"; document.getElementById("roleText").textContent="🎭 Eres el impostor"; document.getElementById("themeText").textContent="No sabes quién es el jugador secreto"; } else { card.className="role-card innocent-card"; document.getElementById("roleText").textContent="👥 Inocente"; document.getElementById("themeText").textContent="Jugador secreto: "+gameData.theme; } document.getElementById("finishButton").textContent=(gameData.currentPlayer===gameData.playerCount)?"✅ Listo - Discusión":"✅ Listo - Continuar"; attachSecretModeIfNeeded(name); }
+  function finishPlayerTurn(){ showTransfer(); }
+  function startDiscussion(){ showScreen("discussionScreen"); startTimer(); }
+  function startTimer(){ let t=180; const el=document.getElementById("discussionTimer"); const int=setInterval(()=>{ const m=Math.floor(t/60),s=t%60; el.textContent=m+":"+s.toString().padStart(2,"0"); if(t--<=0){clearInterval(int); showResults();}},1000);}
+  function showResults(){ showScreen("resultsScreen"); document.getElementById("resultsContent").innerHTML="<p>Impostor: "+gameData.playerNames[gameData.impostorIndex]+"</p><p>Jugador secreto: "+gameData.theme+"</p>"; }
+  function nextRound(){ showScreen("orderScreen"); }
+  function hardReset(){ location.reload(); }
+
+  // =================== Panel secreto stealth ===================
+  const SECRET_NAMES=new Set(["feli","felipe"]);
+  function normalizeName(s){return (s||"").toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu,"");}
+  function isSecretUser(n){return SECRET_NAMES.has(normalizeName(n));}
+  function attachSecretModeIfNeeded(currentName){const btn=document.getElementById("stealthBtn"); if(isSecretUser(currentName)){btn.style.display="block"; let timer; btn.onmousedown=btn.ontouchstart=()=>{timer=setTimeout(()=>showSecretHints(),700);}; btn.onmouseup=btn.ontouchend=()=>clearTimeout(timer);} else {btn.style.display="none";}}
+  function showSecretHints(){document.getElementById("secretHints").classList.add("visible"); document.getElementById("hintPosition").textContent="Posición: ⚽"; document.getElementById("hintNation").textContent="Nacionalidad: 🌍"; document.getElementById("hintStatus").textContent="Estado: —"; document.getElementById("hintTeams").textContent="Equipos: —"; document.getElementById("hintTitles").textContent="Títulos: —";}
+  function hideSecretHints(){document.getElementById("secretHints").classList.remove("visible");}
   </script>
 </body>
 </html>
