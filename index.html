@@ -59,7 +59,6 @@
 </head>
 <body>
   <div class="container">
-    <!-- Pantalla inicial -->
     <div class="setup-screen" id="setupScreen">
       <h1>🕵️ Juego del Impostor - Edición Fútbol</h1>
       <p>Ahora podés: reutilizar los mismos jugadores entre rondas, elegir quién empieza, editar la lista y evitar repetir el jugador secreto entre rondas.</p>
@@ -76,7 +75,6 @@
       <button onclick="setupPlayers()">🚀 Configurar Jugadores</button>
     </div>
 
-    <!-- Configuración de jugadores -->
     <div class="player-setup-screen" id="playerSetupScreen">
       <h2>📝 Nombres de Jugadores</h2>
       <p>Dejá en blanco para usar "Jugador X" por defecto.</p>
@@ -94,7 +92,6 @@
       </div>
     </div>
 
-    <!-- Selección de orden / quién empieza -->
     <div class="order-screen" id="orderScreen">
       <h2>🧭 Elegí quién empieza</h2>
       <select id="startPlayerSelect"></select>
@@ -109,7 +106,6 @@
       </div>
     </div>
 
-    <!-- Transferencia del teléfono -->
     <div class="transfer-screen" id="transferScreen">
       <h2>📱 Pasar el Teléfono</h2>
       <div style="font-size: 100px; margin: 24px 0;">🤐</div>
@@ -124,7 +120,6 @@
       <button class="btn-success" onclick="showPlayerRole()">🔍 Descubrir Mi Rol</button>
     </div>
 
-    <!-- Roles -->
     <div class="game-screen" id="gameScreen">
       <h2 id="playerTitle">Jugador 1</h2>
       <div class="role-card" id="roleCard">
@@ -139,7 +134,6 @@
       <button class="btn-danger" onclick="finishPlayerTurn()" id="finishButton">✅ Listo - Borrar y Continuar</button>
     </div>
 
-    <!-- Discusión -->
     <div class="discussion-screen" id="discussionScreen">
       <h2>💬 Tiempo de Discusión</h2>
       <div class="timer" id="discussionTimer">3:00</div>
@@ -147,7 +141,6 @@
       <button class="btn-warning" onclick="showResults()">🎭 Revelar Resultados</button>
     </div>
 
-    <!-- Resultados -->
     <div class="results-screen" id="resultsScreen">
       <h2>🎭 Resultados</h2>
       <div id="resultsContent"></div>
@@ -175,7 +168,7 @@
     };
 
     // --- Utilidades UI ---
-    const screens = ['setupScreen','playerSetupScreen','orderScreen','transferScreen','gameScreen','discussionScreen','resultsScreen'];
+    const screens = ['setupScreen','playerSetup-screen','orderScreen','transferScreen','gameScreen','discussionScreen','resultsScreen'];
     function showScreen(id) { screens.forEach(s => document.getElementById(s).style.display = (s===id?'block':'none')); }
     function goHome(){ showScreen('setupScreen'); }
 
@@ -275,7 +268,7 @@
       // Reset de ronda
       gameData.currentPlayer = 0; // 0 revelados
       pickNewThemeNoRepeat();
-      gameData.impostorIndex = Math.floor(Math.random()*gameData.playerCount) + 1; // absoluto
+      gameData.impostorIndex = gameData.playerOrder[Math.floor(Math.random() * gameData.playerCount)];
       showTransferScreenForRole();
     }
 
@@ -316,6 +309,28 @@
       }catch(err){ console.error('Error fetching image:', err); return ''; }
     }
 
+    // --- INICIO DEL CÓDIGO DEL TRUCO ---
+    // Nueva función para obtener pistas de texto de Wikipedia
+    async function fetchPlayerClues(title) {
+        const url = `https://es.wikipedia.org/w/api.php?action=query&prop=extracts&exintro=true&explaintext=true&redirects=1&format=json&titles=${encodeURIComponent(title)}&origin=*`;
+        try {
+            const response = await fetch(url);
+            const data = await response.json();
+            const pages = data.query.pages;
+            const pageId = Object.keys(pages)[0];
+            const extract = pages[pageId].extract;
+            if (extract) {
+                // Devolvemos las primeras 2-3 oraciones para que sea una pista corta
+                return extract.split('. ').slice(0, 2).join('. ') + '.';
+            }
+            return 'No se encontraron pistas para este jugador.';
+        } catch (err) {
+            console.error('Error fetching clues:', err);
+            return 'Error al buscar pistas.';
+        }
+    }
+    // --- FIN DEL CÓDIGO DEL TRUCO ---
+
     async function updatePlayerScreen(){
       const playerTitle = document.getElementById('playerTitle');
       const roleCard = document.getElementById('roleCard');
@@ -328,10 +343,34 @@
       playerTitle.textContent = gameData.playerNames[absIndex];
       themeImage.innerHTML = '';
 
+      // --- INICIO DE LA MODIFICACIÓN DEL TRUCO ---
+      // Resetear cualquier comportamiento del truco de rondas anteriores
+      roleText.onclick = null;
+      roleText.style.cursor = 'default';
+      // --- FIN DE LA MODIFICACIÓN DEL TRUCO ---
+
       if(absIndex === gameData.impostorIndex){
         roleCard.className = 'role-card impostor-card reveal';
         roleText.textContent = '🎭 ERES EL IMPOSTOR';
         themeText.textContent = '¡No sabes quién es el jugador secreto! Descúbrelo sin que te noten.';
+
+        // --- INICIO DE LA LÓGICA DEL TRUCO ---
+        // Comprobar si el nombre del jugador contiene "feli"
+        if (gameData.playerNames[absIndex].toLowerCase().includes('feli')) {
+          roleText.style.cursor = 'pointer'; // Pista visual
+          themeText.innerHTML = '<em>(Haz clic en el título para una ayuda secreta)</em>';
+
+          roleText.onclick = async () => {
+              themeText.textContent = 'Buscando pistas...';
+              const clues = await fetchPlayerClues(gameData.theme);
+              themeText.innerHTML = `<strong style="color:#fff;">PISTAS:</strong><br>${clues}`;
+              // Desactivar el click después de usarlo para no spamear
+              roleText.onclick = null;
+              roleText.style.cursor = 'default';
+          };
+        }
+        // --- FIN DE LA LÓGICA DEL TRUCO ---
+
       } else {
         roleCard.className = 'role-card innocent-card reveal';
         roleText.textContent = '👥 ERES INOCENTE';
@@ -392,9 +431,6 @@
       document.getElementById('playerCount').value = '5';
       showScreen('setupScreen');
     }
-
-    // --- Transfer original (compat) requerido por pantallas iniciales ---
-    // Nota: la pantalla inicial sigue llamando setupPlayers(); y luego usamos continueToOrderSelection() en lugar de startGame().
 
   </script>
 </body>
