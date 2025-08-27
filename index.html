@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Juego del Impostor - Versión Mejorada</title>
+    <title>Juego del Impostor - Edición Fútbol</title>
     <style>
         * {
             margin: 0;
@@ -43,7 +43,7 @@
             text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
         }
 
-        .setup-screen, .player-setup-screen, .transfer-screen, .game-screen, .discussion-screen, .voting-transfer-screen, .voting-turn-screen, .results-screen {
+        .setup-screen, .player-setup-screen, .transfer-screen, .game-screen, .discussion-screen, .results-screen {
             display: none;
         }
 
@@ -138,33 +138,6 @@
             text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
 
-        .player-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 10px;
-            margin: 20px 0;
-        }
-
-        .player-vote {
-            background: #f8f9fa;
-            border: 2px solid #ddd;
-            border-radius: 10px;
-            padding: 15px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .player-vote:hover {
-            background: #e9ecef;
-            transform: scale(1.05);
-        }
-
-        .player-vote.selected {
-            background: #667eea;
-            color: white;
-            border-color: #5a67d8;
-        }
-
         .warning, .success, .danger {
             padding: 15px;
             border-radius: 10px;
@@ -195,16 +168,19 @@
             overflow-y: auto;
             margin: 20px 0;
         }
+
+        .player-image {
+            max-width: 70%; /* Tamaño reducido para que sea más pequeño */
+            border-radius: 10px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <!-- Pantalla de configuración -->
         <div class="setup-screen" id="setupScreen">
-            <h1>🕵️ Juego del Impostor - Mejorado</h1>
-            <p>Mejoras: Nombres personalizados, votación secreta por turnos, dinámica separada de discusión y votación, animaciones suaves, UI más responsiva.</p>
-            
-            <input type="text" id="themeInput" placeholder="¿Qué tienen que adivinar? (ej: Animales, Comidas, Películas)">
+            <h1>🕵️ Juego del Impostor - Edición Fútbol</h1>
+            <p>Mejoras: Nombres personalizados, dinámica separada de discusión, animaciones suaves, UI más responsiva. Ahora el juego elige un jugador de fútbol famoso al azar como secreto (213 jugadores). Votación removida (se hace en persona), directamente revela resultados después de discusión.</p>
             
             <select id="playerCount">
                 <option value="3">3 Jugadores</option>
@@ -254,6 +230,7 @@
             <div class="role-card" id="roleCard">
                 <div id="roleText"></div>
                 <div id="themeText"></div>
+                <div id="themeImage" style="margin-top: 20px;"></div>
             </div>
             
             <div class="warning">
@@ -271,42 +248,10 @@
             <div class="timer" id="discussionTimer">3:00</div>
             
             <div class="warning">
-                Discutan palabras relacionadas con el tema secreto. ¡El impostor intentará mezclarse!
+                Discutan hechos, características, carrera y detalles sobre el jugador secreto. ¡El impostor intentará mezclarse sin saber quién es!
             </div>
             
-            <button onclick="startVotingPhase()" style="background: #ffc107;">🗳️ Iniciar Votación Secreta</button>
-        </div>
-
-        <!-- Pantalla de transferencia para votos -->
-        <div class="voting-transfer-screen" id="votingTransferScreen">
-            <h2>📱 Pasar el Teléfono para Votar</h2>
-            
-            <div style="font-size: 100px; margin: 40px 0;">🤫</div>
-            
-            <div class="warning">
-                <strong>¡ATENCIÓN!</strong><br>
-                Pasa el teléfono al <span id="nextVoterName">Jugador X</span><br>
-                SIN que vea la pantalla
-            </div>
-            
-            <p style="font-size: 18px; margin: 20px 0;">
-                <strong id="receivingVoter">Jugador X</strong>: Cuando tengas el teléfono, presiona para votar en secreto.
-            </p>
-            
-            <button onclick="showVotingTurn()" style="background: #28a745;">🗳️ Votar en Secreto</button>
-        </div>
-
-        <!-- Pantalla de turno de votación -->
-        <div class="voting-turn-screen" id="votingTurnScreen">
-            <h2 id="voterTitle">Voto de Jugador 1</h2>
-            
-            <div class="warning">
-                Elige quién crees que es el impostor. ¡Tu voto es secreto!
-            </div>
-            
-            <div class="player-list" id="votingPlayerList"></div>
-            
-            <button onclick="confirmVote()" id="confirmVoteButton" style="background: #28a745;" disabled>✅ Confirmar Voto</button>
+            <button onclick="showResults()" style="background: #ffc107;">🎭 Revelar Resultados</button>
         </div>
 
         <!-- Pantalla de resultados -->
@@ -326,21 +271,95 @@
             currentPlayer: 0, // Comienza en 0 para primer transfer
             impostorIndex: -1,
             playerNames: [],
-            votes: [],
             discussionTimer: null,
             timeLeft: 180, // 3 minutos
-            selectedVote: -1,
             currentVoter: 0 // Para votación
         };
 
-        function setupPlayers() {
-            const theme = document.getElementById('themeInput').value.trim();
-            if (!theme) {
-                alert('¡Por favor ingresa un tema!');
-                return;
-            }
+        const famousPlayers = [
+            // Leyendas históricas
+            "Pelé", "Diego Maradona", "Johan Cruyff", "Franz Beckenbauer", "Alfredo Di Stéfano",
+            "Ferenc Puskás", "Eusébio", "Lev Yashin", "George Best", "Bobby Charlton",
+            "Garrincha", "Just Fontaine", "Gerd Müller", "Bobby Moore", "Gordon Banks",
             
-            gameData.theme = theme;
+            // Estrellas de los 80s-90s
+            "Marco van Basten", "Michel Platini", "Roberto Baggio", "Lothar Matthäus", "Franco Baresi",
+            "Paolo Maldini", "Ruud Gullit", "Frank Rijkaard", "Ronald Koeman", "Hristo Stoichkov",
+            "Romário", "Bebeto", "Claudio Caniggia", "Gabriel Batistuta", "Salvatore Schillaci",
+            
+            // Era dorada de los 2000s
+            "Ronaldo Nazário", "Ronaldinho", "Kaká", "Zinedine Zidane", "Luis Figo",
+            "Thierry Henry", "Raúl González", "Francesco Totti", "Alessandro Del Piero", "Gianluigi Buffon",
+            "Iker Casillas", "Oliver Kahn", "Michael Ballack", "Pavel Nedvěd", "Andrés Iniesta",
+            "Xavi Hernández", "Carles Puyol", "Gerard Piqué", "David Beckham", "Steven Gerrard",
+            "Frank Lampard", "Paul Scholes", "Ryan Giggs", "Roy Keane", "Patrick Vieira",
+            "Claude Makélélé", "Fabio Cannavaro", "Alessandro Nesta", "Jaap Stam", "Rio Ferdinand",
+            "John Terry", "Ashley Cole", "Cafu", "Roberto Carlos", "Javier Zanetti",
+            
+            // Superstrellas actuales
+            "Lionel Messi", "Cristiano Ronaldo", "Neymar", "Kylian Mbappé", "Erling Haaland",
+            "Robert Lewandowski", "Kevin De Bruyne", "Mohamed Salah", "Sadio Mané", "Riyad Mahrez",
+            "Raheem Sterling", "Harry Kane", "Son Heung-min", "Bruno Fernandes", "Paul Pogba",
+            "N'Golo Kanté", "Virgil van Dijk", "Sergio Ramos", "Raphaël Varane", "Karim Benzema",
+            "Luka Modrić", "Toni Kroos", "Casemiro", "Sergio Busquets", "Pedri",
+            "Gavi", "Frenkie de Jong", "Ansu Fati", "Ferran Torres", "Dani Olmo",
+            
+            // Nueva generación
+            "Vinícius Júnior", "Jude Bellingham", "Eduardo Camavinga", "Aurélien Tchouaméni", "Enzo Fernández",
+            "Jamal Musiala", "Florian Wirtz", "Bukayo Saka", "Phil Foden", "Mason Mount",
+            "Declan Rice", "Martin Ødegaard", "Alexander Isak", "Darwin Núñez", "Luis Díaz",
+            "Diogo Jota", "Cody Gakpo", "Antony", "Marcus Rashford", "Jadon Sancho",
+            "Jack Grealish", "Rúben Dias", "Josko Gvardiol", "William Saliba", "Gabriel Martinelli",
+            "Lamine Yamal", "Alejandro Balde", "Ronald Araújo", "Jules Koundé", "Ousmane Dembélé",
+            "Raphinha", "Lautaro Martínez", "Nico González", "Julián Álvarez", "Ángel Di María",
+            "Paulo Dybala", "Leandro Paredes", "Rodrigo De Paul",
+            
+            // Porteros legendarios
+            "Manuel Neuer", "Alisson Becker", "Ederson", "Jan Oblak", "Thibaut Courtois",
+            "Hugo Lloris", "Keylor Navas", "Gianluigi Donnarumma", "Yann Sommer", "Emiliano Martínez",
+            "Marc-André ter Stegen", "Claudio Bravo", "David de Gea", "Jordan Pickford", "Aaron Ramsdale",
+            
+            // Defensas icónicos
+            "Dani Alves", "Marcelo", "Jordi Alba", "Andrew Robertson", "Trent Alexander-Arnold",
+            "Kyle Walker", "João Cancelo", "Achraf Hakimi", "Theo Hernández", "Lucas Hernández",
+            "Dayot Upamecano", "Ibrahima Konaté", "Eder Militão", "Antonio Rüdiger", "Thiago Silva",
+            "Marquinhos", "Presnel Kimpembe", "Milan Škriniar", "Alessandro Bastoni", "Federico Dimarco",
+            "Giorgio Chiellini", "Leonardo Bonucci", "Francesco Acerbi", "Kalidou Koulibaly", "Aymeric Laporte",
+            "Pau Torres", "Diego Carlos", "José Giménez", "Diego Godín", "Stefan Savić",
+            
+            // Mediocampistas creativos
+            "Joshua Kimmich", "Leon Goretzka", "Ilkay Gündogan", "Thomas Müller", "Marco Reus",
+            "Marco Verratti", "Nicolo Barella", "Lorenzo Pellegrini", "Ciro Immobile", "Federico Chiesa",
+            "Lorenzo Insigne", "Domenico Berardi", "Matteo Politano", "Khvicha Kvaratskhelia", "Victor Osimhen",
+            "Piotr Zielinski", "Fabián Ruiz", "Carlos Soler", "Mikel Oyarzabal", "Isco",
+            "Marco Asensio", "Brahim Díaz", "Federico Valverde", "Rodrygo", "Endrick",
+            
+            // Atacantes letales
+            "Sergio Agüero", "Fernando Torres", "David Villa", "Álvaro Morata", "Gerard Moreno",
+            "Dani Carvajal", "Nacho Fernández", "Jesús Navas", "Marcos Llorente", "Koke",
+            "Saúl Ñíguez", "João Félix", "Antoine Griezmann", "Memphis Depay", "Sergi Roberto",
+            "Fermín López", "Pau Cubarsí", "Héctor Fort", "Marc Guiu", "Vitor Roque",
+            
+            // Estrellas internacionales
+            "Romelu Lukaku", "Eden Hazard", "Yannick Carrasco", "Jeremy Doku", "Charles De Ketelaere",
+            "Amadou Onana", "Arthur Theate", "Wout Faes", "Matthijs de Ligt", "Denzel Dumfries",
+            "Steven Bergwijn", "Wout Weghorst", "Daley Blind", "Stefan de Vrij", "Wojciech Szczęsny",
+            "Jan Bednarek", "Matty Cash", "Krzysztof Piątek", "Arkadiusz Milik", "Kamil Glik",
+            "Grzegorz Krychowiak", "Jakub Moder",
+            
+            // Liga Premier
+            "Jack Grealish", "Riyad Mahrez", "Bernardo Silva", "Rodri", "John Stones",
+            "Diogo Dalot", "Harry Maguire", "Alexis Mac Allister", "Ryan Gravenberch", "Wataru Endo",
+            "James Maddison", "Dejan Kulusevski", "Brennan Johnson", "Pape Matar Sarr", "Yves Bissouma",
+            "Pedro Porro", "Cristian Romero", "Micky van de Ven", "Destiny Udogie",
+            
+            // Joyas emergentes
+            "Warren Zaïre-Emery", "Bradley Barcola", "Randal Kolo Muani", "Vitinha", "João Neves",
+            "Nuno Mendes", "Arda Güler", "Kenan Yildiz", "Francisco Conceição", "Samu Omorodion",
+            "Pau Prim", "Dani Rodriguez", "Takefusa Kubo", "Kang-in Lee", "Hwang Hee-chan"
+        ];
+
+        function setupPlayers() {
             gameData.playerCount = parseInt(document.getElementById('playerCount').value);
             
             // Mostrar pantalla de nombres
@@ -367,9 +386,11 @@
                 gameData.playerNames[i] = name || `Jugador ${i}`;
             }
             
+            // Elegir jugador secreto al azar
+            gameData.theme = famousPlayers[Math.floor(Math.random() * famousPlayers.length)];
+            
             // Elegir impostor
             gameData.impostorIndex = Math.floor(Math.random() * gameData.playerCount) + 1;
-            gameData.votes = new Array(gameData.playerCount + 1).fill(0);
             
             // Iniciar con transferencia al primer jugador
             document.getElementById('playerSetupScreen').style.display = 'none';
@@ -394,23 +415,45 @@
             updatePlayerScreen();
         }
 
-        function updatePlayerScreen() {
+        async function fetchPlayerImage(title) {
+            const url = `https://en.wikipedia.org/w/api.php?action=query&prop=pageimages&format=json&pithumbsize=300&titles=${encodeURIComponent(title)}&origin=*`;
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                const pages = data.query.pages;
+                const pageId = Object.keys(pages)[0];
+                return pages[pageId].thumbnail ? pages[pageId].thumbnail.source : '';
+            } catch (error) {
+                console.error('Error fetching image:', error);
+                return '';
+            }
+        }
+
+        async function updatePlayerScreen() {
             const playerTitle = document.getElementById('playerTitle');
             const roleCard = document.getElementById('roleCard');
             const roleText = document.getElementById('roleText');
             const themeText = document.getElementById('themeText');
+            const themeImage = document.getElementById('themeImage');
             const finishButton = document.getElementById('finishButton');
             
             playerTitle.textContent = gameData.playerNames[gameData.currentPlayer];
+            themeImage.innerHTML = '';
             
             if (gameData.currentPlayer === gameData.impostorIndex) {
                 roleCard.className = 'role-card impostor-card reveal';
                 roleText.textContent = '🎭 ERES EL IMPOSTOR';
-                themeText.textContent = '¡No sabes el tema! Descúbrelo sin que te noten.';
+                themeText.textContent = '¡No sabes quién es el jugador secreto! Descúbrelo sin que te noten.';
             } else {
                 roleCard.className = 'role-card innocent-card reveal';
                 roleText.textContent = '👥 ERES INOCENTE';
-                themeText.textContent = `Tema: ${gameData.theme.toUpperCase()}`;
+                themeText.textContent = `El jugador secreto es: ${gameData.theme.toUpperCase()}`;
+                
+                // Fetch and display image
+                const imageUrl = await fetchPlayerImage(gameData.theme);
+                if (imageUrl) {
+                    themeImage.innerHTML = `<img src="${imageUrl}" alt="${gameData.theme}" class="player-image">`;
+                }
             }
             
             finishButton.textContent = gameData.currentPlayer === gameData.playerCount ? '✅ Listo - Iniciar Discusión' : '✅ Listo - Borrar y Continuar';
@@ -440,118 +483,33 @@
                 if (gameData.timeLeft <= 0) {
                     clearInterval(gameData.discussionTimer);
                     timerElement.textContent = '¡TIEMPO!';
-                    startVotingPhase();
+                    showResults();
                 }
                 
                 gameData.timeLeft--;
             }, 1000);
         }
 
-        function startVotingPhase() {
+        async function showResults() {
             clearInterval(gameData.discussionTimer);
             document.getElementById('discussionScreen').style.display = 'none';
-            gameData.currentVoter = 0;
-            showTransferScreenForVote();
-        }
-
-        function showTransferScreenForVote() {
-            if (gameData.currentVoter < gameData.playerCount) {
-                const next = gameData.currentVoter + 1;
-                document.getElementById('nextVoterName').textContent = gameData.playerNames[next];
-                document.getElementById('receivingVoter').textContent = gameData.playerNames[next];
-                document.getElementById('votingTransferScreen').style.display = 'block';
-            } else {
-                showResults();
-            }
-        }
-
-        function showVotingTurn() {
-            gameData.currentVoter++;
-            document.getElementById('votingTransferScreen').style.display = 'none';
-            document.getElementById('votingTurnScreen').style.display = 'block';
-            updateVotingTurnScreen();
-        }
-
-        function updateVotingTurnScreen() {
-            const voterTitle = document.getElementById('voterTitle');
-            voterTitle.textContent = `Voto de ${gameData.playerNames[gameData.currentVoter]}`;
-            
-            const playerList = document.getElementById('votingPlayerList');
-            playerList.innerHTML = '';
-            gameData.selectedVote = -1;
-            document.getElementById('confirmVoteButton').disabled = true;
-            
-            // Opción de saltar
-            const skipDiv = document.createElement('div');
-            skipDiv.className = 'player-vote';
-            skipDiv.textContent = 'Saltar (no votar)';
-            skipDiv.onclick = () => selectVote(0, skipDiv);
-            playerList.appendChild(skipDiv);
-            
-            for (let i = 1; i <= gameData.playerCount; i++) {
-                if (i === gameData.currentVoter) continue; // No votar por uno mismo
-                const playerDiv = document.createElement('div');
-                playerDiv.className = 'player-vote';
-                playerDiv.textContent = gameData.playerNames[i];
-                playerDiv.onclick = () => selectVote(i, playerDiv);
-                playerList.appendChild(playerDiv);
-            }
-        }
-
-        function selectVote(playerNum, element) {
-            document.querySelectorAll('.player-vote').forEach(div => div.classList.remove('selected'));
-            element.classList.add('selected');
-            gameData.selectedVote = playerNum;
-            document.getElementById('confirmVoteButton').disabled = false;
-        }
-
-        function confirmVote() {
-            if (gameData.selectedVote > 0) {
-                gameData.votes[gameData.selectedVote]++;
-            }
-            document.getElementById('votingTurnScreen').style.display = 'none';
-            showTransferScreenForVote();
-        }
-
-        function showResults() {
             document.getElementById('resultsScreen').style.display = 'block';
             
             const resultsContent = document.getElementById('resultsContent');
             let html = `<h3>🎭 El impostor era: <span style="color: #ff4757;">${gameData.playerNames[gameData.impostorIndex]}</span></h3>`;
             
-            // Encontrar el más votado
-            let maxVotes = 0;
-            let mostVoted = [];
-            for (let i = 1; i <= gameData.playerCount; i++) {
-                if (gameData.votes[i] > maxVotes) {
-                    maxVotes = gameData.votes[i];
-                    mostVoted = [i];
-                } else if (gameData.votes[i] === maxVotes) {
-                    mostVoted.push(i);
-                }
-            }
-            
-            if (mostVoted.length === 1 && mostVoted[0] === gameData.impostorIndex) {
-                html += '<div class="success">🎉 ¡Los inocentes ganaron! Encontraron al impostor.</div>';
-            } else {
-                html += '<div class="danger">😈 ¡El impostor ganó! No lo descubrieron.</div>';
-                if (mostVoted.length > 0) {
-                    html += `<p>Más votados: ${mostVoted.map(i => gameData.playerNames[i]).join(', ')} (${maxVotes} votos)</p>`;
-                } else {
-                    html += '<p>No hubo votos suficientes.</p>';
-                }
-            }
-            
-            html += `<p><strong>Tema:</strong> ${gameData.theme}</p>`;
-            
-            // Mostrar tally de votos
-            html += '<h4>Votos recibidos:</h4><ul>';
-            for (let i = 1; i <= gameData.playerCount; i++) {
-                html += `<li>${gameData.playerNames[i]}: ${gameData.votes[i]} votos</li>`;
-            }
-            html += '</ul>';
+            html += `<p><strong>Jugador secreto:</strong> ${gameData.theme}</p><div id="resultsImage" style="margin-top: 20px;"></div>`;
             
             resultsContent.innerHTML = html;
+
+            // Fetch image for results
+            const resultsImage = document.getElementById('resultsImage');
+            if (resultsImage) {
+                const imageUrl = await fetchPlayerImage(gameData.theme);
+                if (imageUrl) {
+                    resultsImage.innerHTML = `<img src="${imageUrl}" alt="${gameData.theme}" class="player-image">`;
+                }
+            }
         }
 
         function resetGame() {
@@ -562,10 +520,8 @@
                 currentPlayer: 0,
                 impostorIndex: -1,
                 playerNames: [],
-                votes: [],
                 discussionTimer: null,
                 timeLeft: 180,
-                selectedVote: -1,
                 currentVoter: 0
             };
             
@@ -574,7 +530,6 @@
             document.getElementById('setupScreen').style.display = 'block';
             
             // Limpiar campos
-            document.getElementById('themeInput').value = '';
             document.getElementById('playerCount').value = '5';
         }
     </script>
