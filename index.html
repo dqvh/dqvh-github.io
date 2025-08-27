@@ -24,7 +24,7 @@
     .btn-success { background: #28a745; }
     .btn-danger { background: #dc3545; }
 
-    .role-card { background: #f8f9fa; border: 3px solid #ddd; border-radius: 15px; padding: 32px; margin: 16px 0; font-size: 22px; font-weight: bold; min-height: 200px; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: transform .5s ease; user-select: none; }
+    .role-card { background: #f8f9fa; border: 3px solid #ddd; border-radius: 15px; padding: 32px; margin: 16px 0; font-size: 22px; font-weight: bold; min-height: 200px; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: transform .5s ease; user-select: none; touch-action: manipulation; }
     .role-card.reveal { transform: scale(1.03); }
     .impostor-card { background: linear-gradient(135deg, #ff6b6b, #ee5a52); color: white; border-color: #ff4757; animation: pulse 2s infinite; }
     .innocent-card { background: linear-gradient(135deg, #51cf66, #40c057); color: white; border-color: #37b24d; }
@@ -57,7 +57,7 @@
     .secret-hints.visible { opacity: 1; pointer-events: auto; }
     .secret-hints h3 { font-size: 18px; margin-bottom: 8px; }
     .secret-hints p { font-size: 14px; margin: 4px 0; line-height: 1.4; }
-    .secret-row { display: grid; grid-template-columns: 120px 1fr; gap: 8px; }
+    .secret-row { display: grid; grid-template-columns: 120px 1fr; gap: 8px; align-items: center; }
     .secret-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; }
     .btn-ghost { background: #222; color: #fff; border-radius: 10px; padding: 8px 12px; width: auto; box-shadow: none; }
     .hint-chip { display: inline-block; border: 1px solid #333; padding: 2px 8px; border-radius: 999px; font-size: 12px; margin-right: 6px; }
@@ -153,7 +153,7 @@
         <div class="secret-row"><span class="hint-chip">Nacionalidad</span><p id="hintNation">—</p></div>
         <div class="secret-row"><span class="hint-chip">Estado</span><p id="hintStatus">—</p></div>
         <div class="secret-row"><span class="hint-chip">Equipos</span><p id="hintTeams">—</p></div>
-        <div class="secret-row"><span class="hint-chip">Característica</span><p id="hintTrait">—</p></div>
+        <div class="secret-row"><span class="hint-chip">Mundiales</span><p id="hintWorlds">—</p></div>
         <div class="secret-actions">
           <button class="btn-ghost" id="hideHintsBtn" type="button">Ocultar</button>
         </div>
@@ -366,16 +366,31 @@
       updatePlayerScreen();
     }
 
+    // Fetch image helper with timeout and error handling
+    async function fetchWithTimeout(url, opts = {}, ms = 6000){
+      const controller = new AbortController();
+      const id = setTimeout(() => controller.abort(), ms);
+      try{
+        const res = await fetch(url, {...opts, signal: controller.signal});
+        clearTimeout(id);
+        return res;
+      }catch(err){
+        clearTimeout(id);
+        throw err;
+      }
+    }
+
     async function fetchPlayerImage(title){
       const url = `https://en.wikipedia.org/w/api.php?action=query&prop=pageimages&format=json&pithumbsize=300&titles=${encodeURIComponent(title)}&origin=*`;
       try{
-        const response = await fetch(url);
+        const response = await fetchWithTimeout(url);
+        if (!response.ok) return '';
         const data = await response.json();
         const pages = data.query.pages;
         const pageId = Object.keys(pages)[0];
         return pages[pageId].thumbnail ? pages[pageId].thumbnail.source : '';
       }catch(err){
-        console.error('Error fetching image:', err);
+        console.warn('Error fetching image:', err);
         return '';
       }
     }
@@ -504,53 +519,57 @@
       return SECRET_NAMES.has(normalizeName(name));
     }
 
-    let pressTimer = null;
-    let tapCount = 0;
-    let tapTimeout = null;
-
+    // Triple-tap handler storage for cleanup
     function attachSecretModeIfNeeded(currentName){
       const finishButton = document.getElementById('finishButton');
       const roleCard = document.getElementById('roleCard');
 
-      // Limpiar restos previos
-      finishButton.classList.remove('finish-pressable');
+      // Limpieza de handlers previos: finishButton debe mantener su onclick normal
       finishButton.onmousedown = finishButton.ontouchstart = null;
       window.onmouseup = window.ontouchend = null;
-      roleCard.onclick = null;
+
+      // Remover handler triple-tap previo si existía
+      if (roleCard._secretHandler) {
+        roleCard.removeEventListener('click', roleCard._secretHandler);
+        roleCard.removeEventListener('touchstart', roleCard._secretHandler);
+        roleCard._secretHandler = null;
+      }
 
       if (!isSecretUser(currentName)){
         hideSecretHints();
         return; // no activar modo secreto
       }
 
-      // Long-press en "Listo"
-      finishButton.classList.add('finish-pressable');
-      const startPress = (e) => {
-        e.preventDefault();
-        if (pressTimer) clearTimeout(pressTimer);
-        pressTimer = setTimeout(async () => {
-          await showSecretHintsFor(gameData.theme);
-        }, 800); // ~1s
-      };
-      const cancelPress = () => { if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; } };
-
-      finishButton.onmousedown = startPress;
-      finishButton.ontouchstart = startPress;
-      window.onmouseup = cancelPress;
-      window.ontouchend = cancelPress;
-
-      // Respaldo: triple‑tap en la tarjeta
-      roleCard.onclick = async () => {
-        tapCount++;
-        if (tapCount === 1){
-          tapTimeout = setTimeout(() => { tapCount = 0; }, 1200);
+      // Sólo triple-tap en la tarjeta (no usamos long-press)
+      let tapCountLocal = 0;
+      let tapTimerLocal = null;
+      const handler = async (e) => {
+        try{
+          // evitar que el tap dispare otras cosas
+          e.preventDefault && e.preventDefault();
+        }catch(e){}
+        tapCountLocal++;
+        if (tapTimerLocal) {
+          clearTimeout(tapTimerLocal);
+          tapTimerLocal = null;
         }
-        if (tapCount >= 3){
-          clearTimeout(tapTimeout);
-          tapCount = 0;
-          await showSecretHintsFor(gameData.theme);
+        if (tapCountLocal >= 3){
+          tapCountLocal = 0;
+          try {
+            await showSecretHintsFor(gameData.theme);
+          } catch (err) {
+            console.error('Error mostrando pistas secretas:', err);
+          }
+        } else {
+          // reset si no llegan 3 taps en 1.2s
+          tapTimerLocal = setTimeout(() => { tapCountLocal = 0; tapTimerLocal = null; }, 1200);
         }
       };
+
+      // Guardar referencia para poder quitar después
+      roleCard._secretHandler = handler;
+      roleCard.addEventListener('click', handler, { passive: false });
+      roleCard.addEventListener('touchstart', handler, { passive: false });
 
       // Botón "Ocultar"
       document.getElementById('hideHintsBtn').onclick = hideSecretHints;
@@ -569,7 +588,7 @@
       const natEl = document.getElementById('hintNation');
       const stEl  = document.getElementById('hintStatus');
       const tmEl  = document.getElementById('hintTeams');
-      const trEl  = document.getElementById('hintTrait');
+      const worldEl = document.getElementById('hintWorlds');
       const box   = document.getElementById('secretHints');
 
       titleEl.textContent = `🔍 Pistas de ${playerName}:`;
@@ -577,24 +596,24 @@
       natEl.textContent = 'Cargando…';
       stEl.textContent = 'Cargando…';
       tmEl.textContent = 'Cargando…';
-      trEl.textContent = 'Cargando…';
+      worldEl.textContent = 'Cargando…';
 
       box.classList.add('visible');
       box.setAttribute('aria-hidden','false');
 
       try {
         const hints = await getHints(playerName);
-        posEl.textContent = hints.position || 'Desconocida';
+        posEl.textContent = hints.position || '—';
         natEl.textContent = hints.nationality || '—';
         stEl.textContent  = hints.status || '—';
         tmEl.textContent  = hints.teams && hints.teams.length ? hints.teams.join(', ') : '—';
-        trEl.textContent  = hints.trait || '—';
+        worldEl.textContent = hints.worlds || '—';
       } catch (err){
         posEl.textContent = 'No disponible';
         natEl.textContent = '—';
         stEl.textContent  = '—';
         tmEl.textContent  = '—';
-        trEl.textContent  = '—';
+        worldEl.textContent = '—';
         console.error(err);
       }
     }
@@ -610,7 +629,14 @@
       const summary = await fetchWikiSummaryAny(playerName);
       const qid = await getWikidataIdFromAny(playerName, summary?.title);
       let wd = null;
-      if (qid) wd = await fetchWikidataEntity(qid);
+      if (qid) {
+        try {
+          wd = await fetchWikidataEntity(qid);
+        } catch (err) {
+          console.warn('Wikidata fetch failed', err);
+          wd = null;
+        }
+      }
 
       const hints = buildHintsFromSources(playerName, summary, wd);
       hintsCache.set(key, hints);
@@ -625,20 +651,23 @@
     }
 
     async function fetchWikiSummary(title, lang){
-      // Intentar acceso directo; si 404, buscar primero
-      const direct = await fetch(`https://${lang}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`)
-        .then(r => r.ok ? r.json() : null)
-        .catch(() => null);
-      if (direct && !direct.title?.includes('may refer to')) return direct;
+      try {
+        // Intentar acceso directo; si 404, buscar primero
+        const directResp = await fetchWithTimeout(`https://${lang}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`, {}, 6000).catch(()=>null);
+        const direct = directResp && directResp.ok ? await directResp.json() : null;
+        if (direct && !direct.title?.includes('may refer to')) return direct;
 
-      // Buscar el mejor match
-      const sr = await fetch(`https://${lang}.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(title)}&format=json&origin=*`)
-        .then(r => r.json()).catch(() => null);
-      const best = sr?.query?.search?.[0]?.title;
-      if (!best) return direct; // nada mejor
-      return fetch(`https://${lang}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(best)}`)
-        .then(r => r.ok ? r.json() : null)
-        .catch(() => null);
+        // Buscar el mejor match
+        const srResp = await fetchWithTimeout(`https://${lang}.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(title)}&format=json&origin=*`, {}, 6000).catch(()=>null);
+        const sr = srResp && srResp.ok ? await srResp.json() : null;
+        const best = sr?.query?.search?.[0]?.title;
+        if (!best) return direct;
+        const bestResp = await fetchWithTimeout(`https://${lang}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(best)}`, {}, 6000).catch(()=>null);
+        return bestResp && bestResp.ok ? await bestResp.json() : direct;
+      } catch (err) {
+        console.warn('fetchWikiSummary error', err);
+        return null;
+      }
     }
 
     // --- Obtener QID (en→es fallback) ---
@@ -651,35 +680,49 @@
     async function getWikidataIdFromWikiTitle(title, lang){
       try{
         const url = `https://${lang}.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(title)}&prop=pageprops&format=json&origin=*`;
-        const data = await fetch(url).then(r=>r.json());
+        const dataResp = await fetchWithTimeout(url, {}, 6000);
+        if (!dataResp.ok) return null;
+        const data = await dataResp.json();
         const pages = data?.query?.pages || {};
         const pid = Object.keys(pages)[0];
         const qid = pages?.[pid]?.pageprops?.wikibase_item;
         return qid || null;
-      }catch{ return null; }
+      }catch(err){
+        console.warn('getWikidataIdFromWikiTitle error', err);
+        return null;
+      }
     }
 
     // --- Wikidata entity (claims + labels) ---
     async function fetchWikidataEntity(qid){
       try{
         const base = `https://www.wikidata.org/w/api.php?action=wbgetentities&format=json&origin=*`;
-        const ent = await fetch(`${base}&ids=${qid}&props=claims|labels&languages=es|en`).then(r=>r.json());
+        const entResp = await fetchWithTimeout(`${base}&ids=${qid}&props=claims|labels&languages=es|en`, {}, 8000);
+        if (!entResp.ok) return null;
+        const ent = await entResp.json();
         const entity = ent?.entities?.[qid];
         if (!entity) return null;
 
-        // Tomar IDs de items referenciados (P413 posición, P27 país, P54 equipos)
+        // Tomar IDs de items referenciados (P413 posición, P27 país, P54 equipos, P1344 participante en torneos)
         const refIds = new Set();
         const claims = entity.claims || {};
         const takeIds = (p) => (claims[p]||[]).forEach(st => {
-          const id = st?.mainsnak?.datavalue?.value?.id;
+          const dv = st?.mainsnak?.datavalue?.value;
+          // puede ser un id o un array
+          const id = dv?.id || (Array.isArray(dv) ? dv[0]?.id : null);
           if (id) refIds.add(id);
         });
         takeIds('P413'); // posición
         takeIds('P27');  // ciudadanía
+        // equipos P54
         (claims['P54']||[]).forEach(st => {
           const id = st?.mainsnak?.datavalue?.value?.id; if (id) refIds.add(id);
           const q = st?.qualifiers || {};
           (q['P413']||[]).forEach(qv => { const id2 = qv?.datavalue?.value?.id; if (id2) refIds.add(id2); });
+        });
+        // torneos (participaciones)
+        (claims['P1344']||[]).forEach(st => {
+          const id = st?.mainsnak?.datavalue?.value?.id; if (id) refIds.add(id);
         });
 
         const labels = await resolveLabels(Array.from(refIds));
@@ -696,12 +739,16 @@
       const base = `https://www.wikidata.org/w/api.php?action=wbgetentities&format=json&origin=*&props=labels&languages=es|en`;
       for (const chunk of chunks){
         try{
-          const data = await fetch(`${base}&ids=${chunk.join('|')}`).then(r=>r.json());
+          const dataResp = await fetchWithTimeout(`${base}&ids=${chunk.join('|')}`, {}, 8000);
+          if (!dataResp.ok) continue;
+          const data = await dataResp.json();
           Object.entries(data.entities||{}).forEach(([id, ent]) => {
             const lbl = ent?.labels?.es?.value || ent?.labels?.en?.value;
             if (lbl) out[id] = lbl;
           });
-        }catch{}
+        }catch(err){
+          console.warn('resolveLabels chunk failed', err);
+        }
       }
       return out;
     }
@@ -712,23 +759,32 @@
       let nationality = '';
       let status = '';
       let teams = [];
-      let trait = '';
+      let worlds = ''; // breve: "Sí: 2014, 2018" o "No"
 
       // 1) Extraer del summary
       if (summary){
         const extract = summary.extract || '';
         const desc = summary.description || '';
-        // Nacionalidad basada en description (en): "English footballer"
         nationality = mapNationality(desc) || nationalityFromText(extract) || '';
-        // Posición heurística desde texto
         position = mapPositionFromText(extract);
-        // Estado
         status = /former|retired/i.test(extract) ? 'Retirado' : 'Activo';
-        // Trait: primera oración limpia
-        trait = firstInterestingPhrase(extract);
-        // Intentar club actual desde extract
         const club = currentClubFromText(extract);
         if (club) teams.push(club);
+
+        // Detectar menciones a "World Cup" / "Copa Mundial" y años
+        const wcMatches = [];
+        const wcRegex = /(World Cup|FIFA World Cup|Copa del Mundo|Copa Mundial)[^0-9]*(\d{4})?/ig;
+        let m;
+        while ((m = wcRegex.exec(extract)) !== null){
+          if (m[2]) wcMatches.push(m[2]);
+          else if (m[1]) wcMatches.push(m[1]);
+        }
+        if (wcMatches.length){
+          // Mantener sólo años cuando existen, si no usar la mención general
+          const years = wcMatches.filter(v => /^\d{4}$/.test(v));
+          if (years.length) worlds = `Sí: ${Array.from(new Set(years)).slice(0,4).join(', ')}`;
+          else worlds = 'Sí';
+        }
       }
 
       // 2) Enriquecer con Wikidata si existe
@@ -748,30 +804,52 @@
         const p54 = claims['P54'] || [];
         const enriched = [];
         let isActive = false;
-        const now = new Date();
         for (const st of p54){
           const id = st?.mainsnak?.datavalue?.value?.id;
           if (!id) continue;
           const name = labels[id];
           if (!name) continue;
-          // Fechas para estado
           const q = st.qualifiers || {};
-          const end = q['P582']?.[0]?.datavalue?.value?.time || null; // +0000-00-00T00:00:00Z
+          const end = q['P582']?.[0]?.datavalue?.value?.time || null;
           if (!end) isActive = true;
           enriched.push(name);
         }
-        // Quitar duplicados y acotar
         const uniq = Array.from(new Set([...teams, ...enriched]));
         teams = uniq.slice(0, 5);
         if (!status) status = isActive ? 'Activo' : 'Retirado';
+
+        // Mundiales: P1344 "participant in" puede contener ítems de Mundiales
+        const p1344 = claims['P1344'] || [];
+        const worldLabels = [];
+        for (const st of p1344){
+          const id = st?.mainsnak?.datavalue?.value?.id;
+          if (!id) continue;
+          const lbl = labels[id];
+          if (!lbl) continue;
+          // filtrar si la etiqueta indica World Cup / Mundial o contiene año 19xx/20xx
+          if (/world cup|mundial|fifa/i.test(lbl) || /\b(19|20)\d{2}\b/.test(lbl)){
+            worldLabels.push(lbl);
+          }
+        }
+        if (worldLabels.length){
+          // intentar extraer años si los hay
+          const years = [];
+          for (const w of worldLabels){
+            const y = (w.match(/\b(19|20)\d{2}\b/g) || []).map(s=>s);
+            years.push(...y);
+          }
+          const yuniq = Array.from(new Set(years));
+          if (yuniq.length) worlds = `Sí: ${yuniq.slice(0,4).join(', ')}`;
+          else worlds = 'Sí';
+        }
       }
 
       // Limpieza final
       if (!position) position = '—';
       if (!nationality) nationality = '—';
       if (!status) status = '—';
-      if (!trait) trait = '';
-      return { position, nationality, status, teams, trait, title: playerName };
+      if (!worlds) worlds = 'No';
+      return { position, nationality, status, teams, worlds, title: playerName };
     }
 
     // ===========================
@@ -781,13 +859,11 @@
     function firstInterestingPhrase(text){
       if (!text) return '';
       const first = text.split(/\.(\s|$)/)[0];
-      // Quitar cola muy larga
       return (first || '').replace(/\s*\([^\)]*\)\s*/g,'').trim();
     }
 
     function currentClubFromText(text){
       if (!text) return '';
-      // Buscar después de "for ... club X" o "for X"
       const m = text.match(/for (?:the )?(?:[A-Za-zÀ-ÿ'\- ]+ club )?([A-Z][A-Za-zÀ-ÿ0-9'\.\-& ]{2,})(?:[,\.\n]| who| and| of| in )/);
       return m ? m[1].trim() : '';
     }
@@ -809,7 +885,6 @@
 
     function mapPositionFromText(text){
       if (!text) return '';
-      // "plays as a/an ... for"  |  "played as a/an ..."
       const m = text.match(/play(?:s|ed) as an? ([a-z \-]+?)(?: for|\.|,)/i);
       const raw = m ? m[1].trim() : '';
       return mapPosition(raw);
@@ -837,7 +912,6 @@
         ['full-back','Lateral'],
       ];
       for (const [en, es] of dict){ if (r.includes(en)) return es; }
-      // Si viene etiqueta de Wikidata en español
       if (/portero/i.test(raw)) return 'Portero';
       if (/delantero/i.test(raw)) return 'Delantero';
       if (/extremo/i.test(raw)) return 'Extremo';
