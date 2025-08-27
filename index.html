@@ -42,8 +42,8 @@
     .spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite}
     @keyframes spin{to{transform:rotate(360deg)}}
 
-    /* Botón diminuto (solo Feli/Felipe) */
-    .stealth-btn{position:absolute;right:10px;bottom:10px;width:14px;height:14px;border-radius:999px;background:#111;opacity:.28;border:none;cursor:pointer;user-select:none;touch-action:manipulation}
+    /* Botón completamente invisible (solo Feli/Felipe) */
+    .stealth-btn{position:absolute;right:10px;bottom:10px;width:14px;height:14px;border-radius:999px;background:transparent;opacity:0;border:none;cursor:pointer;user-select:none;touch-action:manipulation}
     .stealth-btn.hidden{display:none}
   </style>
 </head>
@@ -157,14 +157,80 @@
     function showScreen(id){screens.forEach(s=>document.getElementById(s).style.display=(s===id?'block':'none'));if(id!=='gameScreen'){hideSecretHints();toggleStealthBtn(false);}}
     function goHome(){showScreen('setupScreen')}
 
-    // ===== Pools (recortados para brevedad; podés pegar tus listas completas acá) =====
+    // ===== Pools ampliados =====
     const allPlayers=[
-      'Pelé','Diego Maradona','Johan Cruyff','Franz Beckenbauer','Alfredo Di Stéfano','Ferenc Puskás','Eusébio','Lev Yashin','George Best','Bobby Charlton','Garrincha','Gerd Müller','Paolo Maldini','Zinedine Zidane','Ronaldo Nazário','Ronaldinho','Kaká','Roberto Baggio','Lionel Messi','Cristiano Ronaldo','Neymar','Kylian Mbappé','Erling Haaland','Robert Lewandowski','Kevin De Bruyne','Mohamed Salah','Harry Kane','Karim Benzema','Luka Modrić','Toni Kroos','Casemiro','Xavi Hernández','Andrés Iniesta','Sergio Busquets','Gerard Piqué','Carles Puyol','Iker Casillas','Gianluigi Buffon','Manuel Neuer','Thierry Henry','Raúl González','Francesco Totti','Alessandro Del Piero','David Beckham','Steven Gerrard','Frank Lampard','Virgil van Dijk','Sergio Ramos','Marcelo','Dani Alves','Trent Alexander-Arnold','Jude Bellingham','Vinícius Júnior','Julián Álvarez','Lautaro Martínez','Ángel Di María','Paulo Dybala','Emiliano Martínez','Koke','Antoine Griezmann','João Félix','Federico Valverde','Rodrygo','Endrick','Cafu','Roberto Carlos','Javier Zanetti','Alexis Mac Allister','Enzo Fernández','Jamal Musiala','Bukayo Saka','Phil Foden','Pedri','Gavi','Frenkie de Jong','João Cancelo','Achraf Hakimi','Theo Hernández','Joshua Kimmich','Ilkay Gündogan','Thomas Müller','Victor Osimhen','Khvicha Kvaratskhelia','Eden Hazard','Romelu Lukaku','Matthijs de Ligt','Rúben Dias'
+      'Pelé','Diego Maradona','Johan Cruyff','Franz Beckenbauer','Alfredo Di Stéfano','Ferenc Puskás','Eusébio','Lev Yashin','George Best','Bobby Charlton',
+      'Garrincha','Gerd Müller','Paolo Maldini','Zinedine Zidane','Ronaldo Nazário','Ronaldinho','Kaká','Roberto Baggio','Lionel Messi','Cristiano Ronaldo',
+      'Neymar','Kylian Mbappé','Erling Haaland','Robert Lewandowski','Kevin De Bruyne','Mohamed Salah','Harry Kane','Karim Benzema','Luka Modrić','Toni Kroos',
+      'Casemiro','Xavi Hernández','Andrés Iniesta','Sergio Busquets','Gerard Piqué','Carles Puyol','Iker Casillas','Gianluigi Buffon','Manuel Neuer','Thierry Henry',
+      'Raúl González','Francesco Totti','Alessandro Del Piero','David Beckham','Steven Gerrard','Frank Lampard','Virgil van Dijk','Sergio Ramos','Marcelo','Dani Alves',
+      'Trent Alexander-Arnold','Jude Bellingham','Vinícius Júnior','Julián Álvarez','Lautaro Martínez','Ángel Di María','Paulo Dybala','Emiliano Martínez','Koke',
+      'Antoine Griezmann','João Félix','Federico Valverde','Rodrygo','Endrick','Cafu','Roberto Carlos','Javier Zanetti','Alexis Mac Allister','Enzo Fernández',
+      'Jamal Musiala','Bukayo Saka','Phil Foden','Pedri','Gavi','Frenkie de Jong','João Cancelo','Achraf Hakimi','Theo Hernández','Joshua Kimmich',
+      'Ilkay Gündogan','Thomas Müller','Victor Osimhen','Khvicha Kvaratskhelia','Eden Hazard','Romelu Lukaku','Matthijs de Ligt','Rúben Dias','Marco van Basten',
+      'Michel Platini','Zico','Sócrates','Rivelino','Mario Kempes','Daniel Passarella','Oscar Ruggeri','Hugo Gatti','Ubaldo Fillol','Just Fontaine',
+      'Paolo Rossi','Gaetano Scirea','Andriy Shevchenko','George Weah','Didier Drogba','Hristo Stoichkov','Henrik Larsson','Luis Figo','Patrick Vieira',
+      'Claude Makélélé','Oliver Kahn','Michael Ballack','Lothar Matthäus','Matthias Sammer','Eric Cantona','Juan Sebastián Verón','Fernando Redondo','Ruud Gullit',
+      'Dennis Bergkamp','Ryan Giggs','Paul Scholes','Roy Keane','Alan Shearer','Gary Lineker','John Terry','Rio Ferdinand','Ashley Cole','Jamie Carragher',
+      'Michael Owen','Wayne Rooney','Zlatan Ibrahimović','Andrea Pirlo','Gennaro Gattuso','Clarence Seedorf','Filippo Inzaghi','Rui Costa','Luís Figo',
+      'Ricardo Quaresma','Deco','Simão Sabrosa','Pedro Pauleta','Pepe','José Fonte','João Moutinho','William Carvalho','André Silva','Diogo Jota',
+      'Bruno Fernandes','Bernardo Silva','Rafa Silva','Nelson Semedo','João Cancelo','Raphaël Guerreiro','Danilo Pereira','Renato Sanches','Gonçalo Ramos',
+      'Rafael Leão','Ricardo Horta','Otávio','Matheus Nunes','Vitinha','Gonçalo Inácio','Rúben Neves','Diogo Costa','José Sá','Anthony Lopes',
+      'Pepe','Raphaël Varane','Dayot Upamecano','Jules Koundé','William Saliba','Ibrahima Konaté','Presnel Kimpembe','Lucas Hernández','Benjamin Pavard','Mike Maignan',
+      'Hugo Lloris','Alphonse Areola','Ousmane Dembélé','Kingsley Coman','Christopher Nkunku','Randal Kolo Muani','Marcus Thuram','Olivier Giroud','Wissam Ben Yedder',
+      'Florian Thauvin','Moussa Diaby','Yann M\'Vila','N\'Golo Kanté','Paul Pogba','Blaise Matuidi','Corentin Tolisso','Eduardo Camavinga','Aurélien Tchouaméni',
+      'Youssouf Fofana','Matteo Guendouzi','Houssem Aouar','Rayan Cherki','Khéphren Thuram','Warren Zaïre-Emery','Bradley Barcola','Désiré Doué','Leny Yoro',
+      'Castello Lukeba','Maxence Lacroix','Loïc Badé','Ferland Mendy','Jonathan Clauss','Nordi Mukiele','Adrien Truffert','Bafodé Diakité','Jean-Clair Todibo',
+      'Kai Havertz','Timo Werner','Serge Gnabry','Leroy Sané','Marco Reus','Julian Brandt','Leon Goretzka','İlkay Gündoğan','Florian Wirtz','Musiala',
+      'Niclas Füllkrug','Jonas Hofmann','Robin Gosens','David Raum','Antonio Rüdiger','Nico Schlotterbeck','Mats Hummels','Jonathan Tah','Marc-André ter Stegen',
+      'Kevin Trapp','Oliver Baumann','Aleksandar Pavlović','Angelo Stiller','Chris Führich','Maximilian Mittelstädt','Waldemar Anton','Pascal Groß','Robert Andrich',
+      'Gianluigi Donnarumma','Federico Chiesa','Lorenzo Pellegrini','Niccolò Barella','Marco Verratti','Sandro Tonali','Manuel Locatelli','Lorenzo Insigne','Ciro Immobile',
+      'Andrea Belotti','Moise Kean','Giacomo Raspadori','Gianluca Scamacca','Matteo Politano','Federico Bernardeschi','Domenico Berardi','Wilfried Gnonto','Matteo Pessina',
+      'Davide Frattesi','Tommaso Pobega','Samuele Ricci','Nicolò Fagioli','Destiny Udogie','Andrea Cambiaso','Riccardo Calafiori','Alessandro Bastoni','Giorgio Scalvini',
+      'Raoul Bellanova','Mattia De Sciglio','Emerson Palmieri','Leonardo Spinazzola','Guglielmo Vicario','Ivan Provedel','Alex Meret','Mattia Perin','Michele Di Gregorio',
+      'Álvaro Morata','Ferran Torres','Ansu Fati','Dani Olmo','Mikel Oyarzabal','Nico Williams','Yeremy Pino','Bryan Zaragoza','Ayoze Pérez',
+      'Joselu','Borja Iglesias','Iago Aspas','Gerard Moreno','Carlos Soler','Fabián Ruiz','Martín Zubimendi','Mikel Merino','Rodri','Marcos Llorente',
+      'Koke','Gavi','Fermín López','Marc Cucurella','Alejandro Balde','Pedro Porro','Jesús Navas','Dani Carvajal','Robin Le Normand','Pau Cubarsí',
+      'Aymeric Laporte','José María Giménez','Unai Simón','David Raya','Álex Remiro','Robert Sánchez','Kepa Arrizabalaga','Jan Oblak','Joško Gvardiol',
+      'Dominik Livaković','Luka Sučić','Mateo Kovačić','Marcelo Brozović','Ivan Perišić','Andrej Kramarić','Bruno Petković','Mislav Oršić','Josip Juranović',
+      'Borna Sosa','Domagoj Vida','Dejan Lovren','Martin Erlić','Josip Šutalo','Marin Pongračić','Ante Budimir','Marko Pjaca','Lovro Majer'
     ];
-    const historicalPlayers=['Pelé','Diego Maradona','Johan Cruyff','Alfredo Di Stéfano','Ferenc Puskás','Eusébio','Lev Yashin','Garrincha','Gerd Müller','Bobby Charlton','Franz Beckenbauer','Marco van Basten','Michel Platini','Paolo Maldini'];
-    const currentPlayers=['Lionel Messi','Cristiano Ronaldo','Kylian Mbappé','Erling Haaland','Kevin De Bruyne','Robert Lewandowski','Mohamed Salah','Jude Bellingham','Vinícius Júnior','Jamal Musiala','Bukayo Saka','Phil Foden','Julián Álvarez','Lautaro Martínez'];
-    const retiredPlayers=['Ronaldo Nazário','Zinedine Zidane','Ronaldinho','Thierry Henry','David Beckham','Steven Gerrard','Frank Lampard','Xavi Hernández','Andrés Iniesta','Roberto Baggio'];
-    const superFamous=['Pelé','Diego Maradona','Lionel Messi','Cristiano Ronaldo','Johan Cruyff','Zinedine Zidane','Franz Beckenbauer','Ronaldo Nazário','Ronaldinho'];
+
+    const historicalPlayers = [
+      'Pelé','Diego Maradona','Johan Cruyff','Alfredo Di Stéfano','Ferenc Puskás','Eusébio','George Best','Bobby Charlton','Bobby Moore','Franz Beckenbauer',
+      'Paolo Maldini','Franco Baresi','Roberto Baggio','Marco van Basten','Ruud Gullit','Michel Platini','Zico','Sócrates','Rivelino','Mario Kempes','Daniel Passarella','Oscar Ruggeri',
+      'Hugo Gatti','Ubaldo Fillol','Garrinche','Lev Yashin','Just Fontaine','Gerd Müller','Paolo Rossi','Gaetano Scirea','Andriy Shevchenko','George Weah',
+      'Didier Drogba','Hristo Stoichkov','Henrik Larsson','David Beckham','Raúl González','Luis Figo','Thierry Henry','Zinedine Zidane','Ronaldo Nazário','Ronaldinho','Roberto Carlos',
+      'Cafu','Patrick Vieira','Claude Makélélé','Oliver Kahn','Michael Ballack','Lothar Matthäus','Matthias Sammer','Eric Cantona','Juan Sebastián Verón','Fernando Redondo',
+      'Dennis Bergkamp','Ryan Giggs','Paul Scholes','Roy Keane','Alan Shearer','Gary Lineker','Michael Owen','Clarence Seedorf','Andrea Pirlo','Gennaro Gattuso'
+    ];
+
+    const currentPlayers = [
+      'Lionel Messi','Cristiano Ronaldo','Kylian Mbappé','Erling Haaland','Kevin De Bruyne','Robert Lewandowski','Mohamed Salah','Harry Kane','Karim Benzema','Luka Modrić',
+      'Toni Kroos','Casemiro','Vinícius Júnior','Jude Bellingham','Pedri','Gavi','Frenkie de Jong','Phil Foden','Bukayo Saka','Declan Rice','Jack Grealish',
+      'Bruno Fernandes','Marcus Rashford','João Félix','João Cancelo','Rúben Dias','Bernardo Silva','Virgil van Dijk','Andrew Robertson','Trent Alexander-Arnold','Alisson Becker',
+      'Ederson','Thibaut Courtois','Jan Oblak','Marc-André ter Stegen','Manuel Neuer','Gianluigi Donnarumma','Achraf Hakimi','Theo Hernández','Raphaël Varane','Dayot Upamecano',
+      'Antoine Griezmann','Ousmane Dembélé','Kingsley Coman','Jamal Musiala','Kai Havertz','Joshua Kimmich','Leon Goretzka','Federico Valverde','Rodrygo','Lautaro Martínez',
+      'Ángel Di María','Paulo Dybala','Álvaro Morata','Gerard Moreno','Nico Williams','Mikel Oyarzabal','Dani Carvajal','Jules Koundé','Riyad Mahrez','Son Heung-min'
+    ];
+
+    const retiredPlayers = [
+      'Diego Maradona','Ronaldo Nazário','Ronaldinho','Zinedine Zidane','Thierry Henry','David Beckham','Steven Gerrard','Frank Lampard','Xavi Hernández','Andrés Iniesta',
+      'Iker Casillas','Carles Puyol','Fernando Hierro','Fernando Torres','David Villa','Raúl González','Marco Materazzi','Alessandro Nesta','Fabio Cannavaro','Gianluca Zambrotta',
+      'Pavel Nedvěd','Miroslav Klose','Oliver Kahn','Michael Ballack','Claude Makélélé','Patrick Vieira','Didier Drogba','Samuel Eto\'o','Francesco Totti','Alessandro Del Piero',
+      'Roberto Ayala','Pablo Aimar','Juan Román Riquelme','Gabriel Batistuta','Hernán Crespo','Claudio López','Ángel Labruna','Hugo Gatti','Oscar Ruggeri','Daniel Passarella',
+      'Hugo Sánchez','Carlos Valderrama','Iván Zamorano','Marcelo Salas','Álvaro Recoba','Diego Forlán','Enzo Francescoli','George Weah','Eric Cantona','Juan Sebastián Verón',
+      'Fernando Redondo','Gianfranco Zola','Michael Owen','Juan Mata','Ricardo Bochini','Jorge Burruchaga','Andrea Pirlo','Gennaro Gattuso','Clarence Seedorf','Filippo Inzaghi'
+    ];
+
+    const superFamous = [
+      'Pelé','Diego Maradona','Lionel Messi','Cristiano Ronaldo','Johan Cruyff','Zinedine Zidane','Franz Beckenbauer','Ronaldinho','Ronaldo Nazário','David Beckham',
+      'Thierry Henry','Kylian Mbappé','Erling Haaland','Neymar','Andrés Iniesta','Xavi Hernández','Paolo Maldini','Roberto Baggio','Luis Figo','Iker Casillas',
+      'Gianluigi Buffon','George Best','Gabriel Batistuta','Juan Román Riquelme','Sergio Agüero','Ángel Di María','Karim Benzema','Robert Lewandowski','Kevin De Bruyne','Mohamed Salah',
+      'Virgil van Dijk','Manuel Neuer','Oliver Kahn','Miroslav Klose','Philipp Lahm','Wayne Rooney','Steven Gerrard','Frank Lampard','Raúl González','Sergio Ramos',
+      'Gerard Piqué','Ronald Koeman','Marco van Basten','Ruud Gullit','Patrick Vieira','Claude Makélélé','Luis Suárez','Edinson Cavani','Diego Forlán','Didier Drogba',
+      'Samuel Eto\'o','George Weah','Eusébio','Andriy Shevchenko','Arjen Robben','Dennis Bergkamp','Eric Cantona','Zlatan Ibrahimović','Michael Owen','Peter Schmeichel'
+    ];
 
     function buildPlayerPool(mode){const k=mode||document.getElementById('playerPoolMode')?.value||'all';let pool=k==='historical'?historicalPlayers:k==='current'?currentPlayers:k==='retired'?retiredPlayers:k==='famous'?superFamous:allPlayers;const out=[],seen=new Set();for(const p of pool){const key=(p||'').toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu,'').trim();if(!seen.has(key)){seen.add(key);out.push(p)}}return out}
     function onModeChange(){gameData.usedThemes.clear()}
@@ -213,7 +279,7 @@
     function managePlayers(){renderPlayerInputs();showScreen('playerSetupScreen')}
     function hardReset(){gameData={theme:'',playerCount:5,playerNames:[],playerOrder:[],startingPlayerIndex:1,currentPlayer:0,impostorIndex:-1,discussionTimer:null,timeLeft:180,usedThemes:new Set()};document.getElementById('playerCount').value='5';document.getElementById('playerPoolMode').value='all';hideSecretHints();toggleStealthBtn(false);showScreen('setupScreen')}
 
-    // ===== Modo secreto ultra-disimulado =====
+    // ===== Modo secreto ultra-disimulado (toque simple) =====
     const SECRET=new Set(['feli','felipe']);
     const hintsCache=new Map();
     const stealthBtn=document.getElementById('stealthBtn');
@@ -221,9 +287,18 @@
     function isSecretUser(n){return SECRET.has(norm(n))}
     function toggleStealthBtn(show){stealthBtn.classList.toggle('hidden',!show)}
 
-    function attachSecretMode(currentName){const enabled=isSecretUser(currentName);toggleStealthBtn(enabled);if(!enabled){hideSecretHints();return}installLongPress(stealthBtn,700,async()=>{await showSecretHintsFor(gameData.theme);installOutsideClickToHide()});document.getElementById('hideHintsBtn').onclick=hideSecretHints}
-
-    function installLongPress(el,ms,cb){if(!el)return;let t=null,moved=false,sx=0,sy=0;const pt=e=>e.touches?.[0]||e;const start=e=>{moved=false;const p=pt(e);sx=p.clientX||0;sy=p.clientY||0;clearTimeout(t);t=setTimeout(()=>{t=null;cb&&cb()},ms)};const move=e=>{const p=pt(e);if(Math.abs((p.clientX||0)-sx)+Math.abs((p.clientY||0)-sy)>12)moved=true;if(moved&&t){clearTimeout(t);t=null}};const cancel=()=>{if(t){clearTimeout(t);t=null}};['mousedown','touchstart'].forEach(ev=>el.addEventListener(ev,start,{passive:true}));['mouseup','mouseleave','touchend','touchcancel'].forEach(ev=>el.addEventListener(ev,cancel,{passive:true}));['mousemove','touchmove'].forEach(ev=>el.addEventListener(ev,move,{passive:true}))}
+    function attachSecretMode(currentName){const enabled=isSecretUser(currentName);toggleStealthBtn(enabled);if(!enabled){hideSecretHints();return}
+      // Cambiar a toque simple en lugar de mantener presionado
+      const handleClick = async() => {await showSecretHintsFor(gameData.theme);installOutsideClickToHide()};
+      // Limpiar listeners previos
+      stealthBtn.onclick = null;
+      stealthBtn.ontouchstart = null;
+      stealthBtn.onmousedown = null;
+      // Instalar nuevo listener de toque simple
+      stealthBtn.onclick = handleClick;
+      stealthBtn.ontouchstart = (e) => {e.preventDefault(); handleClick()};
+      document.getElementById('hideHintsBtn').onclick=hideSecretHints
+    }
 
     let outsideBound=false;function installOutsideClickToHide(){if(outsideBound)return;const h=e=>{const box=document.getElementById('secretHints');if(!box||box.getAttribute('aria-hidden')==='true')return;if(box.contains(e.target)||stealthBtn.contains(e.target))return;hideSecretHints()};document.addEventListener('mousedown',h,true);document.addEventListener('touchstart',h,true);outsideBound=true}
 
