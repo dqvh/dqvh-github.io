@@ -1,364 +1,309 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Impostor — Fútbol</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Juego del Impostor - Edición Fútbol (v2)</title>
   <style>
-    :root{
-      --bg1:#0f172a;
-      --accent:#6c5ce7;
-      --card:#ffffff;
-      --muted:#6b7280;
-      --success:#16a34a;
-      --danger:#ef4444;
-      --glass: rgba(255,255,255,0.06);
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0;
-      font-family:Inter,system-ui,Segoe UI,Arial,sans-serif;
-      background:
-        radial-gradient(800px 400px at 10% 10%, rgba(108,92,231,0.12), transparent 10%),
-        linear-gradient(180deg,#071029 0%, #0b1220 100%);
-      color:#0b1220;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:24px;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Arial', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
+    .container { background: white; border-radius: 20px; padding: 40px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); text-align: center; max-width: 720px; width: 100%; min-height: 560px; display: flex; flex-direction: column; justify-content: center; transition: all .5s ease; position: relative; }
+    h1, h2 { color: #333; margin-bottom: 24px; font-size: 2.2em; text-shadow: 2px 2px 4px rgba(0,0,0,0.1); }
 
-    .app {
-      width:100%;
-      max-width:720px;
-      background:linear-gradient(180deg, rgba(255,255,255,0.98), rgba(255,255,255,0.96));
-      border-radius:14px;
-      padding:20px;
-      box-shadow: 0 20px 50px rgba(2,6,23,0.5);
-      overflow:hidden;
-    }
+    .setup-screen, .player-setup-screen, .order-screen, .transfer-screen, .game-screen, .discussion-screen, .results-screen { display: none; }
+    .setup-screen { display: block; }
 
-    header{
-      display:flex;
-      align-items:center;
-      gap:12px;
-      margin-bottom:8px;
-    }
-    .logo{
-      width:44px;height:44px;border-radius:10px;
-      background:linear-gradient(135deg,var(--accent),#a78bfa);
-      display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:20px;
-      box-shadow:0 6px 18px rgba(108,92,231,0.18);
-    }
-    h1{font-size:18px;margin:0;color:#0f172a}
-    p.lead{margin:6px 0 14px;color:var(--muted);font-size:13px}
+    input, select { width: 100%; padding: 12px; margin: 10px 0; border: 2px solid #ddd; border-radius: 10px; font-size: 16px; transition: all .3s ease; }
+    input:focus, select:focus { outline: none; border-color: #667eea; box-shadow: 0 0 10px rgba(102,126,234,.3); }
 
-    /* layout */
-    .row{display:flex;gap:12px}
-    .col{flex:1}
+    button { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 14px 24px; border-radius: 25px; font-size: 16px; font-weight: bold; cursor: pointer; margin: 8px 0; width: 100%; transition: all .3s ease; box-shadow: 0 5px 15px rgba(0,0,0,.2); }
+    button:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,.3); }
+    button:active { transform: translateY(0); }
+    .btn-secondary { background: #6c757d; }
+    .btn-warning { background: #ffc107; color: #111; }
+    .btn-success { background: #28a745; }
+    .btn-danger { background: #dc3545; }
 
-    /* compact controls */
-    select,input{width:100%;padding:10px;border-radius:10px;border:1px solid #e6e9ef;font-size:14px;background:white}
-    input::placeholder{color:#c7cbd6}
+    .role-card { background: #f8f9fa; border: 3px solid #ddd; border-radius: 15px; padding: 32px; margin: 16px 0; font-size: 22px; font-weight: bold; min-height: 200px; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: transform .5s ease; user-select: none; touch-action: manipulation; }
+    .role-card.reveal { transform: scale(1.03); }
+    .impostor-card { background: linear-gradient(135deg, #ff6b6b, #ee5a52); color: white; border-color: #ff4757; animation: pulse 2s infinite; }
+    .innocent-card { background: linear-gradient(135deg, #51cf66, #40c057); color: white; border-color: #37b24d; }
 
-    .btn{
-      display:inline-flex;align-items:center;justify-content:center;gap:8px;
-      background:var(--accent);color:white;border:none;padding:10px 14px;border-radius:10px;font-weight:600;cursor:pointer;
-      box-shadow:0 8px 18px rgba(108,92,231,0.12);
-    }
-    .btn.ghost{background:transparent;color:var(--muted);border:1px solid #eef1f6}
-    .btn.warn{background:#f59e0b}
-    .btn.flat{background:var(--card);color:var(--muted);border:1px solid #eef1f6;box-shadow:none}
+    @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255, 107, 107, .7);} 70% { box-shadow: 0 0 0 10px rgba(255, 107, 107, 0);} 100% { box-shadow: 0 0 0 0 rgba(255, 107, 107, 0);} }
 
-    .center{display:flex;justify-content:center;align-items:center}
+    .timer { font-size: 44px; font-weight: bold; color: #ff4757; margin: 16px 0; text-shadow: 2px 2px 4px rgba(0,0,0,.3); }
 
-    /* screens */
-    .screen{display:none;padding-top:6px}
-    .screen.active{display:block}
+    .warning, .success, .danger { padding: 12px; border-radius: 10px; margin: 12px 0; font-weight: bold; }
+    .warning { background: #fff3cd; border: 1px solid #ffeaa7; color: #856404; }
+    .success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+    .danger { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
 
-    /* player list */
-    .players{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-    .player-input{display:flex;gap:8px}
-    .player-input input{flex:1}
+    .player-names-container { max-height: 300px; overflow-y: auto; margin: 16px 0; text-align: left; }
+    .names-row { display: grid; grid-template-columns: 1fr; gap: 8px; }
 
-    /* order preview */
-    .order-preview{background:var(--glass);padding:12px;border-radius:10px;color:var(--muted);font-size:14px}
+    .count-controls { display: flex; gap: 8px; margin: 8px 0 16px; }
 
-    /* transfer */
-    .big-emoji{font-size:72px;margin:12px 0}
+    .player-image { max-width: 70%; border-radius: 10px; }
 
-    /* role card */
-    .role-card{border-radius:12px;padding:18px;background:#f8fafc;display:flex;flex-direction:column;gap:8px;align-items:center;min-height:160px;justify-content:center}
-    .role-card.reveal{transform:translateY(-6px);box-shadow:0 18px 30px rgba(2,6,23,0.08)}
-    .role-title{font-weight:700;font-size:18px}
-    .role-sub{font-size:13px;color:var(--muted)}
+    .order-preview { text-align: left; margin-top: 8px; border: 1px dashed #ddd; border-radius: 12px; padding: 12px; }
+    .order-preview ol { margin-left: 20px; }
 
-    .impostor-card{background:linear-gradient(135deg,#ff7b7b,#ff5245);color:white}
-    .innocent-card{background:linear-gradient(135deg,#7ee787,#3fcf73);color:white}
+    .actions-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 8px; }
+    .triple-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-top: 8px; }
+    .center { display: flex; justify-content: center; gap: 8px; }
 
-    .player-image{max-width:64%;border-radius:8px;margin-top:8px;box-shadow:0 8px 16px rgba(2,6,23,0.08)}
+    /* Panel secreto (sin foto) */
+    .secret-hints { position: absolute; left: 50%; bottom: 24px; transform: translateX(-50%); width: calc(100% - 48px); max-width: 680px; background: #111; color: #fff; border-radius: 16px; box-shadow: 0 14px 34px rgba(0,0,0,.35); padding: 16px 16px 12px; text-align: left; opacity: 0; pointer-events: none; transition: opacity .2s ease, transform .2s ease; transform-origin: bottom center; z-index: 10; }
+    .secret-hints.visible { opacity: 1; pointer-events: auto; }
+    .secret-hints h3 { font-size: 18px; margin-bottom: 8px; }
+    .secret-hints p { font-size: 14px; margin: 4px 0; line-height: 1.4; }
+    .secret-row { display: grid; grid-template-columns: 120px 1fr; gap: 8px; align-items: center; }
+    .secret-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; }
+    .btn-ghost { background: #222; color: #fff; border-radius: 10px; padding: 8px 12px; width: auto; box-shadow: none; }
+    .hint-chip { display: inline-block; border: 1px solid #333; padding: 2px 8px; border-radius: 999px; font-size: 12px; margin-right: 6px; }
+    .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.2); border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* secret panel — compact */
-    .secret-hints{
-      position:absolute;left:50%;transform:translateX(-50%);bottom:22px;width:calc(100% - 48px);max-width:640px;
-      background:#0b1220;color:white;padding:12px 14px;border-radius:12px;box-shadow:0 20px 40px rgba(2,6,23,0.6);
-      font-size:13px;display:none;
-    }
-    .secret-hints.visible{display:block}
-    .secret-row{display:flex;gap:10px;align-items:center;margin:6px 0}
-    .hint-key{width:100px;color:#93c5fd;font-weight:600}
-    .hint-val{flex:1;color:#dbeafe;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-
-    footer{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-top:12px}
-    .small{font-size:12px;color:var(--muted)}
-    /* responsive */
-    @media (max-width:520px){
-      .players{grid-template-columns:1fr}
-      .player-image{max-width:92%}
-    }
+    /* Pequeña pista visual para vos (no obvia) */
+    .finish-pressable::after { content: '\00a0'; }
   </style>
 </head>
 <body>
-  <div class="app" role="application" aria-label="Juego del Impostor - Fútbol">
-    <header>
-      <div class="logo">IF</div>
-      <div>
-        <h1>Impostor — Fútbol</h1>
-        <p class="lead">Ronda rápida: uno es impostor, los demás conocen al jugador secreto.</p>
-      </div>
-    </header>
+  <div class="container">
+    <!-- Pantalla inicial -->
+    <div class="setup-screen" id="setupScreen">
+      <h1>🕵️ Juego del Impostor - Edición Fútbol (v2)</h1>
+      <p>v2: amplié la lista de jugadores con más íconos especialmente de Argentina y Europa, y mejoré la búsqueda de imágenes (intenta varios métodos para mostrar foto siempre que sea posible).</p>
+      <select id="playerCount">
+        <option value="3">3 Jugadores</option>
+        <option value="4">4 Jugadores</option>
+        <option value="5" selected>5 Jugadores</option>
+        <option value="6">6 Jugadores</option>
+        <option value="7">7 Jugadores</option>
+        <option value="8">8 Jugadores</option>
+        <option value="9">9 Jugadores</option>
+        <option value="10">10 Jugadores</option>
+      </select>
+      <button onclick="setupPlayers()">🚀 Configurar Jugadores</button>
+    </div>
 
-    <!-- SETUP -->
-    <section id="setup" class="screen active">
-      <div class="row">
-        <div class="col">
-          <label class="small">Jugadores</label>
-          <select id="playerCount">
-            <option value="3">3</option><option value="4">4</option><option value="5" selected>5</option>
-            <option value="6">6</option><option value="7">7</option><option value="8">8</option>
-            <option value="9">9</option><option value="10">10</option>
-          </select>
-        </div>
-        <div style="width:140px" class="center">
-          <button class="btn" onclick="setupPlayers()">Configurar</button>
-        </div>
+    <!-- Configuración de jugadores -->
+    <div class="player-setup-screen" id="playerSetupScreen">
+      <h2>📝 Nombres de Jugadores</h2>
+      <p>Dejá en blanco para usar "Jugador X" por defecto.</p>
+      <div class="count-controls center">
+        <button class="btn-secondary" style="width:auto" onclick="removePlayerInput()">➖ Quitar</button>
+        <div id="countLabel" style="font-weight:bold"></div>
+        <button class="btn-secondary" style="width:auto" onclick="addPlayerInput()">➕ Agregar</button>
       </div>
-    </section>
-
-    <!-- PLAYERS -->
-    <section id="playerSetup" class="screen">
-      <div class="row" style="align-items:center;margin-bottom:8px">
-        <strong>Jugadores</strong>
-        <div style="margin-left:auto;display:flex;gap:8px">
-          <button class="btn flat" style="padding:8px 10px" onclick="removePlayerInput()">−</button>
-          <div class="small center" id="countLabel"></div>
-          <button class="btn flat" style="padding:8px 10px" onclick="addPlayerInput()">+</button>
-        </div>
+      <div class="player-names-container" id="playerNamesContainer"></div>
+      <div class="actions-row">
+        <button class="btn-success" onclick="continueToOrderSelection()">✅ Continuar</button>
+        <button class="btn-secondary" onclick="goHome()">🏠 Inicio</button>
       </div>
-      <div id="playerNamesContainer" class="players" style="margin-bottom:12px"></div>
+    </div>
 
-      <div class="row">
-        <div class="col">
-          <button class="btn" onclick="continueToOrderSelection()">Siguiente</button>
-        </div>
-        <div style="width:120px">
-          <button class="btn ghost" onclick="goHome()">Volver</button>
-        </div>
-      </div>
-    </section>
-
-    <!-- ORDER -->
-    <section id="order" class="screen">
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
-        <strong>Quién empieza</strong>
-        <select id="startPlayerSelect" style="margin-left:8px"></select>
-        <div style="margin-left:auto;display:flex;gap:8px">
-          <button class="btn flat" onclick="shuffleOrder()">Aleatorio</button>
-          <button class="btn" onclick="startRoundFromOrder()">Iniciar</button>
-        </div>
-      </div>
-
+    <!-- Selección de orden / quién empieza -->
+    <div class="order-screen" id="orderScreen">
+      <h2>🧭 Elegí quién empieza</h2>
+      <select id="startPlayerSelect"></select>
       <div class="order-preview">
-        <strong style="display:block;margin-bottom:6px">Orden</strong>
-        <ol id="orderPreviewList" style="margin:0;padding-left:18px;color:var(--muted)"></ol>
+        <strong>Orden de esta ronda:</strong>
+        <ol id="orderPreviewList"></ol>
       </div>
-    </section>
-
-    <!-- TRANSFER -->
-    <section id="transfer" class="screen center" style="flex-direction:column">
-      <div class="big-emoji">🤫</div>
-      <div style="font-weight:700;margin-bottom:6px" id="nextPlayerName">Jugador X</div>
-      <div class="small" style="margin-bottom:12px" id="receivingPlayer">Toma el teléfono y presiona</div>
-      <div style="width:100%;max-width:320px">
-        <button class="btn" onclick="showPlayerRole()">Ver mi rol</button>
+      <div class="triple-row">
+        <button class="btn-success" onclick="startRoundFromOrder()">▶️ Iniciar Ronda</button>
+        <button class="btn-warning" onclick="shuffleOrder()">🎲 Orden Aleatorio</button>
+        <button class="btn-secondary" onclick="managePlayers()">👤 Cambiar Jugadores</button>
       </div>
-    </section>
+    </div>
 
-    <!-- GAME ROLE -->
-    <section id="game" class="screen">
-      <div style="display:flex;align-items:center;justify-content:space-between">
-        <div>
-          <div class="small">Turno de</div>
-          <div class="role-title" id="playerTitle">Jugador 1</div>
-        </div>
-        <div style="text-align:right">
-          <button id="finishButton" class="btn flat" onclick="finishPlayerTurn()">Listo</button>
-        </div>
+    <!-- Transferencia del teléfono -->
+    <div class="transfer-screen" id="transferScreen">
+      <h2>📱 Pasar el Teléfono</h2>
+      <div style="font-size: 100px; margin: 24px 0;">🤐</div>
+      <div class="warning">
+        <strong>¡ATENCIÓN!</strong><br />
+        Pasá el teléfono a <span id="nextPlayerName">Jugador X</span><br />
+        SIN que vea la pantalla
       </div>
+      <p style="font-size: 18px; margin: 16px 0;">
+        <strong id="receivingPlayer">Jugador X</strong>: Cuando tengas el teléfono, presioná para descubrir tu rol.
+      </p>
+      <button class="btn-success" onclick="showPlayerRole()">🔍 Descubrir Mi Rol</button>
+    </div>
 
-      <div id="roleCard" class="role-card" style="margin-top:12px">
-        <div id="roleText" class="role-title">—</div>
-        <div id="themeText" class="role-sub">—</div>
-        <div id="themeImage"></div>
+    <!-- Roles -->
+    <div class="game-screen" id="gameScreen">
+      <h2 id="playerTitle">Jugador 1</h2>
+      <div class="role-card" id="roleCard">
+        <div id="roleText"></div>
+        <div id="themeText"></div>
+        <div id="themeImage" style="margin-top: 16px;"></div>
       </div>
-
-      <div style="margin-top:10px;display:flex;gap:8px;justify-content:center">
-        <button class="btn ghost" onclick="hideSecretHints()" style="padding:8px 10px">Ocultar pistas</button>
+      <div class="warning">
+        <strong>¡Memorizá tu rol!</strong><br /> Cuando termines, presioná "Listo" para borrar y continuar.
       </div>
+      <button class="btn-danger" onclick="finishPlayerTurn()" id="finishButton">✅ Listo - Borrar y Continuar</button>
 
-      <!-- secret hints -->
-      <div id="secretHints" class="secret-hints" role="region" aria-hidden="true">
-        <div id="secretTitle" style="font-weight:700;margin-bottom:6px">Pistas</div>
-        <div class="secret-row"><div class="hint-key">Posición</div><div id="hintPosition" class="hint-val">—</div></div>
-        <div class="secret-row"><div class="hint-key">País</div><div id="hintNation" class="hint-val">—</div></div>
-        <div class="secret-row"><div class="hint-key">Estado</div><div id="hintStatus" class="hint-val">—</div></div>
-        <div class="secret-row"><div class="hint-key">Equipos</div><div id="hintTeams" class="hint-val">—</div></div>
-        <div class="secret-row"><div class="hint-key">Títulos</div><div id="hintTitles" class="hint-val">—</div></div>
-        <div style="text-align:right;margin-top:8px"><button class="btn ghost" id="hideHintsBtn" onclick="hideSecretHints()">Cerrar</button></div>
-      </div>
-    </section>
-
-    <!-- DISCUSSION -->
-    <section id="discussion" class="screen center" style="flex-direction:column">
-      <div class="role-title" style="font-size:20px">Discusión</div>
-      <div id="discussionTimer" class="role-sub" style="font-size:20px;margin:10px 0;color:var(--muted)">3:00</div>
-      <div class="small" style="margin-bottom:12px;color:var(--muted)">Hablen 2–3 minutos. Luego revelen.</div>
-      <div style="width:220px">
-        <button class="btn warn" onclick="showResults()">Revelar</button>
-      </div>
-    </section>
-
-    <!-- RESULTS -->
-    <section id="results" class="screen">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <div>
-          <div style="font-weight:700">Resultados</div>
-          <div class="small" id="resultsSub">—</div>
-        </div>
-        <div style="display:flex;gap:8px">
-          <button class="btn" onclick="nextRound()">Nueva ronda</button>
-          <button class="btn ghost" onclick="managePlayers()">Editar</button>
+      <!-- Panel Secreto (solo Feli/Felipe) -->
+      <div id="secretHints" class="secret-hints" aria-hidden="true">
+        <h3 id="secretTitle">🔍 Pistas</h3>
+        <div class="secret-row"><span class="hint-chip">Posición</span><p id="hintPosition">—</p></div>
+        <div class="secret-row"><span class="hint-chip">Nacionalidad</span><p id="hintNation">—</p></div>
+        <div class="secret-row"><span class="hint-chip">Estado</span><p id="hintStatus">—</p></div>
+        <div class="secret-row"><span class="hint-chip">Equipos</span><p id="hintTeams">—</p></div>
+        <div class="secret-row"><span class="hint-chip">Títulos</span><p id="hintTitles">—</p></div>
+        <div class="secret-actions">
+          <button class="btn-ghost" id="hideHintsBtn" type="button">Ocultar</button>
         </div>
       </div>
-      <div id="resultsContent" style="margin-top:12px"></div>
-      <div style="margin-top:12px"><button class="btn flat" onclick="hardReset()">Reiniciar</button></div>
-    </section>
+    </div>
 
-    <footer>
-      <div class="small">Tap triple en la tarjeta si sos Feli/Felipe → pistas</div>
-      <div class="small">dqvh • 2025</div>
-    </footer>
+    <!-- Discusión -->
+    <div class="discussion-screen" id="discussionScreen">
+      <h2>💬 Tiempo de Discusión</h2>
+      <div class="timer" id="discussionTimer">3:00</div>
+      <div class="warning">Discutan hechos, características, carrera y detalles sobre el jugador secreto. ¡El impostor intentará mezclarse sin saber quién es!</div>
+      <button class="btn-warning" onclick="showResults()">🎭 Revelar Resultados</button>
+    </div>
+
+    <!-- Resultados -->
+    <div class="results-screen" id="resultsScreen">
+      <h2>🎭 Resultados</h2>
+      <div id="resultsContent"></div>
+      <div class="actions-row">
+        <button class="btn-success" onclick="nextRound()">🔁 Nueva Ronda (mismos jugadores)</button>
+        <button class="btn-secondary" onclick="managePlayers()">👤 Cambiar Jugadores</button>
+      </div>
+      <button class="btn-danger" onclick="hardReset()">🧹 Reinicio Total</button>
+    </div>
   </div>
 
   <script>
-    // ========= state =========
+    // ===========================
+    // --- Estado del juego ---
+    // ===========================
     let gameData = {
       theme: '',
       playerCount: 5,
-      playerNames: [],
-      playerOrder: [],
-      startingPlayerIndex: 1,
-      currentPlayer: 0,
-      impostorIndex: -1,
+      playerNames: [],          // 1-indexado
+      playerOrder: [],          // índices absolutos [1..N]
+      startingPlayerIndex: 1,   // índice absoluto [1..N]
+      currentPlayer: 0,         // cantidad ya revelados (0..N)
+      impostorIndex: -1,        // índice absoluto [1..N]
       discussionTimer: null,
       timeLeft: 180,
-      usedThemes: new Set()
+      usedThemes: new Set()     // evitar repetir jugador secreto
     };
 
-    // screens
-    const screens = {
-      setup: document.getElementById('setup'),
-      playerSetup: document.getElementById('playerSetup'),
-      order: document.getElementById('order'),
-      transfer: document.getElementById('transfer'),
-      game: document.getElementById('game'),
-      discussion: document.getElementById('discussion'),
-      results: document.getElementById('results')
-    };
-    function showScreen(k){
-      Object.values(screens).forEach(el => el.classList.remove('active'));
-      screens[k].classList.add('active');
-      // hide secret panel except when in game screen
-      if (k !== 'game') hideSecretHints();
+    // ===========================
+    // --- Utilidades UI ---
+    // ===========================
+    const screens = ['setupScreen','playerSetupScreen','orderScreen','transferScreen','gameScreen','discussionScreen','resultsScreen'];
+    function showScreen(id) {
+      screens.forEach(s => document.getElementById(s).style.display = (s === id ? 'block' : 'none'));
+      if (id !== 'gameScreen') hideSecretHints();
+    }
+    function goHome(){ showScreen('setupScreen'); }
+
+    // ===========================
+    // --- Lista de jugadores ---
+    // ===========================
+    // v2: lista expandida con más íconos argentinos/europeos. Intenté incluir nombres MUY conocidos.
+    const famousPlayers = [
+      "Pelé","Diego Maradona","Johan Cruyff","Franz Beckenbauer","Alfredo Di Stéfano","Ferenc Puskás","Eusébio","Lev Yashin","George Best","Bobby Charlton","Garrincha","Just Fontaine","Gerd Müller","Bobby Moore","Gordon Banks","Marco van Basten","Michel Platini","Roberto Baggio","Lothar Matthäus","Franco Baresi","Paolo Maldini","Ruud Gullit","Frank Rijkaard","Ronald Koeman","Hristo Stoichkov","Romário","Bebeto","Claudio Caniggia","Gabriel Batistuta","Salvatore Schillaci","Ronaldo Nazário","Ronaldinho","Kaká","Zinedine Zidane","Luis Figo","Thierry Henry","Raúl González","Francesco Totti","Alessandro Del Piero","Gianluigi Buffon","Iker Casillas","Oliver Kahn","Michael Ballack","Pavel Nedvěd","Andrés Iniesta","Xavi Hernández","Carles Puyol","Gerard Piqué","David Beckham","Steven Gerrard","Frank Lampard","Paul Scholes","Ryan Giggs","Roy Keane","Patrick Vieira","Claude Makélélé","Fabio Cannavaro","Alessandro Nesta","Jaap Stam","Rio Ferdinand","John Terry","Ashley Cole","Cafu","Roberto Carlos","Javier Zanetti","Lionel Messi","Cristiano Ronaldo","Neymar","Kylian Mbappé","Erling Haaland","Robert Lewandowski","Kevin De Bruyne","Mohamed Salah","Sadio Mané","Riyad Mahrez","Raheem Sterling","Harry Kane","Son Heung-min","Bruno Fernandes","Paul Pogba","N'Golo Kanté","Virgil van Dijk","Sergio Ramos","Raphaël Varane","Karim Benzema","Luka Modrić","Toni Kroos","Casemiro","Sergio Busquets","Pedri","Gavi","Frenkie de Jong","Ansu Fati","Ferran Torres","Dani Olmo","Vinícius Júnior","Jude Bellingham","Eduardo Camavinga","Aurélien Tchouaméni","Enzo Fernández","Jamal Musiala","Florian Wirtz","Bukayo Saka","Phil Foden","Mason Mount","Declan Rice","Martin Ødegaard","Alexander Isak","Darwin Núñez","Luis Díaz","Diogo Jota","Cody Gakpo","Antony","Marcus Rashford","Jadon Sancho","Jack Grealish","Rúben Dias","Joško Gvardiol","William Saliba","Gabriel Martinelli","Lamine Yamal","Alejandro Balde","Ronald Araújo","Jules Koundé","Ousmane Dembélé","Raphinha","Lautaro Martínez","Nico González","Julián Álvarez","Ángel Di María","Paulo Dybala","Leandro Paredes","Rodrigo De Paul","Manuel Neuer","Alisson Becker","Ederson","Jan Oblak","Thibaut Courtois","Hugo Lloris","Keylor Navas","Gianluigi Donnarumma","Yann Sommer","Emiliano Martínez","Marc-André ter Stegen","Claudio Bravo","David de Gea","Jordan Pickford","Aaron Ramsdale","Dani Alves","Marcelo","Jordi Alba","Andrew Robertson","Trent Alexander-Arnold","Kyle Walker","João Cancelo","Achraf Hakimi","Theo Hernández","Lucas Hernández","Dayot Upamecano","Ibrahima Konaté","Éder Militão","Antonio Rüdiger","Thiago Silva","Marquinhos","Presnel Kimpembe","Milan Škriniar","Alessandro Bastoni","Federico Dimarco","Giorgio Chiellini","Leonardo Bonucci","Francesco Acerbi","Kalidou Koulibaly","Aymeric Laporte","Pau Torres","Diego Carlos","José Giménez","Diego Godín","Stefan Savić","Joshua Kimmich","Leon Goretzka","Ilkay Gündogan","Thomas Müller","Marco Reus","Marco Verratti","Nicolo Barella","Lorenzo Pellegrini","Ciro Immobile","Federico Chiesa","Lorenzo Insigne","Domenico Berardi","Matteo Politano","Khvicha Kvaratskhelia","Victor Osimhen","Piotr Zielinski","Fabián Ruiz","Carlos Soler","Mikel Oyarzabal","Isco","Marco Asensio","Brahim Díaz","Federico Valverde","Rodrygo","Endrick","Sergio Agüero","Fernando Torres","David Villa","Álvaro Morata","Gerard Moreno","Dani Carvajal","Nacho Fernández","Jesús Navas","Marcos Llorente","Koke","Saúl Ñíguez","João Félix","Antoine Griezmann","Memphis Depay","Sergi Roberto","Fermín López","Pau Cubarsí","Héctor Fort","Marc Guiu","Vitor Roque","Romelu Lukaku","Eden Hazard","Yannick Carrasco","Jeremy Doku","Charles De Ketelaere","Amadou Onana","Arthur Theate","Wout Faes","Matthijs de Ligt","Denzel Dumfries","Steven Bergwijn","Wout Weghorst","Daley Blind","Stefan de Vrij","Wojciech Szczęsny","Jan Bednarek","Matty Cash","Krzysztof Piątek","Arkadiusz Milik","Kamil Glik","Grzegorz Krychowiak","Jakub Moder","Bernardo Silva","Rodri","John Stones","Diogo Dalot","Harry Maguire","Alexis Mac Allister","Ryan Gravenberch","Wataru Endo","James Maddison","Dejan Kulusevski","Brennan Johnson","Pape Matar Sarr","Yves Bissouma","Pedro Porro","Cristian Romero","Micky van de Ven","Destiny Udogie","Warren Zaïre-Emery","Bradley Barcola","Randal Kolo Muani","Vitinha","João Neves","Nuno Mendes","Arda Güler","Kenan Yildiz","Francisco Conceição","Samu Omorodion","Pau Prim","Dani Rodriguez","Takefusa Kubo","Kang-in Lee","Hwang Hee-chan",
+      // ----- v2 additions (Argentina / Europa icons and other widely known names):
+      "Mario Kempes","Daniel Passarella","Óscar Ruggeri","Juan Román Riquelme","Carlos Tevez","Diego Simeone","Enzo Francescoli","Ricardo Bochini","Hernán Crespo","Javier Saviola","Jorge Burruchaga","Ángel Labruna","Hugo Gatti","Juan Sebastián Verón","Diego Forlán","Fernando Redondo",
+      "Gianfranco Zola","Zlatan Ibrahimović","Andriy Shevchenko","Michael Owen","Paolo Rossi","Gaetano Scirea","Eric Cantona","Sergio Busquets","Luis Suárez","Juan Mata","Péter Schmeichel"
+    ];
+
+    // Remove possible duplicates while preserving order (simple)
+    const seen = new Set();
+    for (let i = 0; i < famousPlayers.length; i++){
+      const n = famousPlayers[i];
+      const key = n.toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu,'').trim();
+      if (seen.has(key)){
+        famousPlayers.splice(i,1);
+        i--;
+      } else {
+        seen.add(key);
+      }
     }
 
-    function goHome(){ showScreen('setup'); }
-
-    // ========= players list =========
-    const famousPlayers = [ "Pelé","Diego Maradona","Johan Cruyff","Franz Beckenbauer","Alfredo Di Stéfano","Ferenc Puskás","Eusébio","Lev Yashin","George Best","Bobby Charlton","Garrincha","Just Fontaine","Gerd Müller","Bobby Moore","Gordon Banks","Marco van Basten","Michel Platini","Roberto Baggio","Lothar Matthäus","Franco Baresi","Paolo Maldini","Ruud Gullit","Frank Rijkaard","Ronald Koeman","Hristo Stoichkov","Romário","Bebeto","Claudio Caniggia","Gabriel Batistuta","Salvatore Schillaci","Ronaldo Nazário","Ronaldinho","Kaká","Zinedine Zidane","Luis Figo","Thierry Henry","Raúl González","Francesco Totti","Alessandro Del Piero","Gianluigi Buffon","Iker Casillas","Oliver Kahn","Michael Ballack","Pavel Nedvěd","Andrés Iniesta","Xavi Hernández","Carles Puyol","Gerard Piqué","David Beckham","Steven Gerrard","Frank Lampard","Paul Scholes","Ryan Giggs","Roy Keane","Patrick Vieira","Claude Makélélé","Fabio Cannavaro","Alessandro Nesta","Jaap Stam","Rio Ferdinand","John Terry","Ashley Cole","Cafu","Roberto Carlos","Javier Zanetti","Lionel Messi","Cristiano Ronaldo","Neymar","Kylian Mbappé","Erling Haaland","Robert Lewandowski","Kevin De Bruyne","Mohamed Salah","Sadio Mané","Riyad Mahrez","Raheem Sterling","Harry Kane","Son Heung-min","Bruno Fernandes","Paul Pogba","N'Golo Kanté","Virgil van Dijk","Sergio Ramos","Raphaël Varane","Karim Benzema","Luka Modrić","Toni Kroos","Casemiro","Sergio Busquets","Pedri","Gavi","Frenkie de Jong","Ansu Fati","Ferran Torres","Dani Olmo","Vinícius Júnior","Jude Bellingham","Eduardo Camavinga","Aurélien Tchouaméni","Enzo Fernández","Jamal Musiala","Florian Wirtz","Bukayo Saka","Phil Foden","Mason Mount","Declan Rice","Martin Ødegaard","Alexander Isak","Darwin Núñez","Luis Díaz","Diogo Jota","Cody Gakpo","Antony","Marcus Rashford","Jadon Sancho","Jack Grealish","Rúben Dias","Josko Gvardiol","William Saliba","Gabriel Martinelli","Lamine Yamal","Alejandro Balde","Ronald Araújo","Jules Koundé","Ousmane Dembélé","Raphinha","Lautaro Martínez","Nico González","Julián Álvarez","Ángel Di María","Paulo Dybala","Leandro Paredes","Rodrigo De Paul","Manuel Neuer","Alisson Becker","Ederson","Jan Oblak","Thibaut Courtois","Hugo Lloris","Keylor Navas","Gianluigi Donnarumma","Yann Sommer","Emiliano Martínez","Marc-André ter Stegen","Claudio Bravo","David de Gea","Jordan Pickford","Aaron Ramsdale","Dani Alves","Marcelo","Jordi Alba","Andrew Robertson","Trent Alexander-Arnold","Kyle Walker","João Cancelo","Achraf Hakimi","Theo Hernández","Lucas Hernández","Dayot Upamecano","Ibrahima Konaté","Eder Militão","Antonio Rüdiger","Thiago Silva","Marquinhos","Presnel Kimpembe","Milan Škriniar","Alessandro Bastoni","Federico Dimarco","Giorgio Chiellini","Leonardo Bonucci","Francesco Acerbi","Kalidou Koulibaly","Aymeric Laporte","Pau Torres","Diego Carlos","José Giménez","Diego Godín","Stefan Savić","Joshua Kimmich","Leon Goretzka","Ilkay Gündogan","Thomas Müller","Marco Reus","Marco Verratti","Nicolo Barella","Lorenzo Pellegrini","Ciro Immobile","Federico Chiesa","Lorenzo Insigne","Domenico Berardi","Matteo Politano","Khvicha Kvaratskhelia","Victor Osimhen","Piotr Zielinski","Fabián Ruiz","Carlos Soler","Mikel Oyarzabal","Isco","Marco Asensio","Brahim Díaz","Federico Valverde","Rodrygo","Endrick","Sergio Agüero","Fernando Torres","David Villa","Álvaro Morata","Gerard Moreno","Dani Carvajal","Nacho Fernández","Jesús Navas","Marcos Llorente","Koke","Saúl Ñíguez","João Félix","Antoine Griezmann","Memphis Depay","Sergi Roberto","Fermín López","Pau Cubarsí","Héctor Fort","Marc Guiu","Vitor Roque","Romelu Lukaku","Eden Hazard","Yannick Carrasco","Jeremy Doku","Charles De Ketelaere","Amadou Onana","Arthur Theate","Wout Faes","Matthijs de Ligt","Denzel Dumfries","Steven Bergwijn","Wout Weghorst","Daley Blind","Stefan de Vrij","Wojciech Szczęsny","Jan Bednarek","Matty Cash","Krzysztof Piątek","Arkadiusz Milik","Kamil Glik","Grzegorz Krychowiak","Jakub Moder","Riyad Mahrez","Bernardo Silva","Rodri","John Stones","Diogo Dalot","Harry Maguire","Alexis Mac Allister","Ryan Gravenberch","Wataru Endo","James Maddison","Dejan Kulusevski","Brennan Johnson","Pape Matar Sarr","Yves Bissouma","Pedro Porro","Cristian Romero","Micky van de Ven","Destiny Udogie","Warren Zaïre-Emery","Bradley Barcola","Randal Kolo Muani","Vitinha","João Neves","Nuno Mendes","Arda Güler","Kenan Yildiz","Francisco Conceição","Samu Omorodion","Pau Prim","Dani Rodriguez","Takefusa Kubo","Kang-in Lee","Hwang Hee-chan" ];
-
-    // ======= flow helpers =======
+    // ===========================
+    // --- Flujo inicial ---
+    // ===========================
     function setupPlayers(){
-      gameData.playerCount = parseInt(document.getElementById('playerCount').value,10) || 5;
+      gameData.playerCount = parseInt(document.getElementById('playerCount').value);
       gameData.playerNames = new Array(gameData.playerCount + 1);
       renderPlayerInputs();
-      showScreen('playerSetup');
+      showScreen('playerSetupScreen');
     }
 
     function renderPlayerInputs(){
       const container = document.getElementById('playerNamesContainer');
       container.innerHTML = '';
-      for (let i=1;i<=gameData.playerCount;i++){
-        const wrap = document.createElement('div');
-        wrap.className = 'player-input';
+      for (let i = 1; i <= gameData.playerCount; i++) {
         const input = document.createElement('input');
         input.type = 'text';
         input.id = `playerName${i}`;
-        input.placeholder = `Jugador ${i}`;
+        input.placeholder = `Nombre del Jugador ${i} (opcional)`;
         if (gameData.playerNames[i]) input.value = gameData.playerNames[i];
-        wrap.appendChild(input);
-        container.appendChild(wrap);
+        container.appendChild(input);
       }
       document.getElementById('countLabel').textContent = `${gameData.playerCount} jugadores`;
     }
 
-    function addPlayerInput(){ if (gameData.playerCount>=10) return; gameData.playerCount++; renderPlayerInputs(); }
-    function removePlayerInput(){ if (gameData.playerCount<=3) return; gameData.playerCount--; gameData.playerNames.length = gameData.playerCount+1; renderPlayerInputs(); }
+    function addPlayerInput(){
+      if (gameData.playerCount >= 10) return;
+      gameData.playerCount++;
+      renderPlayerInputs();
+    }
+
+    function removePlayerInput(){
+      if (gameData.playerCount <= 3) return;
+      gameData.playerCount--;
+      gameData.playerNames.length = gameData.playerCount + 1;
+      renderPlayerInputs();
+    }
 
     function continueToOrderSelection(){
-      for (let i=1;i<=gameData.playerCount;i++){
-        const val = (document.getElementById(`playerName${i}`)?.value || '').trim();
-        gameData.playerNames[i] = val || `Jugador ${i}`;
+      for (let i = 1; i <= gameData.playerCount; i++) {
+        const name = (document.getElementById(`playerName${i}`)?.value || '').trim();
+        gameData.playerNames[i] = name || `Jugador ${i}`;
       }
       buildDefaultOrder();
       populateStartSelect();
       updateOrderPreview(gameData.startingPlayerIndex);
-      showScreen('order');
+      showScreen('orderScreen');
     }
 
+    // ===========================
+    // --- Orden e inicio ---
+    // ===========================
     function buildDefaultOrder(){
-      gameData.playerOrder = Array.from({length:gameData.playerCount},(_,i)=>i+1);
+      gameData.playerOrder = Array.from({length: gameData.playerCount}, (_, i) => i + 1);
     }
 
     function rotateOrderStartingAt(startAbsIndex){
-      const order = Array.from({length:gameData.playerCount},(_,i)=>i+1);
+      const order = Array.from({length: gameData.playerCount}, (_, i) => i + 1);
       const pos = order.indexOf(startAbsIndex);
-      if (pos<0) return order;
-      return order.slice(pos).concat(order.slice(0,pos));
+      if (pos < 0) return order;
+      return order.slice(pos).concat(order.slice(0, pos));
     }
 
     function populateStartSelect(){
       const sel = document.getElementById('startPlayerSelect');
       sel.innerHTML = '';
-      for (let i=1;i<=gameData.playerCount;i++){
+      for (let i = 1; i <= gameData.playerCount; i++) {
         const opt = document.createElement('option');
         opt.value = String(i);
         opt.textContent = gameData.playerNames[i];
+        if (i === gameData.startingPlayerIndex) opt.selected = true;
         sel.appendChild(opt);
       }
-      sel.onchange = ()=> updateOrderPreview(parseInt(sel.value,10));
-      sel.value = String(gameData.startingPlayerIndex || 1);
+      sel.onchange = () => updateOrderPreview(parseInt(sel.value));
     }
 
     function updateOrderPreview(startAbsIndex){
@@ -366,7 +311,7 @@
       const order = rotateOrderStartingAt(startAbsIndex);
       const list = document.getElementById('orderPreviewList');
       list.innerHTML = '';
-      order.forEach(idx=>{
+      order.forEach(idx => {
         const li = document.createElement('li');
         li.textContent = gameData.playerNames[idx];
         list.appendChild(li);
@@ -374,12 +319,22 @@
     }
 
     function shuffleOrder(){
-      const arr = Array.from({length:gameData.playerCount},(_,i)=>i+1);
-      for(let i=arr.length-1;i>0;i--){ const j = Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; }
+      const arr = Array.from({length: gameData.playerCount}, (_, i) => i + 1);
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
       gameData.playerOrder = arr.slice();
       gameData.startingPlayerIndex = arr[0];
-      populateStartSelect();
-      updateOrderPreview(gameData.startingPlayerIndex);
+      const sel = document.getElementById('startPlayerSelect');
+      sel.value = String(gameData.startingPlayerIndex);
+      const list = document.getElementById('orderPreviewList');
+      list.innerHTML = '';
+      arr.forEach(idx => {
+        const li = document.createElement('li');
+        li.textContent = gameData.playerNames[idx];
+        list.appendChild(li);
+      });
     }
 
     function startRoundFromOrder(){
@@ -388,58 +343,118 @@
     }
 
     function prepareRound(){
-      gameData.currentPlayer = 0;
+      gameData.currentPlayer = 0; // reset revelados
       pickNewThemeNoRepeat();
-      gameData.impostorIndex = Math.floor(Math.random()*gameData.playerCount) + 1;
+      gameData.impostorIndex = Math.floor(Math.random() * gameData.playerCount) + 1; // absoluto
       showTransferScreenForRole();
     }
 
+    // ===========================
+    // --- Elección del secreto ---
+    // ===========================
     function pickNewThemeNoRepeat(){
       let candidates = famousPlayers.filter(p => !gameData.usedThemes.has(p));
-      if (!candidates.length){ gameData.usedThemes.clear(); candidates = famousPlayers.slice(); }
-      const choice = candidates[Math.floor(Math.random()*candidates.length)];
+      if (candidates.length === 0){
+        gameData.usedThemes.clear();
+        candidates = famousPlayers.slice();
+      }
+      const choice = candidates[Math.floor(Math.random() * candidates.length)];
       gameData.theme = choice;
       gameData.usedThemes.add(choice);
     }
 
+    // ===========================
+    // --- Transferencias / roles ---
+    // ===========================
     function showTransferScreenForRole(){
       if (gameData.currentPlayer < gameData.playerCount){
         const nextAbs = gameData.playerOrder[gameData.currentPlayer];
         document.getElementById('nextPlayerName').textContent = gameData.playerNames[nextAbs];
-        document.getElementById('receivingPlayer').textContent = '';
-        showScreen('transfer');
+        document.getElementById('receivingPlayer').textContent = gameData.playerNames[nextAbs];
+        showScreen('transferScreen');
       } else {
         startDiscussion();
       }
     }
 
     function showPlayerRole(){
-      gameData.currentPlayer++;
-      showScreen('game');
+      gameData.currentPlayer++; // revela al siguiente
+      showScreen('gameScreen');
       updatePlayerScreen();
     }
 
-    // fetch timeout helper
-    async function fetchWithTimeout(url, opts={}, ms=7000){
-      const ctl = new AbortController();
-      const id = setTimeout(()=>ctl.abort(), ms);
+    // Fetch image helper with timeout and improved fallbacks (v2)
+    async function fetchWithTimeout(url, opts = {}, ms = 6000){
+      const controller = new AbortController();
+      const id = setTimeout(() => controller.abort(), ms);
       try{
-        const res = await fetch(url, {...opts, signal: ctl.signal});
+        const res = await fetch(url, {...opts, signal: controller.signal});
         clearTimeout(id);
         return res;
-      }catch(err){ clearTimeout(id); throw err; }
+      }catch(err){
+        clearTimeout(id);
+        throw err;
+      }
     }
 
+    // v2: intentos en varios endpoints para maximizar la probabilidad de obtener una foto:
+    // 1) REST summary pageimages (thumbnail)
+    // 2) query prop=pageimages (pithumbsize)
+    // 3) query prop=images → luego imageinfo para la primera imagen válida (.jpg/.png)
+    // Se intenta en inglés y luego en español como fallback.
     async function fetchPlayerImage(title){
-      try{
-        const url = `https://en.wikipedia.org/w/api.php?action=query&prop=pageimages&format=json&pithumbsize=300&titles=${encodeURIComponent(title)}&origin=*`;
-        const resp = await fetchWithTimeout(url, {}, 6000).catch(()=>null);
-        if (!resp || !resp.ok) return '';
-        const data = await resp.json();
-        const pages = data.query?.pages || {};
-        const id = Object.keys(pages)[0];
-        return pages[id]?.thumbnail?.source || '';
-      }catch(err){ console.warn('image fetch',err); return ''; }
+      const langs = ['en','es'];
+      for (const lang of langs){
+        try {
+          // 1) REST summary thumbnail
+          const restUrl = `https://${lang}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`;
+          const restResp = await fetchWithTimeout(restUrl, {}, 5000).catch(()=>null);
+          if (restResp && restResp.ok){
+            const restJson = await restResp.json();
+            if (restJson?.thumbnail?.source) return restJson.thumbnail.source;
+          }
+
+          // 2) API pageimages pithumbsize
+          const piUrl = `https://${lang}.wikipedia.org/w/api.php?action=query&prop=pageimages&format=json&pithumbsize=400&titles=${encodeURIComponent(title)}&origin=*`;
+          const piResp = await fetchWithTimeout(piUrl, {}, 5000).catch(()=>null);
+          if (piResp && piResp.ok){
+            const piJson = await piResp.json();
+            const pages = piJson?.query?.pages || {};
+            const pid = Object.keys(pages)[0];
+            const thumb = pages[pid]?.thumbnail?.source;
+            if (thumb) return thumb;
+          }
+
+          // 3) query images then imageinfo
+          const imagesUrl = `https://${lang}.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(title)}&prop=images&format=json&origin=*`;
+          const imgResp = await fetchWithTimeout(imagesUrl, {}, 6000).catch(()=>null);
+          if (imgResp && imgResp.ok){
+            const imgJson = await imgResp.json();
+            const pages = imgJson?.query?.pages || {};
+            const pid = Object.keys(pages)[0];
+            const imgs = pages[pid]?.images || [];
+            // buscar primera imagen con extensión jpeg/jpg/png
+            const candidate = imgs.map(i => i.title).find(t => /\.(jpe?g|png|svg)$/i.test(t));
+            if (candidate){
+              // Obtener url de imageinfo
+              const iiUrl = `https://commons.wikimedia.org/w/api.php?action=query&titles=${encodeURIComponent(candidate)}&prop=imageinfo&iiprop=url&format=json&origin=*`;
+              const iiResp = await fetchWithTimeout(iiUrl, {}, 6000).catch(()=>null);
+              if (iiResp && iiResp.ok){
+                const iiJson = await iiResp.json();
+                const ent = iiJson?.query?.pages || {};
+                const key = Object.keys(ent)[0];
+                const info = ent[key]?.imageinfo?.[0]?.url;
+                if (info) return info;
+              }
+            }
+          }
+        } catch (err){
+          // ignorar y probar siguiente idioma / método
+          console.warn('fetchPlayerImage attempt failed for', title, lang, err);
+        }
+      }
+      // si todo falla, devolver vacío (el UI manejará ausencia)
+      return '';
     }
 
     async function updatePlayerScreen(){
@@ -457,119 +472,166 @@
 
       if (absIndex === gameData.impostorIndex){
         roleCard.className = 'role-card impostor-card reveal';
-        roleText.textContent = 'ERES EL IMPOSTOR';
-        themeText.textContent = 'Intentá pasar desapercibido';
+        roleText.textContent = '🎭 ERES EL IMPOSTOR';
+        themeText.textContent = '¡No sabes quién es el jugador secreto! Descúbrelo sin que te noten.';
       } else {
         roleCard.className = 'role-card innocent-card reveal';
-        roleText.textContent = 'SOS INOCENTE';
-        themeText.textContent = gameData.theme;
-        try{
-          const img = await fetchPlayerImage(gameData.theme);
-          if (img) themeImage.innerHTML = `<img src="${img}" alt="${gameData.theme}" class="player-image">`;
-        }catch(e){ /* ignore */ }
+        roleText.textContent = '👥 ERES INOCENTE';
+        themeText.textContent = `El jugador secreto es: ${gameData.theme.toUpperCase()}`;
+        // carga la imagen con la nueva estrategia
+        const imageUrl = await fetchPlayerImage(gameData.theme);
+        if (imageUrl){
+          themeImage.innerHTML = `<img src="${imageUrl}" alt="${gameData.theme}" class="player-image">`;
+        }
       }
 
-      finishButton.textContent = (gameData.currentPlayer === gameData.playerCount) ? 'Iniciar discusión' : 'Listo';
+      finishButton.textContent = (gameData.currentPlayer === gameData.playerCount) ? '✅ Listo - Iniciar Discusión' : '✅ Listo - Borrar y Continuar';
+
+      // Adjuntar / quitar el modo secreto según el nombre
       attachSecretModeIfNeeded(currentName);
     }
 
     function finishPlayerTurn(){
-      const rc = document.getElementById('roleCard');
-      rc.classList.remove('reveal');
+      document.getElementById('roleCard').classList.remove('reveal');
       hideSecretHints();
       showTransferScreenForRole();
     }
 
-    // discussion timer
+    // ===========================
+    // --- Discusión / temporizador ---
+    // ===========================
     function startDiscussion(){
-      showScreen('discussion');
+      showScreen('discussionScreen');
       startTimer();
     }
+
     function startTimer(){
       gameData.timeLeft = 180;
-      const el = document.getElementById('discussionTimer');
+      const timerElement = document.getElementById('discussionTimer');
       clearInterval(gameData.discussionTimer);
-      gameData.discussionTimer = setInterval(()=>{
-        const m = Math.floor(gameData.timeLeft/60);
-        const s = gameData.timeLeft%60;
-        el.textContent = `${m}:${String(s).padStart(2,'0')}`;
-        if (gameData.timeLeft<=0){
+      gameData.discussionTimer = setInterval(() => {
+        const minutes = Math.floor(gameData.timeLeft / 60);
+        const seconds = gameData.timeLeft % 60;
+        timerElement.textContent = `${minutes}:${seconds.toString().padStart(2,'0')}`;
+        if (gameData.timeLeft <= 0){
           clearInterval(gameData.discussionTimer);
-          el.textContent = '0:00';
+          timerElement.textContent = '¡TIEMPO!';
           showResults();
         }
         gameData.timeLeft--;
-      },1000);
+      }, 1000);
     }
 
     async function showResults(){
       clearInterval(gameData.discussionTimer);
-      showScreen('results');
+      showScreen('resultsScreen');
       const resultsContent = document.getElementById('resultsContent');
-      const sub = document.getElementById('resultsSub');
-      sub.textContent = `${gameData.playerNames[gameData.impostorIndex]} era el impostor`;
-      resultsContent.innerHTML = `<div style="font-weight:700;margin-top:8px">${gameData.theme}</div><div id="resultsImage" style="margin-top:8px"></div>`;
-      try{
-        const img = await fetchPlayerImage(gameData.theme);
-        if (img) document.getElementById('resultsImage').innerHTML = `<img src="${img}" alt="${gameData.theme}" class="player-image">`;
-      }catch(e){ /* ignore */ }
+      let html = `<h3>🎭 El impostor era: <span style="color:#ff4757;">${gameData.playerNames[gameData.impostorIndex]}</span></h3>`;
+      html += `<p><strong>Jugador secreto:</strong> ${gameData.theme}</p><div id="resultsImage" style="margin-top: 12px;"></div>`;
+      resultsContent.innerHTML = html;
+
+      const resultsImage = document.getElementById('resultsImage');
+      if (resultsImage){
+        const imageUrl = await fetchPlayerImage(gameData.theme);
+        if (imageUrl){
+          resultsImage.innerHTML = `<img src="${imageUrl}" alt="${gameData.theme}" class="player-image">`;
+        }
+      }
     }
 
+    // ===========================
+    // --- Navegación desde resultados ---
+    // ===========================
     function nextRound(){
       populateStartSelect();
       updateOrderPreview(gameData.startingPlayerIndex);
-      showScreen('order');
+      showScreen('orderScreen');
     }
 
     function managePlayers(){
       renderPlayerInputs();
-      showScreen('playerSetup');
+      showScreen('playerSetupScreen');
     }
 
+    // ===========================
+    // --- Reseteo ---
+    // ===========================
     function hardReset(){
-      gameData = { theme:'', playerCount:5, playerNames:[], playerOrder:[], startingPlayerIndex:1, currentPlayer:0, impostorIndex:-1, discussionTimer:null, timeLeft:180, usedThemes:new Set() };
+      gameData = { theme:'', playerCount:5, playerNames:[], playerOrder:[], startingPlayerIndex:1, currentPlayer:0, impostorIndex:-1, discussionTimer:null, timeLeft:180, usedThemes: new Set() };
       document.getElementById('playerCount').value = '5';
       hideSecretHints();
-      showScreen('setup');
+      showScreen('setupScreen');
     }
 
-    // ========== SECRET MODE ==========
+    // =====================================================
+    // === MODO SECRETO (solo "Feli" / "Felipe") ========
+    // =====================================================
+
     const SECRET_NAMES = new Set(['feli','felipe']);
-    const hintsCache = new Map();
+    const hintsCache = new Map(); // nombreJugadorSecreto -> hints
 
     function normalizeName(s){
-      return (s||'').toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu,'').trim();
+      return (s || '')
+        .toLowerCase()
+        .normalize('NFD').replace(/\p{Diacritic}/gu,'')
+        .trim()
+        .replace(/\s+/g,' ');
     }
-    function isSecretUser(name){ return SECRET_NAMES.has(normalizeName(name)); }
 
+    function isSecretUser(name){
+      return SECRET_NAMES.has(normalizeName(name));
+    }
+
+    // Triple-tap handler storage for cleanup
     function attachSecretModeIfNeeded(currentName){
+      const finishButton = document.getElementById('finishButton');
       const roleCard = document.getElementById('roleCard');
 
-      // remove previous handlers
-      if (roleCard._secretHandler){
+      // Limpieza de handlers previos: finishButton debe mantener su onclick normal
+      finishButton.onmousedown = finishButton.ontouchstart = null;
+      window.onmouseup = window.ontouchend = null;
+
+      // Remover handler triple-tap previo si existía
+      if (roleCard._secretHandler) {
         roleCard.removeEventListener('click', roleCard._secretHandler);
         roleCard.removeEventListener('touchstart', roleCard._secretHandler);
         roleCard._secretHandler = null;
       }
 
-      if (!isSecretUser(currentName)) return;
+      if (!isSecretUser(currentName)){
+        hideSecretHints();
+        return; // no activar modo secreto
+      }
 
-      // triple-tap implementation (robust for touch + click)
-      let taps = 0, timer = null;
-      const handler = async (ev) => {
-        try{ ev.preventDefault && ev.preventDefault(); }catch(e){}
-        taps++;
-        if (timer) { clearTimeout(timer); timer = null; }
-        if (taps >= 3){
-          taps = 0;
-          try{ await showSecretHintsFor(gameData.theme); } catch(err){ console.error(err); }
+      // Sólo triple-tap en la tarjeta (no usamos long-press)
+      let tapCountLocal = 0;
+      let tapTimerLocal = null;
+      const handler = async (e) => {
+        try{ e.preventDefault && e.preventDefault(); }catch(e){}
+        tapCountLocal++;
+        if (tapTimerLocal) {
+          clearTimeout(tapTimerLocal);
+          tapTimerLocal = null;
+        }
+        if (tapCountLocal >= 3){
+          tapCountLocal = 0;
+          try {
+            await showSecretHintsFor(gameData.theme);
+          } catch (err) {
+            console.error('Error mostrando pistas secretas:', err);
+          }
         } else {
-          timer = setTimeout(()=>{ taps = 0; timer = null; }, 1100);
+          // reset si no llegan 3 taps en 1.2s
+          tapTimerLocal = setTimeout(() => { tapCountLocal = 0; tapTimerLocal = null; }, 1200);
         }
       };
+
+      // Guardar referencia para poder quitar después
       roleCard._secretHandler = handler;
-      roleCard.addEventListener('click', handler, {passive:false});
-      roleCard.addEventListener('touchstart', handler, {passive:false});
+      roleCard.addEventListener('click', handler, { passive: false });
+      roleCard.addEventListener('touchstart', handler, { passive: false });
+
+      // Botón "Ocultar"
       document.getElementById('hideHintsBtn').onclick = hideSecretHints;
     }
 
@@ -587,35 +649,39 @@
       const stEl  = document.getElementById('hintStatus');
       const tmEl  = document.getElementById('hintTeams');
       const titlesEl = document.getElementById('hintTitles');
-      const box = document.getElementById('secretHints');
+      const box   = document.getElementById('secretHints');
 
-      titleEl.textContent = `Pistas — ${playerName}`;
-      posEl.textContent = 'cargando…';
-      natEl.textContent = 'cargando…';
-      stEl.textContent = 'cargando…';
-      tmEl.textContent = 'cargando…';
-      titlesEl.textContent = 'cargando…';
+      titleEl.textContent = `🔍 Pistas de ${playerName}:`;
+      posEl.innerHTML = '<span class="spinner"></span> Cargando…';
+      natEl.textContent = 'Cargando…';
+      stEl.textContent = 'Cargando…';
+      tmEl.textContent = 'Cargando…';
+      titlesEl.textContent = 'Cargando…';
+
       box.classList.add('visible');
       box.setAttribute('aria-hidden','false');
 
-      try{
+      try {
         const hints = await getHints(playerName);
         posEl.textContent = hints.position || '—';
         natEl.textContent = hints.nationality || '—';
         stEl.textContent  = hints.status || '—';
-        tmEl.textContent  = (hints.teams && hints.teams.length) ? hints.teams.join(', ') : '—';
-        titlesEl.textContent = (hints.titles && hints.titles.length) ? hints.titles.join(' · ') : '—';
-      }catch(err){
-        posEl.textContent = '—';
+        tmEl.textContent  = hints.teams && hints.teams.length ? hints.teams.join(', ') : '—';
+        titlesEl.textContent = hints.titles && hints.titles.length ? hints.titles.join(' · ') : '—';
+      } catch (err){
+        posEl.textContent = 'No disponible';
         natEl.textContent = '—';
-        stEl.textContent = '—';
-        tmEl.textContent = '—';
+        stEl.textContent  = '—';
+        tmEl.textContent  = '—';
         titlesEl.textContent = '—';
-        console.error('showSecretHintsFor error',err);
+        console.error(err);
       }
     }
 
-    // ========== WIKIPEDIA / WIKIDATA HINTS ==========
+    // ===========================
+    // === Wikipedia / Wikidata ===
+    // ===========================
+
     async function getHints(playerName){
       const key = normalizeName(playerName);
       if (hintsCache.has(key)) return hintsCache.get(key);
@@ -623,149 +689,181 @@
       const summary = await fetchWikiSummaryAny(playerName);
       const qid = await getWikidataIdFromAny(playerName, summary?.title);
       let wd = null;
-      if (qid){
-        try{ wd = await fetchWikidataEntity(qid); } catch(err){ console.warn('Wikidata failed',err); wd = null; }
+      if (qid) {
+        try {
+          wd = await fetchWikidataEntity(qid);
+        } catch (err) {
+          console.warn('Wikidata fetch failed', err);
+          wd = null;
+        }
       }
+
       const hints = buildHintsFromSources(playerName, summary, wd);
       hintsCache.set(key, hints);
       return hints;
     }
 
-    // summary (en -> es)
+    // --- Wikipedia Summary (en→es fallback) ---
     async function fetchWikiSummaryAny(title){
-      let s = await fetchWikiSummary(title,'en');
-      if (!s) s = await fetchWikiSummary(title,'es');
-      return s;
+      let sum = await fetchWikiSummary(title, 'en');
+      if (!sum) sum = await fetchWikiSummary(title, 'es');
+      return sum;
     }
 
     async function fetchWikiSummary(title, lang){
-      try{
-        const direct = await fetchWithTimeout(`https://${lang}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`, {}, 6000).catch(()=>null);
-        if (direct && direct.ok){
-          const data = await direct.json();
-          if (!data.title?.includes('may refer to')) return data;
-        }
-        // search fallback
-        const sr = await fetchWithTimeout(`https://${lang}.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(title)}&format=json&origin=*`, {}, 6000).catch(()=>null);
-        if (!sr || !sr.ok) return null;
-        const srj = await sr.json();
-        const best = srj?.query?.search?.[0]?.title;
-        if (!best) return null;
+      try {
+        // Intentar acceso directo; si 404, buscar primero
+        const directResp = await fetchWithTimeout(`https://${lang}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`, {}, 6000).catch(()=>null);
+        const direct = directResp && directResp.ok ? await directResp.json() : null;
+        if (direct && !direct.title?.includes('may refer to')) return direct;
+
+        // Buscar el mejor match
+        const srResp = await fetchWithTimeout(`https://${lang}.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(title)}&format=json&origin=*`, {}, 6000).catch(()=>null);
+        const sr = srResp && srResp.ok ? await srResp.json() : null;
+        const best = sr?.query?.search?.[0]?.title;
+        if (!best) return direct;
         const bestResp = await fetchWithTimeout(`https://${lang}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(best)}`, {}, 6000).catch(()=>null);
-        if (!bestResp || !bestResp.ok) return null;
-        return await bestResp.json();
-      }catch(err){ console.warn('fetchWikiSummary error',err); return null; }
+        return bestResp && bestResp.ok ? await bestResp.json() : direct;
+      } catch (err) {
+        console.warn('fetchWikiSummary error', err);
+        return null;
+      }
     }
 
+    // --- Obtener QID (en→es fallback) ---
     async function getWikidataIdFromAny(title, resolvedTitle){
       const fromEn = await getWikidataIdFromWikiTitle(resolvedTitle || title, 'en');
       if (fromEn) return fromEn;
-      return await getWikidataIdFromWikiTitle(resolvedTitle || title, 'es');
+      return getWikidataIdFromWikiTitle(resolvedTitle || title, 'es');
     }
 
     async function getWikidataIdFromWikiTitle(title, lang){
       try{
         const url = `https://${lang}.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(title)}&prop=pageprops&format=json&origin=*`;
-        const resp = await fetchWithTimeout(url, {}, 6000).catch(()=>null);
-        if (!resp || !resp.ok) return null;
-        const data = await resp.json();
+        const dataResp = await fetchWithTimeout(url, {}, 6000);
+        if (!dataResp.ok) return null;
+        const data = await dataResp.json();
         const pages = data?.query?.pages || {};
         const pid = Object.keys(pages)[0];
-        return pages[pid]?.pageprops?.wikibase_item || null;
-      }catch(err){ console.warn('getWikidataId error',err); return null; }
+        const qid = pages?.[pid]?.pageprops?.wikibase_item;
+        return qid || null;
+      }catch(err){
+        console.warn('getWikidataIdFromWikiTitle error', err);
+        return null;
+      }
     }
 
+    // --- Wikidata entity (claims + labels) ---
     async function fetchWikidataEntity(qid){
       try{
         const base = `https://www.wikidata.org/w/api.php?action=wbgetentities&format=json&origin=*`;
-        const resp = await fetchWithTimeout(`${base}&ids=${qid}&props=claims|labels&languages=es|en`, {}, 7000).catch(()=>null);
-        if (!resp || !resp.ok) return null;
-        const j = await resp.json();
-        const entity = j?.entities?.[qid];
+        const entResp = await fetchWithTimeout(`${base}&ids=${qid}&props=claims|labels&languages=es|en`, {}, 8000);
+        if (!entResp.ok) return null;
+        const ent = await entResp.json();
+        const entity = ent?.entities?.[qid];
         if (!entity) return null;
 
-        const claims = entity.claims || {};
+        // Tomar IDs de items referenciados (P413 posición, P27 país, P54 equipos, P166 premios, P1346 ganador, P1344 participante)
         const refIds = new Set();
-        const takeIds = (p) => (claims[p]||[]).forEach(st=>{
+        const claims = entity.claims || {};
+        const takeIds = (p) => (claims[p]||[]).forEach(st => {
           const dv = st?.mainsnak?.datavalue?.value;
           const id = dv?.id || (Array.isArray(dv) ? dv[0]?.id : null);
           if (id) refIds.add(id);
         });
-        takeIds('P413'); // position
-        takeIds('P27');  // country
-        (claims['P54']||[]).forEach(st => { const id = st?.mainsnak?.datavalue?.value?.id; if (id) refIds.add(id); });
-        takeIds('P166'); // awards
+        takeIds('P413'); // posición
+        takeIds('P27');  // ciudadanía
+        (claims['P54']||[]).forEach(st => {
+          const id = st?.mainsnak?.datavalue?.value?.id; if (id) refIds.add(id);
+          const q = st?.qualifiers || {};
+          (q['P413']||[]).forEach(qv => { const id2 = qv?.datavalue?.value?.id; if (id2) refIds.add(id2); });
+        });
+        takeIds('P166'); // awards received
         takeIds('P1346'); // winner of
-        takeIds('P1344'); // participant in
+        takeIds('P1344'); // participant in (puede contener torneos)
+        // resolver labels de refIds
         const labels = await resolveLabels(Array.from(refIds));
         return { qid, claims, labels };
-      }catch(err){ console.warn('fetchWikidataEntity error',err); return null; }
+      }catch(err){ console.warn('Wikidata error', err); return null; }
     }
 
     async function resolveLabels(ids){
       if (!ids || !ids.length) return {};
-      const chunks=[];
-      for (let i=0;i<ids.length;i+=45) chunks.push(ids.slice(i,i+45));
+      // Dividir en bloques por límites de URL
+      const chunks = [];
+      for (let i = 0; i < ids.length; i += 45) chunks.push(ids.slice(i, i+45));
       const out = {};
       const base = `https://www.wikidata.org/w/api.php?action=wbgetentities&format=json&origin=*&props=labels&languages=es|en`;
-      for (const c of chunks){
+      for (const chunk of chunks){
         try{
-          const resp = await fetchWithTimeout(`${base}&ids=${c.join('|')}`, {}, 7000).catch(()=>null);
-          if (!resp || !resp.ok) continue;
-          const j = await resp.json();
-          Object.entries(j.entities || {}).forEach(([id,ent])=>{
+          const dataResp = await fetchWithTimeout(`${base}&ids=${chunk.join('|')}`, {}, 8000);
+          if (!dataResp.ok) continue;
+          const data = await dataResp.json();
+          Object.entries(data.entities||{}).forEach(([id, ent]) => {
             const lbl = ent?.labels?.es?.value || ent?.labels?.en?.value;
             if (lbl) out[id] = lbl;
           });
-        }catch(err){ console.warn('resolveLabels chunk',err); }
+        }catch(err){
+          console.warn('resolveLabels chunk failed', err);
+        }
       }
       return out;
     }
 
-    // build hints — now extract important titles (filtered)
     function buildHintsFromSources(playerName, summary, wd){
+      // Defaults
       let position = '';
       let nationality = '';
       let status = '';
       let teams = [];
-      let titles = [];
+      let titles = []; // títulos importantes
 
-      const KEYWORDS = ['world cup','fifa world cup','champions league','uefa champions','ballon','ballon d\'or','copa américa','copa libertadores','premier league','la liga','serie a','bundesliga','fa cup','coppa italia','copa del rey','uefa european championship','euros','gold cup','olympic gold','fifa club world cup'];
+      // Heurísticas: palabras clave para reconocer títulos importantes
+      const KEYWORDS = ['world cup','fifa world cup','champions league','uefa champions','ballon','ballon d\'or','copa américa','copa del mundo','copa libertadores','premier league','la liga','serie a','bundesliga','fa cup','coppa italia','copa del rey','uefa european championship','euros','gold cup','olympic gold'];
 
+      // 1) Extraer del summary
       if (summary){
-        const extract = (summary.extract || '').toLowerCase();
-        const desc = (summary.description || '').toLowerCase();
-        nationality = mapNationality(desc) || nationalityFromText(summary.extract);
-        position = mapPositionFromText(summary.extract);
-        status = /former|retired/i.test(summary.extract) ? 'Retirado' : 'Activo';
-        const club = currentClubFromText(summary.extract);
-        if (club) teams.push(capitalizePhrase(club));
+        const extract = summary.extract || '';
+        const desc = summary.description || '';
+        nationality = mapNationality(desc) || nationalityFromText(extract) || '';
+        position = mapPositionFromText(extract);
+        status = /former|retired/i.test(extract) ? 'Retirado' : 'Activo';
+        const club = currentClubFromText(extract);
+        if (club) teams.push(club);
 
-        // find keyword matches and take short fragments
-        const found = [];
-        for (const kw of KEYWORDS){
-          const idx = extract.indexOf(kw);
-          if (idx >= 0){
-            const frag = summary.extract.substring(Math.max(0, idx-30), Math.min(summary.extract.length, idx+60)).replace(/\s+/g,' ').trim();
-            found.push(capitalizePhrase(frag));
+        // Buscar menciones de títulos en el extract (búsqueda por palabras clave)
+        try {
+          const found = [];
+          const low = extract.toLowerCase();
+          for (const kw of KEYWORDS){
+            if (low.includes(kw)) {
+              // extraer fragmento cercano
+              const idx = low.indexOf(kw);
+              const start = Math.max(0, idx - 40);
+              const frag = extract.substring(start, Math.min(extract.length, idx + 80)).replace(/\s+/g,' ').trim();
+              found.push(capitalizePhrase(frag));
+            }
           }
-        }
-        if (found.length) titles.push(...found.slice(0,3));
+          if (found.length){
+            titles.push(...found.slice(0,4));
+          }
+        } catch(e){ /* ignore */ }
       }
 
+      // 2) Enriquecer con Wikidata si existe
       if (wd){
         const { claims, labels } = wd;
-        // position (P413)
+        // Posición (P413)
         if (!position){
           const p413 = claims['P413']?.[0]?.mainsnak?.datavalue?.value?.id;
           if (p413 && labels[p413]) position = mapPosition(labels[p413]);
         }
-        // nationality (P27)
+        // Nacionalidad (P27)
         if (!nationality){
           const p27 = claims['P27']?.[0]?.mainsnak?.datavalue?.value?.id;
           if (p27 && labels[p27]) nationality = labels[p27];
         }
-        // teams (P54)
+        // Equipos (P54)
         const p54 = claims['P54'] || [];
         const enriched = [];
         let isActive = false;
@@ -773,78 +871,138 @@
           const id = st?.mainsnak?.datavalue?.value?.id;
           if (!id) continue;
           const name = labels[id];
-          if (name) enriched.push(name);
+          if (!name) continue;
           const q = st.qualifiers || {};
-          if (!q['P582']) isActive = true;
+          const end = q['P582']?.[0]?.datavalue?.value?.time || null;
+          if (!end) isActive = true;
+          enriched.push(name);
         }
-        teams = Array.from(new Set([...teams, ...enriched])).slice(0,5);
+        const uniqTeams = Array.from(new Set([...teams, ...enriched]));
+        teams = uniqTeams.slice(0, 5);
         if (!status) status = isActive ? 'Activo' : 'Retirado';
 
-        // titles: P166, P1346, P1344 labels -> filter by keywords
-        const cand = [];
-        ['P166','P1346','P1344'].forEach(prop=>{
-          (claims[prop]||[]).forEach(st=>{
+        // Títulos: revisar P166 (awards), P1346 (winner of), P1344 (participant in)
+        const titleCandidates = [];
+        const collectClaimLabels = (prop) => {
+          const arr = claims[prop] || [];
+          for (const st of arr){
             const dv = st?.mainsnak?.datavalue?.value;
             const id = dv?.id || (Array.isArray(dv) ? dv[0]?.id : null);
-            if (!id) return;
+            if (!id) continue;
             const lbl = labels[id];
-            if (lbl) cand.push(lbl);
-          });
-        });
-        // filter by keyword presence
-        const filtered = cand.filter(t => {
+            if (lbl) titleCandidates.push(lbl);
+          }
+        };
+        collectClaimLabels('P166');
+        collectClaimLabels('P1346');
+        collectClaimLabels('P1344');
+
+        // Filtrar por keywords para quedarse con títulos importantes
+        const filtered = [];
+        for (const t of titleCandidates){
           const low = (t||'').toLowerCase();
-          return KEYWORDS.some(k => low.includes(k));
-        });
-        const chosen = (filtered.length ? filtered : cand).slice(0,4);
-        titles = Array.from(new Set([...titles, ...chosen])).slice(0,4);
+          if (!low) continue;
+          // si contiene alguna palabra clave la consideramos título importante
+          if (KEYWORDS.some(k => low.includes(k))) {
+            filtered.push(t);
+          }
+        }
+        // Si no hay filtrados, incluir algunos candidatos curtos (p. ej. Ballon, Champions, Copa)
+        const fallback = titleCandidates.filter(Boolean).slice(0,6);
+        const chosen = filtered.length ? filtered : fallback;
+
+        // Normalizar / deduplicar y limitar
+        const uniq = Array.from(new Set(chosen));
+        titles = titles.concat(uniq).slice(0,4);
       }
 
+      // Limpieza final
       if (!position) position = '—';
       if (!nationality) nationality = '—';
       if (!status) status = '—';
-      return { position, nationality, status, teams, titles };
+      if (!titles || !titles.length) titles = [];
+      return { position, nationality, status, teams, titles, title: playerName };
     }
 
-    // heuristics
-    function capitalizePhrase(s){ if (!s) return s; return s.replace(/\s+/g,' ').trim().replace(/(^|\.\s+)([a-z])/g,(m,p,ch)=>p+ch.toUpperCase()); }
+    // ===========================
+    // === Heurísticas / mapeos ===
+    // ===========================
+
+    function capitalizePhrase(s){
+      if (!s) return s;
+      return s.replace(/\s+/g,' ').trim().replace(/(^|\.\s+)([a-z])/g, (m,p,ch)=>p + ch.toUpperCase());
+    }
+
+    function firstInterestingPhrase(text){
+      if (!text) return '';
+      const first = text.split(/\.(\s|$)/)[0];
+      return (first || '').replace(/\s*\([^\)]*\)\s*/g,'').trim();
+    }
+
     function currentClubFromText(text){
       if (!text) return '';
       const m = text.match(/for (?:the )?(?:[A-Za-zÀ-ÿ'\- ]+ club )?([A-Z][A-Za-zÀ-ÿ0-9'\.\-& ]{2,})(?:[,\.\n]| who| and| of| in )/);
       return m ? m[1].trim() : '';
     }
+
     function nationalityFromText(text){
       if (!text) return '';
       const m = text.match(/\b([A-Z][a-z]+) professional footballer/);
       return mapNationality(m?.[1] || '');
     }
+
     function mapNationality(adj){
-      if (!adj) return '';
       const a = (adj||'').toLowerCase();
-      const map = {'english':'Inglaterra','spanish':'España','argentine':'Argentina','brazilian':'Brasil','portuguese':'Portugal','french':'Francia','german':'Alemania','italian':'Italia','belgian':'Bélgica','dutch':'Países Bajos','swiss':'Suiza','japanese':'Japón','mexican':'México','uruguayan':'Uruguay','colombian':'Colombia','chilean':'Chile','peruvian':'Perú','nigerian':'Nigeria','egyptian':'Egipto','senegalese':'Senegal'};
+      const map = {
+        'english':'Inglaterra','british':'Reino Unido','scottish':'Escocia','welsh':'Gales','northern irish':'Irlanda del Norte','irish':'Irlanda',
+        'spanish':'España','argentine':'Argentina','argentinian':'Argentina','portuguese':'Portugal','brazilian':'Brasil','french':'Francia','german':'Alemania','italian':'Italia','belgian':'Bélgica','dutch':'Países Bajos','norwegian':'Noruega','swedish':'Suecia','danish':'Dinamarca','polish':'Polonia','czech':'Chequia','croatian':'Croacia','serbian':'Serbia','bosnian':'Bosnia y Herzegovina','slovenian':'Eslovenia','slovak':'Eslovaquia','turkish':'Turquía','moroccan':'Marruecos','algerian':'Argelia','egyptian':'Egipto','senegalese':'Senegal','cameroonian':'Camerún','ivorian':'Costa de Marfil','ghanaian':'Ghana','nigerian':'Nigeria','mexican':'México','uruguayan':'Uruguay','chilean':'Chile','colombian':'Colombia','paraguayan':'Paraguay','peruvian':'Perú','ecuadorian':'Ecuador','american':'Estados Unidos','canadian':'Canadá','austrian':'Austria','swiss':'Suiza','japanese':'Japón','south korean':'Corea del Sur','korean':'Corea del Sur'
+      };
       return map[a] || '';
     }
+
     function mapPositionFromText(text){
       if (!text) return '';
       const m = text.match(/play(?:s|ed) as an? ([a-z \-]+?)(?: for|\.|,)/i);
       const raw = m ? m[1].trim() : '';
       return mapPosition(raw);
     }
+
     function mapPosition(raw){
       const r = (raw||'').toLowerCase();
-      const dict = [['goalkeeper','Portero'],['striker','Delantero'],['forward','Delantero'],['winger','Extremo'],['midfielder','Mediocampista'],['defender','Defensor'],['left-back','Lateral izquierdo'],['right-back','Lateral derecho']];
-      for (const [k,v] of dict) if (r.includes(k)) return v;
-      if (!raw) return '';
-      return raw;
+      const dict = [
+        ['goalkeeper','Portero'],
+        ['keeper','Portero'],
+        ['striker','Delantero'],
+        ['forward','Delantero'],
+        ['winger','Extremo'],
+        ['midfielder','Mediocampista'],
+        ['attacking midfielder','Mediapunta'],
+        ['defensive midfielder','Mediocentro defensivo'],
+        ['central midfielder','Mediocentro'],
+        ['playmaker','Mediapunta'],
+        ['defender','Defensor'],
+        ['centre-back','Defensor central'],
+        ['center-back','Defensor central'],
+        ['left-back','Lateral izquierdo'],
+        ['right-back','Lateral derecho'],
+        ['wing-back','Carrilero'],
+        ['full-back','Lateral'],
+      ];
+      for (const [en, es] of dict){ if (r.includes(en)) return es; }
+      if (/portero/i.test(raw)) return 'Portero';
+      if (/delantero/i.test(raw)) return 'Delantero';
+      if (/extremo/i.test(raw)) return 'Extremo';
+      if (/mediocampista|centrocampista/i.test(raw)) return 'Mediocampista';
+      if (/defensa|defensor/i.test(raw)) return 'Defensor';
+      return raw ? raw : '';
     }
 
-    // init: start on setup
-    showScreen('setup');
+    // ===========================
+    // === Init ==================
+    // ===========================
 
-    // expose helper for transfer screen: when it's time to reveal, receiving player should press "Ver mi rol".
-    // No further automatic actions here.
-
-    // (end)
+    // Arranca en la pantalla inicial
+    // (setupPlayers() se llama desde el botón)
   </script>
 </body>
 </html>
