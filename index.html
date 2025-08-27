@@ -153,7 +153,7 @@
         <div class="secret-row"><span class="hint-chip">Nacionalidad</span><p id="hintNation">—</p></div>
         <div class="secret-row"><span class="hint-chip">Estado</span><p id="hintStatus">—</p></div>
         <div class="secret-row"><span class="hint-chip">Equipos</span><p id="hintTeams">—</p></div>
-        <div class="secret-row"><span class="hint-chip">Mundiales</span><p id="hintWorlds">—</p></div>
+        <div class="secret-row"><span class="hint-chip">Títulos</span><p id="hintTitles">—</p></div>
         <div class="secret-actions">
           <button class="btn-ghost" id="hideHintsBtn" type="button">Ocultar</button>
         </div>
@@ -544,10 +544,7 @@
       let tapCountLocal = 0;
       let tapTimerLocal = null;
       const handler = async (e) => {
-        try{
-          // evitar que el tap dispare otras cosas
-          e.preventDefault && e.preventDefault();
-        }catch(e){}
+        try{ e.preventDefault && e.preventDefault(); }catch(e){}
         tapCountLocal++;
         if (tapTimerLocal) {
           clearTimeout(tapTimerLocal);
@@ -588,7 +585,7 @@
       const natEl = document.getElementById('hintNation');
       const stEl  = document.getElementById('hintStatus');
       const tmEl  = document.getElementById('hintTeams');
-      const worldEl = document.getElementById('hintWorlds');
+      const titlesEl = document.getElementById('hintTitles');
       const box   = document.getElementById('secretHints');
 
       titleEl.textContent = `🔍 Pistas de ${playerName}:`;
@@ -596,7 +593,7 @@
       natEl.textContent = 'Cargando…';
       stEl.textContent = 'Cargando…';
       tmEl.textContent = 'Cargando…';
-      worldEl.textContent = 'Cargando…';
+      titlesEl.textContent = 'Cargando…';
 
       box.classList.add('visible');
       box.setAttribute('aria-hidden','false');
@@ -607,13 +604,13 @@
         natEl.textContent = hints.nationality || '—';
         stEl.textContent  = hints.status || '—';
         tmEl.textContent  = hints.teams && hints.teams.length ? hints.teams.join(', ') : '—';
-        worldEl.textContent = hints.worlds || '—';
+        titlesEl.textContent = hints.titles && hints.titles.length ? hints.titles.join(' · ') : '—';
       } catch (err){
         posEl.textContent = 'No disponible';
         natEl.textContent = '—';
         stEl.textContent  = '—';
         tmEl.textContent  = '—';
-        worldEl.textContent = '—';
+        titlesEl.textContent = '—';
         console.error(err);
       }
     }
@@ -703,28 +700,25 @@
         const entity = ent?.entities?.[qid];
         if (!entity) return null;
 
-        // Tomar IDs de items referenciados (P413 posición, P27 país, P54 equipos, P1344 participante en torneos)
+        // Tomar IDs de items referenciados (P413 posición, P27 país, P54 equipos, P166 premios, P1346 ganador, P1344 participante)
         const refIds = new Set();
         const claims = entity.claims || {};
         const takeIds = (p) => (claims[p]||[]).forEach(st => {
           const dv = st?.mainsnak?.datavalue?.value;
-          // puede ser un id o un array
           const id = dv?.id || (Array.isArray(dv) ? dv[0]?.id : null);
           if (id) refIds.add(id);
         });
         takeIds('P413'); // posición
         takeIds('P27');  // ciudadanía
-        // equipos P54
         (claims['P54']||[]).forEach(st => {
           const id = st?.mainsnak?.datavalue?.value?.id; if (id) refIds.add(id);
           const q = st?.qualifiers || {};
           (q['P413']||[]).forEach(qv => { const id2 = qv?.datavalue?.value?.id; if (id2) refIds.add(id2); });
         });
-        // torneos (participaciones)
-        (claims['P1344']||[]).forEach(st => {
-          const id = st?.mainsnak?.datavalue?.value?.id; if (id) refIds.add(id);
-        });
-
+        takeIds('P166'); // awards received
+        takeIds('P1346'); // winner of
+        takeIds('P1344'); // participant in (puede contener torneos)
+        // resolver labels de refIds
         const labels = await resolveLabels(Array.from(refIds));
         return { qid, claims, labels };
       }catch(err){ console.warn('Wikidata error', err); return null; }
@@ -759,7 +753,10 @@
       let nationality = '';
       let status = '';
       let teams = [];
-      let worlds = ''; // breve: "Sí: 2014, 2018" o "No"
+      let titles = []; // títulos importantes
+
+      // Heurísticas: palabras clave para reconocer títulos importantes
+      const KEYWORDS = ['world cup','fifa world cup','champions league','uefa champions','ballon','ballon d\'or','copa américa','copa del mundo','copa libertadores','premier league','la liga','serie a','bundesliga','fa cup','coppa italia','copa del rey','uefa european championship','euros','gold cup','olympic gold'];
 
       // 1) Extraer del summary
       if (summary){
@@ -771,20 +768,23 @@
         const club = currentClubFromText(extract);
         if (club) teams.push(club);
 
-        // Detectar menciones a "World Cup" / "Copa Mundial" y años
-        const wcMatches = [];
-        const wcRegex = /(World Cup|FIFA World Cup|Copa del Mundo|Copa Mundial)[^0-9]*(\d{4})?/ig;
-        let m;
-        while ((m = wcRegex.exec(extract)) !== null){
-          if (m[2]) wcMatches.push(m[2]);
-          else if (m[1]) wcMatches.push(m[1]);
-        }
-        if (wcMatches.length){
-          // Mantener sólo años cuando existen, si no usar la mención general
-          const years = wcMatches.filter(v => /^\d{4}$/.test(v));
-          if (years.length) worlds = `Sí: ${Array.from(new Set(years)).slice(0,4).join(', ')}`;
-          else worlds = 'Sí';
-        }
+        // Buscar menciones de títulos en el extract (búsqueda por palabras clave)
+        try {
+          const found = [];
+          const low = extract.toLowerCase();
+          for (const kw of KEYWORDS){
+            if (low.includes(kw)) {
+              // extraer fragmento cercano
+              const idx = low.indexOf(kw);
+              const start = Math.max(0, idx - 40);
+              const frag = extract.substring(start, Math.min(extract.length, idx + 80)).replace(/\s+/g,' ').trim();
+              found.push(capitalizePhrase(frag));
+            }
+          }
+          if (found.length){
+            titles.push(...found.slice(0,4));
+          }
+        } catch(e){ /* ignore */ }
       }
 
       // 2) Enriquecer con Wikidata si existe
@@ -814,47 +814,61 @@
           if (!end) isActive = true;
           enriched.push(name);
         }
-        const uniq = Array.from(new Set([...teams, ...enriched]));
-        teams = uniq.slice(0, 5);
+        const uniqTeams = Array.from(new Set([...teams, ...enriched]));
+        teams = uniqTeams.slice(0, 5);
         if (!status) status = isActive ? 'Activo' : 'Retirado';
 
-        // Mundiales: P1344 "participant in" puede contener ítems de Mundiales
-        const p1344 = claims['P1344'] || [];
-        const worldLabels = [];
-        for (const st of p1344){
-          const id = st?.mainsnak?.datavalue?.value?.id;
-          if (!id) continue;
-          const lbl = labels[id];
-          if (!lbl) continue;
-          // filtrar si la etiqueta indica World Cup / Mundial o contiene año 19xx/20xx
-          if (/world cup|mundial|fifa/i.test(lbl) || /\b(19|20)\d{2}\b/.test(lbl)){
-            worldLabels.push(lbl);
+        // Títulos: revisar P166 (awards), P1346 (winner of), P1344 (participant in)
+        const titleCandidates = [];
+        const collectClaimLabels = (prop) => {
+          const arr = claims[prop] || [];
+          for (const st of arr){
+            const dv = st?.mainsnak?.datavalue?.value;
+            const id = dv?.id || (Array.isArray(dv) ? dv[0]?.id : null);
+            if (!id) continue;
+            const lbl = labels[id];
+            if (lbl) titleCandidates.push(lbl);
+          }
+        };
+        collectClaimLabels('P166');
+        collectClaimLabels('P1346');
+        collectClaimLabels('P1344');
+
+        // Filtrar por keywords para quedarse con títulos importantes
+        const filtered = [];
+        for (const t of titleCandidates){
+          const low = (t||'').toLowerCase();
+          if (!low) continue;
+          // si contiene alguna palabra clave la consideramos título importante
+          if (KEYWORDS.some(k => low.includes(k))) {
+            filtered.push(t);
           }
         }
-        if (worldLabels.length){
-          // intentar extraer años si los hay
-          const years = [];
-          for (const w of worldLabels){
-            const y = (w.match(/\b(19|20)\d{2}\b/g) || []).map(s=>s);
-            years.push(...y);
-          }
-          const yuniq = Array.from(new Set(years));
-          if (yuniq.length) worlds = `Sí: ${yuniq.slice(0,4).join(', ')}`;
-          else worlds = 'Sí';
-        }
+        // Si no hay filtrados, incluir algunos candidatos curtos (p. ej. Ballon, Champions, Copa)
+        const fallback = titleCandidates.filter(Boolean).slice(0,6);
+        const chosen = filtered.length ? filtered : fallback;
+
+        // Normalizar / deduplicar y limitar
+        const uniq = Array.from(new Set(chosen));
+        titles = titles.concat(uniq).slice(0,4);
       }
 
       // Limpieza final
       if (!position) position = '—';
       if (!nationality) nationality = '—';
       if (!status) status = '—';
-      if (!worlds) worlds = 'No';
-      return { position, nationality, status, teams, worlds, title: playerName };
+      if (!titles || !titles.length) titles = [];
+      return { position, nationality, status, teams, titles, title: playerName };
     }
 
     // ===========================
     // === Heurísticas / mapeos ===
     // ===========================
+
+    function capitalizePhrase(s){
+      if (!s) return s;
+      return s.replace(/\s+/g,' ').trim().replace(/(^|\.\s+)([a-z])/g, (m,p,ch)=>p + ch.toUpperCase());
+    }
 
     function firstInterestingPhrase(text){
       if (!text) return '';
