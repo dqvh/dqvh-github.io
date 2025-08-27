@@ -6,16 +6,10 @@
   <title>Juego del Impostor - Edición Fútbol</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: 'Arial', sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px;
-    }
-    .container {
-      background: white; border-radius: 20px; padding: 40px; box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-      text-align: center; max-width: 720px; width: 100%; min-height: 560px; display: flex; flex-direction: column; justify-content: center; transition: all .5s ease;
-    }
+    body { font-family: 'Arial', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
+    .container { background: white; border-radius: 20px; padding: 40px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); text-align: center; max-width: 720px; width: 100%; min-height: 560px; display: flex; flex-direction: column; justify-content: center; transition: all .5s ease; position: relative; }
     h1, h2 { color: #333; margin-bottom: 24px; font-size: 2.2em; text-shadow: 2px 2px 4px rgba(0,0,0,0.1); }
+
     .setup-screen, .player-setup-screen, .order-screen, .transfer-screen, .game-screen, .discussion-screen, .results-screen { display: none; }
     .setup-screen { display: block; }
 
@@ -30,7 +24,7 @@
     .btn-success { background: #28a745; }
     .btn-danger { background: #dc3545; }
 
-    .role-card { background: #f8f9fa; border: 3px solid #ddd; border-radius: 15px; padding: 32px; margin: 16px 0; font-size: 22px; font-weight: bold; min-height: 200px; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: transform .5s ease; }
+    .role-card { background: #f8f9fa; border: 3px solid #ddd; border-radius: 15px; padding: 32px; margin: 16px 0; font-size: 22px; font-weight: bold; min-height: 200px; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: transform .5s ease; user-select: none; }
     .role-card.reveal { transform: scale(1.03); }
     .impostor-card { background: linear-gradient(135deg, #ff6b6b, #ee5a52); color: white; border-color: #ff4757; animation: pulse 2s infinite; }
     .innocent-card { background: linear-gradient(135deg, #51cf66, #40c057); color: white; border-color: #37b24d; }
@@ -38,6 +32,7 @@
     @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255, 107, 107, .7);} 70% { box-shadow: 0 0 0 10px rgba(255, 107, 107, 0);} 100% { box-shadow: 0 0 0 0 rgba(255, 107, 107, 0);} }
 
     .timer { font-size: 44px; font-weight: bold; color: #ff4757; margin: 16px 0; text-shadow: 2px 2px 4px rgba(0,0,0,.3); }
+
     .warning, .success, .danger { padding: 12px; border-radius: 10px; margin: 12px 0; font-weight: bold; }
     .warning { background: #fff3cd; border: 1px solid #ffeaa7; color: #856404; }
     .success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
@@ -45,6 +40,7 @@
 
     .player-names-container { max-height: 300px; overflow-y: auto; margin: 16px 0; text-align: left; }
     .names-row { display: grid; grid-template-columns: 1fr; gap: 8px; }
+
     .count-controls { display: flex; gap: 8px; margin: 8px 0 16px; }
 
     .player-image { max-width: 70%; border-radius: 10px; }
@@ -55,10 +51,26 @@
     .actions-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 8px; }
     .triple-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-top: 8px; }
     .center { display: flex; justify-content: center; gap: 8px; }
+
+    /* Panel secreto (sin foto) */
+    .secret-hints { position: absolute; left: 50%; bottom: 24px; transform: translateX(-50%); width: calc(100% - 48px); max-width: 680px; background: #111; color: #fff; border-radius: 16px; box-shadow: 0 14px 34px rgba(0,0,0,.35); padding: 16px 16px 12px; text-align: left; opacity: 0; pointer-events: none; transition: opacity .2s ease, transform .2s ease; transform-origin: bottom center; z-index: 10; }
+    .secret-hints.visible { opacity: 1; pointer-events: auto; }
+    .secret-hints h3 { font-size: 18px; margin-bottom: 8px; }
+    .secret-hints p { font-size: 14px; margin: 4px 0; line-height: 1.4; }
+    .secret-row { display: grid; grid-template-columns: 120px 1fr; gap: 8px; }
+    .secret-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; }
+    .btn-ghost { background: #222; color: #fff; border-radius: 10px; padding: 8px 12px; width: auto; box-shadow: none; }
+    .hint-chip { display: inline-block; border: 1px solid #333; padding: 2px 8px; border-radius: 999px; font-size: 12px; margin-right: 6px; }
+    .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.2); border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Pequeña pista visual para vos (no obvia) */
+    .finish-pressable::after { content: '\00a0'; }
   </style>
 </head>
 <body>
   <div class="container">
+    <!-- Pantalla inicial -->
     <div class="setup-screen" id="setupScreen">
       <h1>🕵️ Juego del Impostor - Edición Fútbol</h1>
       <p>Ahora podés: reutilizar los mismos jugadores entre rondas, elegir quién empieza, editar la lista y evitar repetir el jugador secreto entre rondas.</p>
@@ -75,16 +87,15 @@
       <button onclick="setupPlayers()">🚀 Configurar Jugadores</button>
     </div>
 
+    <!-- Configuración de jugadores -->
     <div class="player-setup-screen" id="playerSetupScreen">
       <h2>📝 Nombres de Jugadores</h2>
       <p>Dejá en blanco para usar "Jugador X" por defecto.</p>
-
       <div class="count-controls center">
         <button class="btn-secondary" style="width:auto" onclick="removePlayerInput()">➖ Quitar</button>
         <div id="countLabel" style="font-weight:bold"></div>
         <button class="btn-secondary" style="width:auto" onclick="addPlayerInput()">➕ Agregar</button>
       </div>
-
       <div class="player-names-container" id="playerNamesContainer"></div>
       <div class="actions-row">
         <button class="btn-success" onclick="continueToOrderSelection()">✅ Continuar</button>
@@ -92,6 +103,7 @@
       </div>
     </div>
 
+    <!-- Selección de orden / quién empieza -->
     <div class="order-screen" id="orderScreen">
       <h2>🧭 Elegí quién empieza</h2>
       <select id="startPlayerSelect"></select>
@@ -106,6 +118,7 @@
       </div>
     </div>
 
+    <!-- Transferencia del teléfono -->
     <div class="transfer-screen" id="transferScreen">
       <h2>📱 Pasar el Teléfono</h2>
       <div style="font-size: 100px; margin: 24px 0;">🤐</div>
@@ -120,6 +133,7 @@
       <button class="btn-success" onclick="showPlayerRole()">🔍 Descubrir Mi Rol</button>
     </div>
 
+    <!-- Roles -->
     <div class="game-screen" id="gameScreen">
       <h2 id="playerTitle">Jugador 1</h2>
       <div class="role-card" id="roleCard">
@@ -128,12 +142,25 @@
         <div id="themeImage" style="margin-top: 16px;"></div>
       </div>
       <div class="warning">
-        <strong>¡Memorizá tu rol!</strong><br />
-        Cuando termines, presioná "Listo" para borrar y continuar.
+        <strong>¡Memorizá tu rol!</strong><br /> Cuando termines, presioná "Listo" para borrar y continuar.
       </div>
       <button class="btn-danger" onclick="finishPlayerTurn()" id="finishButton">✅ Listo - Borrar y Continuar</button>
+
+      <!-- Panel Secreto (solo Feli/Felipe) -->
+      <div id="secretHints" class="secret-hints" aria-hidden="true">
+        <h3 id="secretTitle">🔍 Pistas</h3>
+        <div class="secret-row"><span class="hint-chip">Posición</span><p id="hintPosition">—</p></div>
+        <div class="secret-row"><span class="hint-chip">Nacionalidad</span><p id="hintNation">—</p></div>
+        <div class="secret-row"><span class="hint-chip">Estado</span><p id="hintStatus">—</p></div>
+        <div class="secret-row"><span class="hint-chip">Equipos</span><p id="hintTeams">—</p></div>
+        <div class="secret-row"><span class="hint-chip">Característica</span><p id="hintTrait">—</p></div>
+        <div class="secret-actions">
+          <button class="btn-ghost" id="hideHintsBtn" type="button">Ocultar</button>
+        </div>
+      </div>
     </div>
 
+    <!-- Discusión -->
     <div class="discussion-screen" id="discussionScreen">
       <h2>💬 Tiempo de Discusión</h2>
       <div class="timer" id="discussionTimer">3:00</div>
@@ -141,6 +168,7 @@
       <button class="btn-warning" onclick="showResults()">🎭 Revelar Resultados</button>
     </div>
 
+    <!-- Resultados -->
     <div class="results-screen" id="resultsScreen">
       <h2>🎭 Resultados</h2>
       <div id="resultsContent"></div>
@@ -153,31 +181,42 @@
   </div>
 
   <script>
+    // ===========================
     // --- Estado del juego ---
+    // ===========================
     let gameData = {
       theme: '',
       playerCount: 5,
-      playerNames: [],           // 1-indexado
-      playerOrder: [],           // array de índices absolutos [1..N]
-      startingPlayerIndex: 1,    // índice absoluto [1..N]
-      currentPlayer: 0,          // cantidad ya revelados (0..N)
-      impostorIndex: -1,         // índice absoluto [1..N]
+      playerNames: [],          // 1-indexado
+      playerOrder: [],          // índices absolutos [1..N]
+      startingPlayerIndex: 1,   // índice absoluto [1..N]
+      currentPlayer: 0,         // cantidad ya revelados (0..N)
+      impostorIndex: -1,        // índice absoluto [1..N]
       discussionTimer: null,
       timeLeft: 180,
-      usedThemes: new Set()      // evitar repetir jugador secreto
+      usedThemes: new Set()     // evitar repetir jugador secreto
     };
 
+    // ===========================
     // --- Utilidades UI ---
-    const screens = ['setupScreen','playerSetup-screen','orderScreen','transferScreen','gameScreen','discussionScreen','resultsScreen'];
-    function showScreen(id) { screens.forEach(s => document.getElementById(s).style.display = (s===id?'block':'none')); }
+    // ===========================
+    const screens = ['setupScreen','playerSetupScreen','orderScreen','transferScreen','gameScreen','discussionScreen','resultsScreen'];
+    function showScreen(id) {
+      screens.forEach(s => document.getElementById(s).style.display = (s === id ? 'block' : 'none'));
+      if (id !== 'gameScreen') hideSecretHints();
+    }
     function goHome(){ showScreen('setupScreen'); }
 
-    // --- Lista de jugadores famosos (igual que original) ---
+    // ===========================
+    // --- Lista de jugadores ---
+    // ===========================
     const famousPlayers = [
-      "Pelé","Diego Maradona","Johan Cruyff","Franz Beckenbauer","Alfredo Di Stéfano","Ferenc Puskás","Eusébio","Lev Yashin","George Best","Bobby Charlton","Garrincha","Just Fontaine","Gerd Müller","Bobby Moore","Gordon Banks","Marco van Basten","Michel Platini","Roberto Baggio","Lothar Matthäus","Franco Baresi","Paolo Maldini","Ruud Gullit","Frank Rijkaard","Ronald Koeman","Hristo Stoichkov","Romário","Bebeto","Claudio Caniggia","Gabriel Batistuta","Salvatore Schillaci","Ronaldo Nazário","Ronaldinho","Kaká","Zinedine Zidane","Luis Figo","Thierry Henry","Raúl González","Francesco Totti","Alessandro Del Piero","Gianluigi Buffon","Iker Casillas","Oliver Kahn","Michael Ballack","Pavel Nedvěd","Andrés Iniesta","Xavi Hernández","Carles Puyol","Gerard Piqué","David Beckham","Steven Gerrard","Frank Lampard","Paul Scholes","Ryan Giggs","Roy Keane","Patrick Vieira","Claude Makélélé","Fabio Cannavaro","Alessandro Nesta","Jaap Stam","Rio Ferdinand","John Terry","Ashley Cole","Cafu","Roberto Carlos","Javier Zanetti","Lionel Messi","Cristiano Ronaldo","Neymar","Kylian Mbappé","Erling Haaland","Robert Lewandowski","Kevin De Bruyne","Mohamed Salah","Sadio Mané","Riyad Mahrez","Raheem Sterling","Harry Kane","Son Heung-min","Bruno Fernandes","Paul Pogba","N'Golo Kanté","Virgil van Dijk","Sergio Ramos","Raphaël Varane","Karim Benzema","Luka Modrić","Toni Kroos","Casemiro","Sergio Busquets","Pedri","Gavi","Frenkie de Jong","Ansu Fati","Ferran Torres","Dani Olmo","Vinícius Júnior","Jude Bellingham","Eduardo Camavinga","Aurélien Tchouaméni","Enzo Fernández","Jamal Musiala","Florian Wirtz","Bukayo Saka","Phil Foden","Mason Mount","Declan Rice","Martin Ødegaard","Alexander Isak","Darwin Núñez","Luis Díaz","Diogo Jota","Cody Gakpo","Antony","Marcus Rashford","Jadon Sancho","Jack Grealish","Rúben Dias","Josko Gvardiol","William Saliba","Gabriel Martinelli","Lamine Yamal","Alejandro Balde","Ronald Araújo","Jules Koundé","Ousmane Dembélé","Raphinha","Lautaro Martínez","Nico González","Julián Álvarez","Ángel Di María","Paulo Dybala","Leandro Paredes","Rodrigo De Paul","Manuel Neuer","Alisson Becker","Ederson","Jan Oblak","Thibaut Courtois","Hugo Lloris","Keylor Navas","Gianluigi Donnarumma","Yann Sommer","Emiliano Martínez","Marc-André ter Stegen","Claudio Bravo","David de Gea","Jordan Pickford","Aaron Ramsdale","Dani Alves","Marcelo","Jordi Alba","Andrew Robertson","Trent Alexander-Arnold","Kyle Walker","João Cancelo","Achraf Hakimi","Theo Hernández","Lucas Hernández","Dayot Upamecano","Ibrahima Konaté","Eder Militão","Antonio Rüdiger","Thiago Silva","Marquinhos","Presnel Kimpembe","Milan Škriniar","Alessandro Bastoni","Federico Dimarco","Giorgio Chiellini","Leonardo Bonucci","Francesco Acerbi","Kalidou Koulibaly","Aymeric Laporte","Pau Torres","Diego Carlos","José Giménez","Diego Godín","Stefan Savić","Joshua Kimmich","Leon Goretzka","Ilkay Gündogan","Thomas Müller","Marco Reus","Marco Verratti","Nicolo Barella","Lorenzo Pellegrini","Ciro Immobile","Federico Chiesa","Lorenzo Insigne","Domenico Berardi","Matteo Politano","Khvicha Kvaratskhelia","Victor Osimhen","Piotr Zielinski","Fabián Ruiz","Carlos Soler","Mikel Oyarzabal","Isco","Marco Asensio","Brahim Díaz","Federico Valverde","Rodrygo","Endrick","Sergio Agüero","Fernando Torres","David Villa","Álvaro Morata","Gerard Moreno","Dani Carvajal","Nacho Fernández","Jesús Navas","Marcos Llorente","Koke","Saúl Ñíguez","João Félix","Antoine Griezmann","Memphis Depay","Sergi Roberto","Fermín López","Pau Cubarsí","Héctor Fort","Marc Guiu","Vitor Roque","Romelu Lukaku","Eden Hazard","Yannick Carrasco","Jeremy Doku","Charles De Ketelaere","Amadou Onana","Arthur Theate","Wout Faes","Matthijs de Ligt","Denzel Dumfries","Steven Bergwijn","Wout Weghorst","Daley Blind","Stefan de Vrij","Wojciech Szczęsny","Jan Bednarek","Matty Cash","Krzysztof Piątek","Arkadiusz Milik","Kamil Glik","Grzegorz Krychowiak","Jakub Moder","Jack Grealish","Riyad Mahrez","Bernardo Silva","Rodri","John Stones","Diogo Dalot","Harry Maguire","Alexis Mac Allister","Ryan Gravenberch","Wataru Endo","James Maddison","Dejan Kulusevski","Brennan Johnson","Pape Matar Sarr","Yves Bissouma","Pedro Porro","Cristian Romero","Micky van de Ven","Destiny Udogie","Warren Zaïre-Emery","Bradley Barcola","Randal Kolo Muani","Vitinha","João Neves","Nuno Mendes","Arda Güler","Kenan Yildiz","Francisco Conceição","Samu Omorodion","Pau Prim","Dani Rodriguez","Takefusa Kubo","Kang-in Lee","Hwang Hee-chan"
+      "Pelé","Diego Maradona","Johan Cruyff","Franz Beckenbauer","Alfredo Di Stéfano","Ferenc Puskás","Eusébio","Lev Yashin","George Best","Bobby Charlton","Garrincha","Just Fontaine","Gerd Müller","Bobby Moore","Gordon Banks","Marco van Basten","Michel Platini","Roberto Baggio","Lothar Matthäus","Franco Baresi","Paolo Maldini","Ruud Gullit","Frank Rijkaard","Ronald Koeman","Hristo Stoichkov","Romário","Bebeto","Claudio Caniggia","Gabriel Batistuta","Salvatore Schillaci","Ronaldo Nazário","Ronaldinho","Kaká","Zinedine Zidane","Luis Figo","Thierry Henry","Raúl González","Francesco Totti","Alessandro Del Piero","Gianluigi Buffon","Iker Casillas","Oliver Kahn","Michael Ballack","Pavel Nedvěd","Andrés Iniesta","Xavi Hernández","Carles Puyol","Gerard Piqué","David Beckham","Steven Gerrard","Frank Lampard","Paul Scholes","Ryan Giggs","Roy Keane","Patrick Vieira","Claude Makélélé","Fabio Cannavaro","Alessandro Nesta","Jaap Stam","Rio Ferdinand","John Terry","Ashley Cole","Cafu","Roberto Carlos","Javier Zanetti","Lionel Messi","Cristiano Ronaldo","Neymar","Kylian Mbappé","Erling Haaland","Robert Lewandowski","Kevin De Bruyne","Mohamed Salah","Sadio Mané","Riyad Mahrez","Raheem Sterling","Harry Kane","Son Heung-min","Bruno Fernandes","Paul Pogba","N'Golo Kanté","Virgil van Dijk","Sergio Ramos","Raphaël Varane","Karim Benzema","Luka Modrić","Toni Kroos","Casemiro","Sergio Busquets","Pedri","Gavi","Frenkie de Jong","Ansu Fati","Ferran Torres","Dani Olmo","Vinícius Júnior","Jude Bellingham","Eduardo Camavinga","Aurélien Tchouaméni","Enzo Fernández","Jamal Musiala","Florian Wirtz","Bukayo Saka","Phil Foden","Mason Mount","Declan Rice","Martin Ødegaard","Alexander Isak","Darwin Núñez","Luis Díaz","Diogo Jota","Cody Gakpo","Antony","Marcus Rashford","Jadon Sancho","Jack Grealish","Rúben Dias","Josko Gvardiol","William Saliba","Gabriel Martinelli","Lamine Yamal","Alejandro Balde","Ronald Araújo","Jules Koundé","Ousmane Dembélé","Raphinha","Lautaro Martínez","Nico González","Julián Álvarez","Ángel Di María","Paulo Dybala","Leandro Paredes","Rodrigo De Paul","Manuel Neuer","Alisson Becker","Ederson","Jan Oblak","Thibaut Courtois","Hugo Lloris","Keylor Navas","Gianluigi Donnarumma","Yann Sommer","Emiliano Martínez","Marc-André ter Stegen","Claudio Bravo","David de Gea","Jordan Pickford","Aaron Ramsdale","Dani Alves","Marcelo","Jordi Alba","Andrew Robertson","Trent Alexander-Arnold","Kyle Walker","João Cancelo","Achraf Hakimi","Theo Hernández","Lucas Hernández","Dayot Upamecano","Ibrahima Konaté","Eder Militão","Antonio Rüdiger","Thiago Silva","Marquinhos","Presnel Kimpembe","Milan Škriniar","Alessandro Bastoni","Federico Dimarco","Giorgio Chiellini","Leonardo Bonucci","Francesco Acerbi","Kalidou Koulibaly","Aymeric Laporte","Pau Torres","Diego Carlos","José Giménez","Diego Godín","Stefan Savić","Joshua Kimmich","Leon Goretzka","Ilkay Gündogan","Thomas Müller","Marco Reus","Marco Verratti","Nicolo Barella","Lorenzo Pellegrini","Ciro Immobile","Federico Chiesa","Lorenzo Insigne","Domenico Berardi","Matteo Politano","Khvicha Kvaratskhelia","Victor Osimhen","Piotr Zielinski","Fabián Ruiz","Carlos Soler","Mikel Oyarzabal","Isco","Marco Asensio","Brahim Díaz","Federico Valverde","Rodrygo","Endrick","Sergio Agüero","Fernando Torres","David Villa","Álvaro Morata","Gerard Moreno","Dani Carvajal","Nacho Fernández","Jesús Navas","Marcos Llorente","Koke","Saúl Ñíguez","João Félix","Antoine Griezmann","Memphis Depay","Sergi Roberto","Fermín López","Pau Cubarsí","Héctor Fort","Marc Guiu","Vitor Roque","Romelu Lukaku","Eden Hazard","Yannick Carrasco","Jeremy Doku","Charles De Ketelaere","Amadou Onana","Arthur Theate","Wout Faes","Matthijs de Ligt","Denzel Dumfries","Steven Bergwijn","Wout Weghorst","Daley Blind","Stefan de Vrij","Wojciech Szczęsny","Jan Bednarek","Matty Cash","Krzysztof Piątek","Arkadiusz Milik","Kamil Glik","Grzegorz Krychowiak","Jakub Moder","Riyad Mahrez","Bernardo Silva","Rodri","John Stones","Diogo Dalot","Harry Maguire","Alexis Mac Allister","Ryan Gravenberch","Wataru Endo","James Maddison","Dejan Kulusevski","Brennan Johnson","Pape Matar Sarr","Yves Bissouma","Pedro Porro","Cristian Romero","Micky van de Ven","Destiny Udogie","Warren Zaïre-Emery","Bradley Barcola","Randal Kolo Muani","Vitinha","João Neves","Nuno Mendes","Arda Güler","Kenan Yildiz","Francisco Conceição","Samu Omorodion","Pau Prim","Dani Rodriguez","Takefusa Kubo","Kang-in Lee","Hwang Hee-chan"
     ];
 
+    // ===========================
     // --- Flujo inicial ---
+    // ===========================
     function setupPlayers(){
       gameData.playerCount = parseInt(document.getElementById('playerCount').value);
       gameData.playerNames = new Array(gameData.playerCount + 1);
@@ -188,22 +227,32 @@
     function renderPlayerInputs(){
       const container = document.getElementById('playerNamesContainer');
       container.innerHTML = '';
-      for(let i=1;i<=gameData.playerCount;i++){
+      for (let i = 1; i <= gameData.playerCount; i++) {
         const input = document.createElement('input');
-        input.type='text';
-        input.id=`playerName${i}`;
-        input.placeholder=`Nombre del Jugador ${i} (opcional)`;
-        if(gameData.playerNames[i]) input.value = gameData.playerNames[i];
+        input.type = 'text';
+        input.id = `playerName${i}`;
+        input.placeholder = `Nombre del Jugador ${i} (opcional)`;
+        if (gameData.playerNames[i]) input.value = gameData.playerNames[i];
         container.appendChild(input);
       }
       document.getElementById('countLabel').textContent = `${gameData.playerCount} jugadores`;
     }
 
-    function addPlayerInput(){ if(gameData.playerCount>=10) return; gameData.playerCount++; renderPlayerInputs(); }
-    function removePlayerInput(){ if(gameData.playerCount<=3) return; gameData.playerCount--; gameData.playerNames.length = gameData.playerCount+1; renderPlayerInputs(); }
+    function addPlayerInput(){
+      if (gameData.playerCount >= 10) return;
+      gameData.playerCount++;
+      renderPlayerInputs();
+    }
+
+    function removePlayerInput(){
+      if (gameData.playerCount <= 3) return;
+      gameData.playerCount--;
+      gameData.playerNames.length = gameData.playerCount + 1;
+      renderPlayerInputs();
+    }
 
     function continueToOrderSelection(){
-      for(let i=1;i<=gameData.playerCount;i++){
+      for (let i = 1; i <= gameData.playerCount; i++) {
         const name = (document.getElementById(`playerName${i}`)?.value || '').trim();
         gameData.playerNames[i] = name || `Jugador ${i}`;
       }
@@ -213,77 +262,95 @@
       showScreen('orderScreen');
     }
 
-    // --- Orden y selección de inicio ---
-    function buildDefaultOrder(){ gameData.playerOrder = Array.from({length: gameData.playerCount}, (_,i)=>i+1); }
-    function rotateOrderStartingAt(startAbsIndex){
-      const order = Array.from({length: gameData.playerCount}, (_,i)=>i+1);
-      const pos = order.indexOf(startAbsIndex);
-      if(pos<0) return order;
-      return order.slice(pos).concat(order.slice(0,pos));
+    // ===========================
+    // --- Orden e inicio ---
+    // ===========================
+    function buildDefaultOrder(){
+      gameData.playerOrder = Array.from({length: gameData.playerCount}, (_, i) => i + 1);
     }
+
+    function rotateOrderStartingAt(startAbsIndex){
+      const order = Array.from({length: gameData.playerCount}, (_, i) => i + 1);
+      const pos = order.indexOf(startAbsIndex);
+      if (pos < 0) return order;
+      return order.slice(pos).concat(order.slice(0, pos));
+    }
+
     function populateStartSelect(){
       const sel = document.getElementById('startPlayerSelect');
       sel.innerHTML = '';
-      for(let i=1;i<=gameData.playerCount;i++){
+      for (let i = 1; i <= gameData.playerCount; i++) {
         const opt = document.createElement('option');
         opt.value = String(i);
         opt.textContent = gameData.playerNames[i];
-        if(i===gameData.startingPlayerIndex) opt.selected = true;
+        if (i === gameData.startingPlayerIndex) opt.selected = true;
         sel.appendChild(opt);
       }
       sel.onchange = () => updateOrderPreview(parseInt(sel.value));
     }
+
     function updateOrderPreview(startAbsIndex){
       gameData.startingPlayerIndex = startAbsIndex;
       const order = rotateOrderStartingAt(startAbsIndex);
       const list = document.getElementById('orderPreviewList');
       list.innerHTML = '';
-      order.forEach(idx=>{
+      order.forEach(idx => {
         const li = document.createElement('li');
         li.textContent = gameData.playerNames[idx];
         list.appendChild(li);
       });
     }
+
     function shuffleOrder(){
-      // aleatorio y setear como starting el primero
-      const arr = Array.from({length: gameData.playerCount}, (_,i)=>i+1);
-      for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; }
+      const arr = Array.from({length: gameData.playerCount}, (_, i) => i + 1);
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
       gameData.playerOrder = arr.slice();
       gameData.startingPlayerIndex = arr[0];
-      // reflejar en UI
       const sel = document.getElementById('startPlayerSelect');
       sel.value = String(gameData.startingPlayerIndex);
       const list = document.getElementById('orderPreviewList');
       list.innerHTML = '';
-      arr.forEach(idx=>{ const li=document.createElement('li'); li.textContent=gameData.playerNames[idx]; list.appendChild(li); });
+      arr.forEach(idx => {
+        const li = document.createElement('li');
+        li.textContent = gameData.playerNames[idx];
+        list.appendChild(li);
+      });
     }
 
     function startRoundFromOrder(){
-      // preparar ronda con el starting seleccionado
       gameData.playerOrder = rotateOrderStartingAt(gameData.startingPlayerIndex);
       prepareRound();
     }
 
     function prepareRound(){
-      // Reset de ronda
-      gameData.currentPlayer = 0; // 0 revelados
+      gameData.currentPlayer = 0; // reset revelados
       pickNewThemeNoRepeat();
-      gameData.impostorIndex = gameData.playerOrder[Math.floor(Math.random() * gameData.playerCount)];
+      gameData.impostorIndex = Math.floor(Math.random() * gameData.playerCount) + 1; // absoluto
       showTransferScreenForRole();
     }
 
-    // --- Elección del secreto sin repetir ---
+    // ===========================
+    // --- Elección del secreto ---
+    // ===========================
     function pickNewThemeNoRepeat(){
       let candidates = famousPlayers.filter(p => !gameData.usedThemes.has(p));
-      if(candidates.length === 0){ gameData.usedThemes.clear(); candidates = famousPlayers.slice(); }
-      const choice = candidates[Math.floor(Math.random()*candidates.length)];
+      if (candidates.length === 0){
+        gameData.usedThemes.clear();
+        candidates = famousPlayers.slice();
+      }
+      const choice = candidates[Math.floor(Math.random() * candidates.length)];
       gameData.theme = choice;
       gameData.usedThemes.add(choice);
     }
 
+    // ===========================
     // --- Transferencias / roles ---
+    // ===========================
     function showTransferScreenForRole(){
-      if(gameData.currentPlayer < gameData.playerCount){
+      if (gameData.currentPlayer < gameData.playerCount){
         const nextAbs = gameData.playerOrder[gameData.currentPlayer];
         document.getElementById('nextPlayerName').textContent = gameData.playerNames[nextAbs];
         document.getElementById('receivingPlayer').textContent = gameData.playerNames[nextAbs];
@@ -304,32 +371,14 @@
       try{
         const response = await fetch(url);
         const data = await response.json();
-        const pages = data.query.pages; const pageId = Object.keys(pages)[0];
+        const pages = data.query.pages;
+        const pageId = Object.keys(pages)[0];
         return pages[pageId].thumbnail ? pages[pageId].thumbnail.source : '';
-      }catch(err){ console.error('Error fetching image:', err); return ''; }
+      }catch(err){
+        console.error('Error fetching image:', err);
+        return '';
+      }
     }
-
-    // --- INICIO DEL CÓDIGO DEL TRUCO ---
-    // Nueva función para obtener pistas de texto de Wikipedia
-    async function fetchPlayerClues(title) {
-        const url = `https://es.wikipedia.org/w/api.php?action=query&prop=extracts&exintro=true&explaintext=true&redirects=1&format=json&titles=${encodeURIComponent(title)}&origin=*`;
-        try {
-            const response = await fetch(url);
-            const data = await response.json();
-            const pages = data.query.pages;
-            const pageId = Object.keys(pages)[0];
-            const extract = pages[pageId].extract;
-            if (extract) {
-                // Devolvemos las primeras 2-3 oraciones para que sea una pista corta
-                return extract.split('. ').slice(0, 2).join('. ') + '.';
-            }
-            return 'No se encontraron pistas para este jugador.';
-        } catch (err) {
-            console.error('Error fetching clues:', err);
-            return 'Error al buscar pistas.';
-        }
-    }
-    // --- FIN DEL CÓDIGO DEL TRUCO ---
 
     async function updatePlayerScreen(){
       const playerTitle = document.getElementById('playerTitle');
@@ -340,65 +389,59 @@
       const finishButton = document.getElementById('finishButton');
 
       const absIndex = gameData.playerOrder[gameData.currentPlayer - 1];
-      playerTitle.textContent = gameData.playerNames[absIndex];
+      const currentName = gameData.playerNames[absIndex];
+      playerTitle.textContent = currentName;
       themeImage.innerHTML = '';
 
-      // --- INICIO DE LA MODIFICACIÓN DEL TRUCO ---
-      // Resetear cualquier comportamiento del truco de rondas anteriores
-      roleText.onclick = null;
-      roleText.style.cursor = 'default';
-      // --- FIN DE LA MODIFICACIÓN DEL TRUCO ---
-
-      if(absIndex === gameData.impostorIndex){
+      if (absIndex === gameData.impostorIndex){
         roleCard.className = 'role-card impostor-card reveal';
         roleText.textContent = '🎭 ERES EL IMPOSTOR';
         themeText.textContent = '¡No sabes quién es el jugador secreto! Descúbrelo sin que te noten.';
-
-        // --- INICIO DE LA LÓGICA DEL TRUCO ---
-        // Comprobar si el nombre del jugador contiene "feli"
-        if (gameData.playerNames[absIndex].toLowerCase().includes('feli')) {
-          roleText.style.cursor = 'pointer'; // Pista visual
-          themeText.innerHTML = '<em>(Haz clic en el título para una ayuda secreta)</em>';
-
-          roleText.onclick = async () => {
-              themeText.textContent = 'Buscando pistas...';
-              const clues = await fetchPlayerClues(gameData.theme);
-              themeText.innerHTML = `<strong style="color:#fff;">PISTAS:</strong><br>${clues}`;
-              // Desactivar el click después de usarlo para no spamear
-              roleText.onclick = null;
-              roleText.style.cursor = 'default';
-          };
-        }
-        // --- FIN DE LA LÓGICA DEL TRUCO ---
-
       } else {
         roleCard.className = 'role-card innocent-card reveal';
         roleText.textContent = '👥 ERES INOCENTE';
         themeText.textContent = `El jugador secreto es: ${gameData.theme.toUpperCase()}`;
         const imageUrl = await fetchPlayerImage(gameData.theme);
-        if(imageUrl){ themeImage.innerHTML = `<img src="${imageUrl}" alt="${gameData.theme}" class="player-image">`; }
+        if (imageUrl){
+          themeImage.innerHTML = `<img src="${imageUrl}" alt="${gameData.theme}" class="player-image">`;
+        }
       }
 
       finishButton.textContent = (gameData.currentPlayer === gameData.playerCount) ? '✅ Listo - Iniciar Discusión' : '✅ Listo - Borrar y Continuar';
+
+      // Adjuntar / quitar el modo secreto según el nombre
+      attachSecretModeIfNeeded(currentName);
     }
 
     function finishPlayerTurn(){
       document.getElementById('roleCard').classList.remove('reveal');
+      hideSecretHints();
       showTransferScreenForRole();
     }
 
+    // ===========================
     // --- Discusión / temporizador ---
-    function startDiscussion(){ showScreen('discussionScreen'); startTimer(); }
+    // ===========================
+    function startDiscussion(){
+      showScreen('discussionScreen');
+      startTimer();
+    }
+
     function startTimer(){
       gameData.timeLeft = 180;
       const timerElement = document.getElementById('discussionTimer');
       clearInterval(gameData.discussionTimer);
-      gameData.discussionTimer = setInterval(()=>{
-        const minutes = Math.floor(gameData.timeLeft/60);
-        const seconds = gameData.timeLeft%60;
+      gameData.discussionTimer = setInterval(() => {
+        const minutes = Math.floor(gameData.timeLeft / 60);
+        const seconds = gameData.timeLeft % 60;
         timerElement.textContent = `${minutes}:${seconds.toString().padStart(2,'0')}`;
-        if(gameData.timeLeft<=0){ clearInterval(gameData.discussionTimer); timerElement.textContent='¡TIEMPO!'; showResults(); }
-        gameData.timeLeft--; }, 1000);
+        if (gameData.timeLeft <= 0){
+          clearInterval(gameData.discussionTimer);
+          timerElement.textContent = '¡TIEMPO!';
+          showResults();
+        }
+        gameData.timeLeft--;
+      }, 1000);
     }
 
     async function showResults(){
@@ -408,30 +451,407 @@
       let html = `<h3>🎭 El impostor era: <span style="color:#ff4757;">${gameData.playerNames[gameData.impostorIndex]}</span></h3>`;
       html += `<p><strong>Jugador secreto:</strong> ${gameData.theme}</p><div id="resultsImage" style="margin-top: 12px;"></div>`;
       resultsContent.innerHTML = html;
+
       const resultsImage = document.getElementById('resultsImage');
-      if(resultsImage){ const imageUrl = await fetchPlayerImage(gameData.theme); if(imageUrl){ resultsImage.innerHTML = `<img src="${imageUrl}" alt="${gameData.theme}" class="player-image">`; } }
+      if (resultsImage){
+        const imageUrl = await fetchPlayerImage(gameData.theme);
+        if (imageUrl){
+          resultsImage.innerHTML = `<img src="${imageUrl}" alt="${gameData.theme}" class="player-image">`;
+        }
+      }
     }
 
+    // ===========================
     // --- Navegación desde resultados ---
+    // ===========================
     function nextRound(){
-      // Reusar mismos jugadores -> ir a selección de quién empieza
       populateStartSelect();
       updateOrderPreview(gameData.startingPlayerIndex);
       showScreen('orderScreen');
     }
+
     function managePlayers(){
-      // volver a la pantalla de nombres con los actuales
       renderPlayerInputs();
       showScreen('playerSetupScreen');
     }
 
+    // ===========================
     // --- Reseteo ---
+    // ===========================
     function hardReset(){
       gameData = { theme:'', playerCount:5, playerNames:[], playerOrder:[], startingPlayerIndex:1, currentPlayer:0, impostorIndex:-1, discussionTimer:null, timeLeft:180, usedThemes: new Set() };
       document.getElementById('playerCount').value = '5';
+      hideSecretHints();
       showScreen('setupScreen');
     }
 
+    // =====================================================
+    // === MODO SECRETO (solo "Feli" / "Felipe") ========
+    // =====================================================
+
+    const SECRET_NAMES = new Set(['feli','felipe']);
+    const hintsCache = new Map(); // nombreJugadorSecreto -> hints
+
+    function normalizeName(s){
+      return (s || '')
+        .toLowerCase()
+        .normalize('NFD').replace(/\p{Diacritic}/gu,'')
+        .trim()
+        .replace(/\s+/g,' ');
+    }
+
+    function isSecretUser(name){
+      return SECRET_NAMES.has(normalizeName(name));
+    }
+
+    let pressTimer = null;
+    let tapCount = 0;
+    let tapTimeout = null;
+
+    function attachSecretModeIfNeeded(currentName){
+      const finishButton = document.getElementById('finishButton');
+      const roleCard = document.getElementById('roleCard');
+
+      // Limpiar restos previos
+      finishButton.classList.remove('finish-pressable');
+      finishButton.onmousedown = finishButton.ontouchstart = null;
+      window.onmouseup = window.ontouchend = null;
+      roleCard.onclick = null;
+
+      if (!isSecretUser(currentName)){
+        hideSecretHints();
+        return; // no activar modo secreto
+      }
+
+      // Long-press en "Listo"
+      finishButton.classList.add('finish-pressable');
+      const startPress = (e) => {
+        e.preventDefault();
+        if (pressTimer) clearTimeout(pressTimer);
+        pressTimer = setTimeout(async () => {
+          await showSecretHintsFor(gameData.theme);
+        }, 800); // ~1s
+      };
+      const cancelPress = () => { if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; } };
+
+      finishButton.onmousedown = startPress;
+      finishButton.ontouchstart = startPress;
+      window.onmouseup = cancelPress;
+      window.ontouchend = cancelPress;
+
+      // Respaldo: triple‑tap en la tarjeta
+      roleCard.onclick = async () => {
+        tapCount++;
+        if (tapCount === 1){
+          tapTimeout = setTimeout(() => { tapCount = 0; }, 1200);
+        }
+        if (tapCount >= 3){
+          clearTimeout(tapTimeout);
+          tapCount = 0;
+          await showSecretHintsFor(gameData.theme);
+        }
+      };
+
+      // Botón "Ocultar"
+      document.getElementById('hideHintsBtn').onclick = hideSecretHints;
+    }
+
+    function hideSecretHints(){
+      const box = document.getElementById('secretHints');
+      if (!box) return;
+      box.classList.remove('visible');
+      box.setAttribute('aria-hidden','true');
+    }
+
+    async function showSecretHintsFor(playerName){
+      const titleEl = document.getElementById('secretTitle');
+      const posEl = document.getElementById('hintPosition');
+      const natEl = document.getElementById('hintNation');
+      const stEl  = document.getElementById('hintStatus');
+      const tmEl  = document.getElementById('hintTeams');
+      const trEl  = document.getElementById('hintTrait');
+      const box   = document.getElementById('secretHints');
+
+      titleEl.textContent = `🔍 Pistas de ${playerName}:`;
+      posEl.innerHTML = '<span class="spinner"></span> Cargando…';
+      natEl.textContent = 'Cargando…';
+      stEl.textContent = 'Cargando…';
+      tmEl.textContent = 'Cargando…';
+      trEl.textContent = 'Cargando…';
+
+      box.classList.add('visible');
+      box.setAttribute('aria-hidden','false');
+
+      try {
+        const hints = await getHints(playerName);
+        posEl.textContent = hints.position || 'Desconocida';
+        natEl.textContent = hints.nationality || '—';
+        stEl.textContent  = hints.status || '—';
+        tmEl.textContent  = hints.teams && hints.teams.length ? hints.teams.join(', ') : '—';
+        trEl.textContent  = hints.trait || '—';
+      } catch (err){
+        posEl.textContent = 'No disponible';
+        natEl.textContent = '—';
+        stEl.textContent  = '—';
+        tmEl.textContent  = '—';
+        trEl.textContent  = '—';
+        console.error(err);
+      }
+    }
+
+    // ===========================
+    // === Wikipedia / Wikidata ===
+    // ===========================
+
+    async function getHints(playerName){
+      const key = normalizeName(playerName);
+      if (hintsCache.has(key)) return hintsCache.get(key);
+
+      const summary = await fetchWikiSummaryAny(playerName);
+      const qid = await getWikidataIdFromAny(playerName, summary?.title);
+      let wd = null;
+      if (qid) wd = await fetchWikidataEntity(qid);
+
+      const hints = buildHintsFromSources(playerName, summary, wd);
+      hintsCache.set(key, hints);
+      return hints;
+    }
+
+    // --- Wikipedia Summary (en→es fallback) ---
+    async function fetchWikiSummaryAny(title){
+      let sum = await fetchWikiSummary(title, 'en');
+      if (!sum) sum = await fetchWikiSummary(title, 'es');
+      return sum;
+    }
+
+    async function fetchWikiSummary(title, lang){
+      // Intentar acceso directo; si 404, buscar primero
+      const direct = await fetch(`https://${lang}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`)
+        .then(r => r.ok ? r.json() : null)
+        .catch(() => null);
+      if (direct && !direct.title?.includes('may refer to')) return direct;
+
+      // Buscar el mejor match
+      const sr = await fetch(`https://${lang}.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(title)}&format=json&origin=*`)
+        .then(r => r.json()).catch(() => null);
+      const best = sr?.query?.search?.[0]?.title;
+      if (!best) return direct; // nada mejor
+      return fetch(`https://${lang}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(best)}`)
+        .then(r => r.ok ? r.json() : null)
+        .catch(() => null);
+    }
+
+    // --- Obtener QID (en→es fallback) ---
+    async function getWikidataIdFromAny(title, resolvedTitle){
+      const fromEn = await getWikidataIdFromWikiTitle(resolvedTitle || title, 'en');
+      if (fromEn) return fromEn;
+      return getWikidataIdFromWikiTitle(resolvedTitle || title, 'es');
+    }
+
+    async function getWikidataIdFromWikiTitle(title, lang){
+      try{
+        const url = `https://${lang}.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(title)}&prop=pageprops&format=json&origin=*`;
+        const data = await fetch(url).then(r=>r.json());
+        const pages = data?.query?.pages || {};
+        const pid = Object.keys(pages)[0];
+        const qid = pages?.[pid]?.pageprops?.wikibase_item;
+        return qid || null;
+      }catch{ return null; }
+    }
+
+    // --- Wikidata entity (claims + labels) ---
+    async function fetchWikidataEntity(qid){
+      try{
+        const base = `https://www.wikidata.org/w/api.php?action=wbgetentities&format=json&origin=*`;
+        const ent = await fetch(`${base}&ids=${qid}&props=claims|labels&languages=es|en`).then(r=>r.json());
+        const entity = ent?.entities?.[qid];
+        if (!entity) return null;
+
+        // Tomar IDs de items referenciados (P413 posición, P27 país, P54 equipos)
+        const refIds = new Set();
+        const claims = entity.claims || {};
+        const takeIds = (p) => (claims[p]||[]).forEach(st => {
+          const id = st?.mainsnak?.datavalue?.value?.id;
+          if (id) refIds.add(id);
+        });
+        takeIds('P413'); // posición
+        takeIds('P27');  // ciudadanía
+        (claims['P54']||[]).forEach(st => {
+          const id = st?.mainsnak?.datavalue?.value?.id; if (id) refIds.add(id);
+          const q = st?.qualifiers || {};
+          (q['P413']||[]).forEach(qv => { const id2 = qv?.datavalue?.value?.id; if (id2) refIds.add(id2); });
+        });
+
+        const labels = await resolveLabels(Array.from(refIds));
+        return { qid, claims, labels };
+      }catch(err){ console.warn('Wikidata error', err); return null; }
+    }
+
+    async function resolveLabels(ids){
+      if (!ids || !ids.length) return {};
+      // Dividir en bloques por límites de URL
+      const chunks = [];
+      for (let i = 0; i < ids.length; i += 45) chunks.push(ids.slice(i, i+45));
+      const out = {};
+      const base = `https://www.wikidata.org/w/api.php?action=wbgetentities&format=json&origin=*&props=labels&languages=es|en`;
+      for (const chunk of chunks){
+        try{
+          const data = await fetch(`${base}&ids=${chunk.join('|')}`).then(r=>r.json());
+          Object.entries(data.entities||{}).forEach(([id, ent]) => {
+            const lbl = ent?.labels?.es?.value || ent?.labels?.en?.value;
+            if (lbl) out[id] = lbl;
+          });
+        }catch{}
+      }
+      return out;
+    }
+
+    function buildHintsFromSources(playerName, summary, wd){
+      // Defaults
+      let position = '';
+      let nationality = '';
+      let status = '';
+      let teams = [];
+      let trait = '';
+
+      // 1) Extraer del summary
+      if (summary){
+        const extract = summary.extract || '';
+        const desc = summary.description || '';
+        // Nacionalidad basada en description (en): "English footballer"
+        nationality = mapNationality(desc) || nationalityFromText(extract) || '';
+        // Posición heurística desde texto
+        position = mapPositionFromText(extract);
+        // Estado
+        status = /former|retired/i.test(extract) ? 'Retirado' : 'Activo';
+        // Trait: primera oración limpia
+        trait = firstInterestingPhrase(extract);
+        // Intentar club actual desde extract
+        const club = currentClubFromText(extract);
+        if (club) teams.push(club);
+      }
+
+      // 2) Enriquecer con Wikidata si existe
+      if (wd){
+        const { claims, labels } = wd;
+        // Posición (P413)
+        if (!position){
+          const p413 = claims['P413']?.[0]?.mainsnak?.datavalue?.value?.id;
+          if (p413 && labels[p413]) position = mapPosition(labels[p413]);
+        }
+        // Nacionalidad (P27)
+        if (!nationality){
+          const p27 = claims['P27']?.[0]?.mainsnak?.datavalue?.value?.id;
+          if (p27 && labels[p27]) nationality = labels[p27];
+        }
+        // Equipos (P54)
+        const p54 = claims['P54'] || [];
+        const enriched = [];
+        let isActive = false;
+        const now = new Date();
+        for (const st of p54){
+          const id = st?.mainsnak?.datavalue?.value?.id;
+          if (!id) continue;
+          const name = labels[id];
+          if (!name) continue;
+          // Fechas para estado
+          const q = st.qualifiers || {};
+          const end = q['P582']?.[0]?.datavalue?.value?.time || null; // +0000-00-00T00:00:00Z
+          if (!end) isActive = true;
+          enriched.push(name);
+        }
+        // Quitar duplicados y acotar
+        const uniq = Array.from(new Set([...teams, ...enriched]));
+        teams = uniq.slice(0, 5);
+        if (!status) status = isActive ? 'Activo' : 'Retirado';
+      }
+
+      // Limpieza final
+      if (!position) position = '—';
+      if (!nationality) nationality = '—';
+      if (!status) status = '—';
+      if (!trait) trait = '';
+      return { position, nationality, status, teams, trait, title: playerName };
+    }
+
+    // ===========================
+    // === Heurísticas / mapeos ===
+    // ===========================
+
+    function firstInterestingPhrase(text){
+      if (!text) return '';
+      const first = text.split(/\.(\s|$)/)[0];
+      // Quitar cola muy larga
+      return (first || '').replace(/\s*\([^\)]*\)\s*/g,'').trim();
+    }
+
+    function currentClubFromText(text){
+      if (!text) return '';
+      // Buscar después de "for ... club X" o "for X"
+      const m = text.match(/for (?:the )?(?:[A-Za-zÀ-ÿ'\- ]+ club )?([A-Z][A-Za-zÀ-ÿ0-9'\.\-& ]{2,})(?:[,\.\n]| who| and| of| in )/);
+      return m ? m[1].trim() : '';
+    }
+
+    function nationalityFromText(text){
+      if (!text) return '';
+      const m = text.match(/\b([A-Z][a-z]+) professional footballer/);
+      return mapNationality(m?.[1] || '');
+    }
+
+    function mapNationality(adj){
+      const a = (adj||'').toLowerCase();
+      const map = {
+        'english':'Inglaterra','british':'Reino Unido','scottish':'Escocia','welsh':'Gales','northern irish':'Irlanda del Norte','irish':'Irlanda',
+        'spanish':'España','argentine':'Argentina','argentinian':'Argentina','portuguese':'Portugal','brazilian':'Brasil','french':'Francia','german':'Alemania','italian':'Italia','belgian':'Bélgica','dutch':'Países Bajos','norwegian':'Noruega','swedish':'Suecia','danish':'Dinamarca','polish':'Polonia','czech':'Chequia','croatian':'Croacia','serbian':'Serbia','bosnian':'Bosnia y Herzegovina','slovenian':'Eslovenia','slovak':'Eslovaquia','turkish':'Turquía','moroccan':'Marruecos','algerian':'Argelia','egyptian':'Egipto','senegalese':'Senegal','cameroonian':'Camerún','ivorian':'Costa de Marfil','ghanaian':'Ghana','nigerian':'Nigeria','mexican':'México','uruguayan':'Uruguay','chilean':'Chile','colombian':'Colombia','paraguayan':'Paraguay','peruvian':'Perú','ecuadorian':'Ecuador','american':'Estados Unidos','canadian':'Canadá','austrian':'Austria','swiss':'Suiza','japanese':'Japón','south korean':'Corea del Sur','korean':'Corea del Sur'
+      };
+      return map[a] || '';
+    }
+
+    function mapPositionFromText(text){
+      if (!text) return '';
+      // "plays as a/an ... for"  |  "played as a/an ..."
+      const m = text.match(/play(?:s|ed) as an? ([a-z \-]+?)(?: for|\.|,)/i);
+      const raw = m ? m[1].trim() : '';
+      return mapPosition(raw);
+    }
+
+    function mapPosition(raw){
+      const r = (raw||'').toLowerCase();
+      const dict = [
+        ['goalkeeper','Portero'],
+        ['keeper','Portero'],
+        ['striker','Delantero'],
+        ['forward','Delantero'],
+        ['winger','Extremo'],
+        ['midfielder','Mediocampista'],
+        ['attacking midfielder','Mediapunta'],
+        ['defensive midfielder','Mediocentro defensivo'],
+        ['central midfielder','Mediocentro'],
+        ['playmaker','Mediapunta'],
+        ['defender','Defensor'],
+        ['centre-back','Defensor central'],
+        ['center-back','Defensor central'],
+        ['left-back','Lateral izquierdo'],
+        ['right-back','Lateral derecho'],
+        ['wing-back','Carrilero'],
+        ['full-back','Lateral'],
+      ];
+      for (const [en, es] of dict){ if (r.includes(en)) return es; }
+      // Si viene etiqueta de Wikidata en español
+      if (/portero/i.test(raw)) return 'Portero';
+      if (/delantero/i.test(raw)) return 'Delantero';
+      if (/extremo/i.test(raw)) return 'Extremo';
+      if (/mediocampista|centrocampista/i.test(raw)) return 'Mediocampista';
+      if (/defensa|defensor/i.test(raw)) return 'Defensor';
+      return raw ? raw : '';
+    }
+
+    // ===========================
+    // === Init ==================
+    // ===========================
+
+    // Arranca en la pantalla inicial
+    // (setupPlayers() se llama desde el botón)
   </script>
 </body>
 </html>
