@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Juego del Impostor - Edición Fútbol (v2)</title>
+  <title>Juego del Impostor - Edición Fútbol (v3)</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Arial', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
@@ -72,9 +72,19 @@
   <div class="container">
     <!-- Pantalla inicial -->
     <div class="setup-screen" id="setupScreen">
-      <h1>🕵️ Juego del Impostor - Edición Fútbol (v2)</h1>
-      <p>v2: amplié la lista de jugadores con más íconos especialmente de Argentina y Europa, y mejoré la búsqueda de imágenes (intenta varios métodos para mostrar foto siempre que sea posible).</p>
-      <select id="playerCount">
+      <h1>🕵️ Juego del Impostor - Edición Fútbol (v3)</h1>
+      <p>Elegí el modo de jugadores antes de empezar: "De todo", "Históricos", "Actuales", "Retirados" o "Demasiado famosos".</p>
+
+      <label for="playerPoolMode" style="text-align:left;display:block;margin-top:12px;font-weight:bold;">Seleccioná el modo de jugadores:</label>
+      <select id="playerPoolMode" onchange="onModeChange()">
+        <option value="all" selected>De todo (mezcla)</option>
+        <option value="historical">Históricos (leyendas clásicas)</option>
+        <option value="current">Actuales (estrellas en activo)</option>
+        <option value="retired">Retirados (figuras recientes retiradas)</option>
+        <option value="famous">Demasiado famosos (solo los más icónicos)</option>
+      </select>
+
+      <select id="playerCount" style="margin-top:18px">
         <option value="3">3 Jugadores</option>
         <option value="4">4 Jugadores</option>
         <option value="5" selected>5 Jugadores</option>
@@ -87,7 +97,7 @@
       <button onclick="setupPlayers()">🚀 Configurar Jugadores</button>
     </div>
 
-    <!-- Configuración de jugadores -->
+    <!-- Resto de pantallas iguales -->
     <div class="player-setup-screen" id="playerSetupScreen">
       <h2>📝 Nombres de Jugadores</h2>
       <p>Dejá en blanco para usar "Jugador X" por defecto.</p>
@@ -103,7 +113,6 @@
       </div>
     </div>
 
-    <!-- Selección de orden / quién empieza -->
     <div class="order-screen" id="orderScreen">
       <h2>🧭 Elegí quién empieza</h2>
       <select id="startPlayerSelect"></select>
@@ -118,7 +127,6 @@
       </div>
     </div>
 
-    <!-- Transferencia del teléfono -->
     <div class="transfer-screen" id="transferScreen">
       <h2>📱 Pasar el Teléfono</h2>
       <div style="font-size: 100px; margin: 24px 0;">🤐</div>
@@ -133,7 +141,6 @@
       <button class="btn-success" onclick="showPlayerRole()">🔍 Descubrir Mi Rol</button>
     </div>
 
-    <!-- Roles -->
     <div class="game-screen" id="gameScreen">
       <h2 id="playerTitle">Jugador 1</h2>
       <div class="role-card" id="roleCard">
@@ -146,7 +153,6 @@
       </div>
       <button class="btn-danger" onclick="finishPlayerTurn()" id="finishButton">✅ Listo - Borrar y Continuar</button>
 
-      <!-- Panel Secreto (solo Feli/Felipe) -->
       <div id="secretHints" class="secret-hints" aria-hidden="true">
         <h3 id="secretTitle">🔍 Pistas</h3>
         <div class="secret-row"><span class="hint-chip">Posición</span><p id="hintPosition">—</p></div>
@@ -160,7 +166,6 @@
       </div>
     </div>
 
-    <!-- Discusión -->
     <div class="discussion-screen" id="discussionScreen">
       <h2>💬 Tiempo de Discusión</h2>
       <div class="timer" id="discussionTimer">3:00</div>
@@ -168,7 +173,6 @@
       <button class="btn-warning" onclick="showResults()">🎭 Revelar Resultados</button>
     </div>
 
-    <!-- Resultados -->
     <div class="results-screen" id="resultsScreen">
       <h2>🎭 Resultados</h2>
       <div id="resultsContent"></div>
@@ -194,7 +198,7 @@
       impostorIndex: -1,        // índice absoluto [1..N]
       discussionTimer: null,
       timeLeft: 180,
-      usedThemes: new Set()     // evitar repetir jugador secreto
+      usedThemes: new Set()     // evitar repetir jugador secreto (reseteable al cambiar modo)
     };
 
     // ===========================
@@ -208,27 +212,68 @@
     function goHome(){ showScreen('setupScreen'); }
 
     // ===========================
-    // --- Lista de jugadores ---
+    // --- Listas / Modos ---
     // ===========================
-    // v2: lista expandida con más íconos argentinos/europeos. Intenté incluir nombres MUY conocidos.
-    const famousPlayers = [
+    // Base: "de todo" contiene la lista amplia usada previamente (acorde v2)
+    const allPlayers = [
       "Pelé","Diego Maradona","Johan Cruyff","Franz Beckenbauer","Alfredo Di Stéfano","Ferenc Puskás","Eusébio","Lev Yashin","George Best","Bobby Charlton","Garrincha","Just Fontaine","Gerd Müller","Bobby Moore","Gordon Banks","Marco van Basten","Michel Platini","Roberto Baggio","Lothar Matthäus","Franco Baresi","Paolo Maldini","Ruud Gullit","Frank Rijkaard","Ronald Koeman","Hristo Stoichkov","Romário","Bebeto","Claudio Caniggia","Gabriel Batistuta","Salvatore Schillaci","Ronaldo Nazário","Ronaldinho","Kaká","Zinedine Zidane","Luis Figo","Thierry Henry","Raúl González","Francesco Totti","Alessandro Del Piero","Gianluigi Buffon","Iker Casillas","Oliver Kahn","Michael Ballack","Pavel Nedvěd","Andrés Iniesta","Xavi Hernández","Carles Puyol","Gerard Piqué","David Beckham","Steven Gerrard","Frank Lampard","Paul Scholes","Ryan Giggs","Roy Keane","Patrick Vieira","Claude Makélélé","Fabio Cannavaro","Alessandro Nesta","Jaap Stam","Rio Ferdinand","John Terry","Ashley Cole","Cafu","Roberto Carlos","Javier Zanetti","Lionel Messi","Cristiano Ronaldo","Neymar","Kylian Mbappé","Erling Haaland","Robert Lewandowski","Kevin De Bruyne","Mohamed Salah","Sadio Mané","Riyad Mahrez","Raheem Sterling","Harry Kane","Son Heung-min","Bruno Fernandes","Paul Pogba","N'Golo Kanté","Virgil van Dijk","Sergio Ramos","Raphaël Varane","Karim Benzema","Luka Modrić","Toni Kroos","Casemiro","Sergio Busquets","Pedri","Gavi","Frenkie de Jong","Ansu Fati","Ferran Torres","Dani Olmo","Vinícius Júnior","Jude Bellingham","Eduardo Camavinga","Aurélien Tchouaméni","Enzo Fernández","Jamal Musiala","Florian Wirtz","Bukayo Saka","Phil Foden","Mason Mount","Declan Rice","Martin Ødegaard","Alexander Isak","Darwin Núñez","Luis Díaz","Diogo Jota","Cody Gakpo","Antony","Marcus Rashford","Jadon Sancho","Jack Grealish","Rúben Dias","Joško Gvardiol","William Saliba","Gabriel Martinelli","Lamine Yamal","Alejandro Balde","Ronald Araújo","Jules Koundé","Ousmane Dembélé","Raphinha","Lautaro Martínez","Nico González","Julián Álvarez","Ángel Di María","Paulo Dybala","Leandro Paredes","Rodrigo De Paul","Manuel Neuer","Alisson Becker","Ederson","Jan Oblak","Thibaut Courtois","Hugo Lloris","Keylor Navas","Gianluigi Donnarumma","Yann Sommer","Emiliano Martínez","Marc-André ter Stegen","Claudio Bravo","David de Gea","Jordan Pickford","Aaron Ramsdale","Dani Alves","Marcelo","Jordi Alba","Andrew Robertson","Trent Alexander-Arnold","Kyle Walker","João Cancelo","Achraf Hakimi","Theo Hernández","Lucas Hernández","Dayot Upamecano","Ibrahima Konaté","Éder Militão","Antonio Rüdiger","Thiago Silva","Marquinhos","Presnel Kimpembe","Milan Škriniar","Alessandro Bastoni","Federico Dimarco","Giorgio Chiellini","Leonardo Bonucci","Francesco Acerbi","Kalidou Koulibaly","Aymeric Laporte","Pau Torres","Diego Carlos","José Giménez","Diego Godín","Stefan Savić","Joshua Kimmich","Leon Goretzka","Ilkay Gündogan","Thomas Müller","Marco Reus","Marco Verratti","Nicolo Barella","Lorenzo Pellegrini","Ciro Immobile","Federico Chiesa","Lorenzo Insigne","Domenico Berardi","Matteo Politano","Khvicha Kvaratskhelia","Victor Osimhen","Piotr Zielinski","Fabián Ruiz","Carlos Soler","Mikel Oyarzabal","Isco","Marco Asensio","Brahim Díaz","Federico Valverde","Rodrygo","Endrick","Sergio Agüero","Fernando Torres","David Villa","Álvaro Morata","Gerard Moreno","Dani Carvajal","Nacho Fernández","Jesús Navas","Marcos Llorente","Koke","Saúl Ñíguez","João Félix","Antoine Griezmann","Memphis Depay","Sergi Roberto","Fermín López","Pau Cubarsí","Héctor Fort","Marc Guiu","Vitor Roque","Romelu Lukaku","Eden Hazard","Yannick Carrasco","Jeremy Doku","Charles De Ketelaere","Amadou Onana","Arthur Theate","Wout Faes","Matthijs de Ligt","Denzel Dumfries","Steven Bergwijn","Wout Weghorst","Daley Blind","Stefan de Vrij","Wojciech Szczęsny","Jan Bednarek","Matty Cash","Krzysztof Piątek","Arkadiusz Milik","Kamil Glik","Grzegorz Krychowiak","Jakub Moder","Bernardo Silva","Rodri","John Stones","Diogo Dalot","Harry Maguire","Alexis Mac Allister","Ryan Gravenberch","Wataru Endo","James Maddison","Dejan Kulusevski","Brennan Johnson","Pape Matar Sarr","Yves Bissouma","Pedro Porro","Cristian Romero","Micky van de Ven","Destiny Udogie","Warren Zaïre-Emery","Bradley Barcola","Randal Kolo Muani","Vitinha","João Neves","Nuno Mendes","Arda Güler","Kenan Yildiz","Francisco Conceição","Samu Omorodion","Pau Prim","Dani Rodriguez","Takefusa Kubo","Kang-in Lee","Hwang Hee-chan",
-      // ----- v2 additions (Argentina / Europa icons and other widely known names):
+      // additions used in v2
       "Mario Kempes","Daniel Passarella","Óscar Ruggeri","Juan Román Riquelme","Carlos Tevez","Diego Simeone","Enzo Francescoli","Ricardo Bochini","Hernán Crespo","Javier Saviola","Jorge Burruchaga","Ángel Labruna","Hugo Gatti","Juan Sebastián Verón","Diego Forlán","Fernando Redondo",
       "Gianfranco Zola","Zlatan Ibrahimović","Andriy Shevchenko","Michael Owen","Paolo Rossi","Gaetano Scirea","Eric Cantona","Sergio Busquets","Luis Suárez","Juan Mata","Péter Schmeichel"
     ];
 
-    // Remove possible duplicates while preserving order (simple)
-    const seen = new Set();
-    for (let i = 0; i < famousPlayers.length; i++){
-      const n = famousPlayers[i];
-      const key = n.toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu,'').trim();
-      if (seen.has(key)){
-        famousPlayers.splice(i,1);
-        i--;
+    // Prebuilt specialist pools for the modes
+    const historicalPlayers = [
+      "Pelé","Diego Maradona","Johan Cruyff","Alfredo Di Stéfano","Ferenc Puskás","Eusébio","Lev Yashin","George Best","Garrincha","Gerd Müller","Bobby Charlton","Franz Beckenbauer","Marco van Basten","Michel Platini","Paolo Rossi","Paolo Maldini","Gaetano Scirea","Alessandro Del Piero","Paolo Rossi","Mario Kempes","Daniel Passarella","Ángel Labruna"
+    ];
+
+    const currentPlayers = [
+      "Lionel Messi","Cristiano Ronaldo","Kylian Mbappé","Erling Haaland","Kevin De Bruyne","Robert Lewandowski","Mohamed Salah","Karim Benzema","Neymar","Jude Bellingham","Vinícius Júnior","Kylian Mbappé","Jamal Musiala","Bukayo Saka","Phil Foden","Julián Álvarez","Lautaro Martínez","Pedri","Rodrigo De Paul","João Félix","Trent Alexander-Arnold","Virgil van Dijk","Alisson Becker","Ederson","Jan Oblak","Thibaut Courtois","Gianluigi Donnarumma"
+    ];
+
+    const retiredPlayers = [
+      "Diego Maradona","Ronaldo Nazário","Zinedine Zidane","Ronaldinho","Ronaldo Nazário","Thierry Henry","David Beckham","Steven Gerrard","Frank Lampard","Xavi Hernández","Andrés Iniesta","Roberto Baggio","Sergio Agüero","Fernando Torres","David Villa","Gianfranco Zola","Eric Cantona"
+    ];
+
+    const superFamous = [
+      "Pelé","Diego Maradona","Lionel Messi","Cristiano Ronaldo","Johan Cruyff","Zinedine Zidane","Franz Beckenbauer","Ronaldo Nazário","Ronaldinho","Roberto Baggio","Eusébio","Lev Yashin","Pele","Maradona","Michel Platini"
+    ];
+
+    // Normalizar y desduplicar pools
+    function buildPlayerPool(mode){
+      const modeKey = mode || document.getElementById('playerPoolMode')?.value || 'all';
+      let pool = [];
+      if (modeKey === 'all') {
+        pool = allPlayers.slice();
+      } else if (modeKey === 'historical') {
+        pool = historicalPlayers.slice();
+      } else if (modeKey === 'current') {
+        pool = currentPlayers.slice();
+      } else if (modeKey === 'retired') {
+        pool = retiredPlayers.slice();
+      } else if (modeKey === 'famous') {
+        pool = superFamous.slice();
       } else {
-        seen.add(key);
+        pool = allPlayers.slice();
       }
+      // Deduplicate while preserving order using Map
+      const out = [];
+      const seen = new Set();
+      for (const p of pool){
+        const key = (p||'').toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu,'').trim();
+        if (!seen.has(key)){
+          seen.add(key);
+          out.push(p);
+        }
+      }
+      return out;
+    }
+
+    function onModeChange(){
+      // Cuando el usuario cambia modo, reseteamos el historial de temas usados para que no interfiera
+      gameData.usedThemes.clear();
+      // También puedes mostrar un aviso o actualizar un contador (opcional)
+      // console.log('Modo cambiado a', document.getElementById('playerPoolMode').value);
     }
 
     // ===========================
@@ -353,10 +398,18 @@
     // --- Elección del secreto ---
     // ===========================
     function pickNewThemeNoRepeat(){
-      let candidates = famousPlayers.filter(p => !gameData.usedThemes.has(p));
+      // Construir pool según el modo actual
+      const pool = buildPlayerPool();
+      let candidates = pool.filter(p => !gameData.usedThemes.has(p));
       if (candidates.length === 0){
+        // si se agotaron en este modo, limpiar usado y volver a empezar
         gameData.usedThemes.clear();
-        candidates = famousPlayers.slice();
+        candidates = pool.slice();
+      }
+      // Si el pool es más pequeño que la cantidad de jugadores, permitimos repetición entre rondas (pero no en la misma ronda)
+      if (candidates.length === 0) {
+        // fallback simple a allPlayers si algo raro pasó
+        candidates = allPlayers.slice();
       }
       const choice = candidates[Math.floor(Math.random() * candidates.length)];
       gameData.theme = choice;
@@ -383,7 +436,7 @@
       updatePlayerScreen();
     }
 
-    // Fetch image helper with timeout and improved fallbacks (v2)
+    // Fetch image helper with timeout and improved fallbacks (v2/v3)
     async function fetchWithTimeout(url, opts = {}, ms = 6000){
       const controller = new AbortController();
       const id = setTimeout(() => controller.abort(), ms);
@@ -397,11 +450,6 @@
       }
     }
 
-    // v2: intentos en varios endpoints para maximizar la probabilidad de obtener una foto:
-    // 1) REST summary pageimages (thumbnail)
-    // 2) query prop=pageimages (pithumbsize)
-    // 3) query prop=images → luego imageinfo para la primera imagen válida (.jpg/.png)
-    // Se intenta en inglés y luego en español como fallback.
     async function fetchPlayerImage(title){
       const langs = ['en','es'];
       for (const lang of langs){
@@ -433,10 +481,8 @@
             const pages = imgJson?.query?.pages || {};
             const pid = Object.keys(pages)[0];
             const imgs = pages[pid]?.images || [];
-            // buscar primera imagen con extensión jpeg/jpg/png
             const candidate = imgs.map(i => i.title).find(t => /\.(jpe?g|png|svg)$/i.test(t));
             if (candidate){
-              // Obtener url de imageinfo
               const iiUrl = `https://commons.wikimedia.org/w/api.php?action=query&titles=${encodeURIComponent(candidate)}&prop=imageinfo&iiprop=url&format=json&origin=*`;
               const iiResp = await fetchWithTimeout(iiUrl, {}, 6000).catch(()=>null);
               if (iiResp && iiResp.ok){
@@ -449,11 +495,9 @@
             }
           }
         } catch (err){
-          // ignorar y probar siguiente idioma / método
           console.warn('fetchPlayerImage attempt failed for', title, lang, err);
         }
       }
-      // si todo falla, devolver vacío (el UI manejará ausencia)
       return '';
     }
 
@@ -478,7 +522,6 @@
         roleCard.className = 'role-card innocent-card reveal';
         roleText.textContent = '👥 ERES INOCENTE';
         themeText.textContent = `El jugador secreto es: ${gameData.theme.toUpperCase()}`;
-        // carga la imagen con la nueva estrategia
         const imageUrl = await fetchPlayerImage(gameData.theme);
         if (imageUrl){
           themeImage.innerHTML = `<img src="${imageUrl}" alt="${gameData.theme}" class="player-image">`;
@@ -487,7 +530,6 @@
 
       finishButton.textContent = (gameData.currentPlayer === gameData.playerCount) ? '✅ Listo - Iniciar Discusión' : '✅ Listo - Borrar y Continuar';
 
-      // Adjuntar / quitar el modo secreto según el nombre
       attachSecretModeIfNeeded(currentName);
     }
 
@@ -559,6 +601,7 @@
     function hardReset(){
       gameData = { theme:'', playerCount:5, playerNames:[], playerOrder:[], startingPlayerIndex:1, currentPlayer:0, impostorIndex:-1, discussionTimer:null, timeLeft:180, usedThemes: new Set() };
       document.getElementById('playerCount').value = '5';
+      document.getElementById('playerPoolMode').value = 'all';
       hideSecretHints();
       showScreen('setupScreen');
     }
@@ -582,16 +625,13 @@
       return SECRET_NAMES.has(normalizeName(name));
     }
 
-    // Triple-tap handler storage for cleanup
     function attachSecretModeIfNeeded(currentName){
       const finishButton = document.getElementById('finishButton');
       const roleCard = document.getElementById('roleCard');
 
-      // Limpieza de handlers previos: finishButton debe mantener su onclick normal
       finishButton.onmousedown = finishButton.ontouchstart = null;
       window.onmouseup = window.ontouchend = null;
 
-      // Remover handler triple-tap previo si existía
       if (roleCard._secretHandler) {
         roleCard.removeEventListener('click', roleCard._secretHandler);
         roleCard.removeEventListener('touchstart', roleCard._secretHandler);
@@ -600,10 +640,9 @@
 
       if (!isSecretUser(currentName)){
         hideSecretHints();
-        return; // no activar modo secreto
+        return;
       }
 
-      // Sólo triple-tap en la tarjeta (no usamos long-press)
       let tapCountLocal = 0;
       let tapTimerLocal = null;
       const handler = async (e) => {
@@ -621,17 +660,14 @@
             console.error('Error mostrando pistas secretas:', err);
           }
         } else {
-          // reset si no llegan 3 taps en 1.2s
           tapTimerLocal = setTimeout(() => { tapCountLocal = 0; tapTimerLocal = null; }, 1200);
         }
       };
 
-      // Guardar referencia para poder quitar después
       roleCard._secretHandler = handler;
       roleCard.addEventListener('click', handler, { passive: false });
       roleCard.addEventListener('touchstart', handler, { passive: false });
 
-      // Botón "Ocultar"
       document.getElementById('hideHintsBtn').onclick = hideSecretHints;
     }
 
@@ -703,7 +739,6 @@
       return hints;
     }
 
-    // --- Wikipedia Summary (en→es fallback) ---
     async function fetchWikiSummaryAny(title){
       let sum = await fetchWikiSummary(title, 'en');
       if (!sum) sum = await fetchWikiSummary(title, 'es');
@@ -712,12 +747,10 @@
 
     async function fetchWikiSummary(title, lang){
       try {
-        // Intentar acceso directo; si 404, buscar primero
         const directResp = await fetchWithTimeout(`https://${lang}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`, {}, 6000).catch(()=>null);
         const direct = directResp && directResp.ok ? await directResp.json() : null;
         if (direct && !direct.title?.includes('may refer to')) return direct;
 
-        // Buscar el mejor match
         const srResp = await fetchWithTimeout(`https://${lang}.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(title)}&format=json&origin=*`, {}, 6000).catch(()=>null);
         const sr = srResp && srResp.ok ? await srResp.json() : null;
         const best = sr?.query?.search?.[0]?.title;
@@ -730,7 +763,6 @@
       }
     }
 
-    // --- Obtener QID (en→es fallback) ---
     async function getWikidataIdFromAny(title, resolvedTitle){
       const fromEn = await getWikidataIdFromWikiTitle(resolvedTitle || title, 'en');
       if (fromEn) return fromEn;
@@ -753,7 +785,6 @@
       }
     }
 
-    // --- Wikidata entity (claims + labels) ---
     async function fetchWikidataEntity(qid){
       try{
         const base = `https://www.wikidata.org/w/api.php?action=wbgetentities&format=json&origin=*`;
@@ -763,7 +794,6 @@
         const entity = ent?.entities?.[qid];
         if (!entity) return null;
 
-        // Tomar IDs de items referenciados (P413 posición, P27 país, P54 equipos, P166 premios, P1346 ganador, P1344 participante)
         const refIds = new Set();
         const claims = entity.claims || {};
         const takeIds = (p) => (claims[p]||[]).forEach(st => {
@@ -780,8 +810,7 @@
         });
         takeIds('P166'); // awards received
         takeIds('P1346'); // winner of
-        takeIds('P1344'); // participant in (puede contener torneos)
-        // resolver labels de refIds
+        takeIds('P1344'); // participant in
         const labels = await resolveLabels(Array.from(refIds));
         return { qid, claims, labels };
       }catch(err){ console.warn('Wikidata error', err); return null; }
@@ -789,7 +818,6 @@
 
     async function resolveLabels(ids){
       if (!ids || !ids.length) return {};
-      // Dividir en bloques por límites de URL
       const chunks = [];
       for (let i = 0; i < ids.length; i += 45) chunks.push(ids.slice(i, i+45));
       const out = {};
@@ -811,17 +839,14 @@
     }
 
     function buildHintsFromSources(playerName, summary, wd){
-      // Defaults
       let position = '';
       let nationality = '';
       let status = '';
       let teams = [];
-      let titles = []; // títulos importantes
+      let titles = [];
 
-      // Heurísticas: palabras clave para reconocer títulos importantes
       const KEYWORDS = ['world cup','fifa world cup','champions league','uefa champions','ballon','ballon d\'or','copa américa','copa del mundo','copa libertadores','premier league','la liga','serie a','bundesliga','fa cup','coppa italia','copa del rey','uefa european championship','euros','gold cup','olympic gold'];
 
-      // 1) Extraer del summary
       if (summary){
         const extract = summary.extract || '';
         const desc = summary.description || '';
@@ -831,13 +856,11 @@
         const club = currentClubFromText(extract);
         if (club) teams.push(club);
 
-        // Buscar menciones de títulos en el extract (búsqueda por palabras clave)
         try {
           const found = [];
           const low = extract.toLowerCase();
           for (const kw of KEYWORDS){
             if (low.includes(kw)) {
-              // extraer fragmento cercano
               const idx = low.indexOf(kw);
               const start = Math.max(0, idx - 40);
               const frag = extract.substring(start, Math.min(extract.length, idx + 80)).replace(/\s+/g,' ').trim();
@@ -850,20 +873,16 @@
         } catch(e){ /* ignore */ }
       }
 
-      // 2) Enriquecer con Wikidata si existe
       if (wd){
         const { claims, labels } = wd;
-        // Posición (P413)
         if (!position){
           const p413 = claims['P413']?.[0]?.mainsnak?.datavalue?.value?.id;
           if (p413 && labels[p413]) position = mapPosition(labels[p413]);
         }
-        // Nacionalidad (P27)
         if (!nationality){
           const p27 = claims['P27']?.[0]?.mainsnak?.datavalue?.value?.id;
           if (p27 && labels[p27]) nationality = labels[p27];
         }
-        // Equipos (P54)
         const p54 = claims['P54'] || [];
         const enriched = [];
         let isActive = false;
@@ -881,7 +900,6 @@
         teams = uniqTeams.slice(0, 5);
         if (!status) status = isActive ? 'Activo' : 'Retirado';
 
-        // Títulos: revisar P166 (awards), P1346 (winner of), P1344 (participant in)
         const titleCandidates = [];
         const collectClaimLabels = (prop) => {
           const arr = claims[prop] || [];
@@ -897,36 +915,26 @@
         collectClaimLabels('P1346');
         collectClaimLabels('P1344');
 
-        // Filtrar por keywords para quedarse con títulos importantes
         const filtered = [];
         for (const t of titleCandidates){
           const low = (t||'').toLowerCase();
           if (!low) continue;
-          // si contiene alguna palabra clave la consideramos título importante
           if (KEYWORDS.some(k => low.includes(k))) {
             filtered.push(t);
           }
         }
-        // Si no hay filtrados, incluir algunos candidatos curtos (p. ej. Ballon, Champions, Copa)
         const fallback = titleCandidates.filter(Boolean).slice(0,6);
         const chosen = filtered.length ? filtered : fallback;
-
-        // Normalizar / deduplicar y limitar
         const uniq = Array.from(new Set(chosen));
         titles = titles.concat(uniq).slice(0,4);
       }
 
-      // Limpieza final
       if (!position) position = '—';
       if (!nationality) nationality = '—';
       if (!status) status = '—';
       if (!titles || !titles.length) titles = [];
       return { position, nationality, status, teams, titles, title: playerName };
     }
-
-    // ===========================
-    // === Heurísticas / mapeos ===
-    // ===========================
 
     function capitalizePhrase(s){
       if (!s) return s;
@@ -1000,9 +1008,7 @@
     // ===========================
     // === Init ==================
     // ===========================
-
-    // Arranca en la pantalla inicial
-    // (setupPlayers() se llama desde el botón)
+    // Arranca en la pantalla inicial (setupPlayers() se llama desde el botón)
   </script>
 </body>
 </html>
