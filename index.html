@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Juego del Impostor</title>
+    <title>Juego del Impostor - Versión Mejorada</title>
     <style>
         * {
             margin: 0;
@@ -27,39 +27,28 @@
             padding: 40px;
             box-shadow: 0 20px 40px rgba(0,0,0,0.1);
             text-align: center;
-            max-width: 500px;
+            max-width: 600px;
             width: 100%;
-            min-height: 400px;
+            min-height: 500px;
             display: flex;
             flex-direction: column;
             justify-content: center;
+            transition: all 0.5s ease;
         }
 
-        h1 {
+        h1, h2 {
             color: #333;
             margin-bottom: 30px;
             font-size: 2.5em;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
         }
 
+        .setup-screen, .player-setup-screen, .transfer-screen, .game-screen, .discussion-screen, .voting-transfer-screen, .voting-turn-screen, .results-screen {
+            display: none;
+        }
+
         .setup-screen {
             display: block;
-        }
-
-        .game-screen {
-            display: none;
-        }
-
-        .transfer-screen {
-            display: none;
-        }
-
-        .voting-screen {
-            display: none;
-        }
-
-        .results-screen {
-            display: none;
         }
 
         input, select {
@@ -115,6 +104,11 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
+            transition: transform 0.5s ease;
+        }
+
+        .role-card.reveal {
+            transform: scale(1.05);
         }
 
         .impostor-card {
@@ -171,38 +165,35 @@
             border-color: #5a67d8;
         }
 
-        .hidden {
-            display: none;
+        .warning, .success, .danger {
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-weight: bold;
         }
 
         .warning {
             background: #fff3cd;
             border: 1px solid #ffeaa7;
             color: #856404;
-            padding: 15px;
-            border-radius: 10px;
-            margin: 15px 0;
-            font-weight: bold;
         }
 
         .success {
             background: #d4edda;
             border: 1px solid #c3e6cb;
             color: #155724;
-            padding: 15px;
-            border-radius: 10px;
-            margin: 15px 0;
-            font-weight: bold;
         }
 
         .danger {
             background: #f8d7da;
             border: 1px solid #f5c6cb;
             color: #721c24;
-            padding: 15px;
-            border-radius: 10px;
-            margin: 15px 0;
-            font-weight: bold;
+        }
+
+        .player-names-container {
+            max-height: 300px;
+            overflow-y: auto;
+            margin: 20px 0;
         }
     </style>
 </head>
@@ -210,7 +201,8 @@
     <div class="container">
         <!-- Pantalla de configuración -->
         <div class="setup-screen" id="setupScreen">
-            <h1>🕵️ Juego del Impostor</h1>
+            <h1>🕵️ Juego del Impostor - Mejorado</h1>
+            <p>Mejoras: Nombres personalizados, votación secreta por turnos, dinámica separada de discusión y votación, animaciones suaves, UI más responsiva.</p>
             
             <input type="text" id="themeInput" placeholder="¿Qué tienen que adivinar? (ej: Animales, Comidas, Películas)">
             
@@ -225,10 +217,18 @@
                 <option value="10">10 Jugadores</option>
             </select>
             
-            <button onclick="startGame()">🚀 Comenzar Juego</button>
+            <button onclick="setupPlayers()">🚀 Configurar Jugadores</button>
         </div>
 
-        <!-- Pantalla de transferencia -->
+        <!-- Pantalla de configuración de jugadores -->
+        <div class="player-setup-screen" id="playerSetupScreen">
+            <h2>📝 Ingresa Nombres de Jugadores</h2>
+            <p>Deja en blanco para usar "Jugador X" por defecto.</p>
+            <div class="player-names-container" id="playerNamesContainer"></div>
+            <button onclick="startGame()">✅ Continuar al Juego</button>
+        </div>
+
+        <!-- Pantalla de transferencia para roles -->
         <div class="transfer-screen" id="transferScreen">
             <h2>📱 Pasar el Teléfono</h2>
             
@@ -241,13 +241,13 @@
             </div>
             
             <p style="font-size: 18px; margin: 20px 0;">
-                <strong id="receivingPlayer">Jugador X</strong>: Cuando tengas el teléfono en tus manos, presiona el botón para descubrir tu rol.
+                <strong id="receivingPlayer">Jugador X</strong>: Cuando tengas el teléfono, presiona para descubrir tu rol.
             </p>
             
             <button onclick="showPlayerRole()" style="background: #28a745;">🔍 Descubrir Mi Rol</button>
         </div>
 
-        <!-- Pantalla del juego -->
+        <!-- Pantalla del juego (roles) -->
         <div class="game-screen" id="gameScreen">
             <h2 id="playerTitle">Jugador 1</h2>
             
@@ -258,27 +258,55 @@
             
             <div class="warning">
                 <strong>¡Memoriza tu rol!</strong><br>
-                Cuando termines, presiona "Listo" para borrar la información y pasar el teléfono.
+                Cuando termines, presiona "Listo" para borrar y continuar.
             </div>
             
             <button onclick="finishPlayerTurn()" id="finishButton" style="background: #dc3545;">✅ Listo - Borrar y Continuar</button>
         </div>
 
-        <!-- Pantalla de votación -->
-        <div class="voting-screen" id="votingScreen">
-            <h2>⏰ ¡Tiempo de Votación!</h2>
+        <!-- Pantalla de discusión -->
+        <div class="discussion-screen" id="discussionScreen">
+            <h2>💬 Tiempo de Discusión</h2>
             
-            <div class="timer" id="timer">3:00</div>
-            
-            <p><strong>Tema:</strong> <span id="votingTheme"></span></p>
+            <div class="timer" id="discussionTimer">3:00</div>
             
             <div class="warning">
-                Discutan y voten por quien creen que es el IMPOSTOR
+                Discutan palabras relacionadas con el tema secreto. ¡El impostor intentará mezclarse!
             </div>
             
-            <div class="player-list" id="playerList"></div>
+            <button onclick="startVotingPhase()" style="background: #ffc107;">🗳️ Iniciar Votación Secreta</button>
+        </div>
+
+        <!-- Pantalla de transferencia para votos -->
+        <div class="voting-transfer-screen" id="votingTransferScreen">
+            <h2>📱 Pasar el Teléfono para Votar</h2>
             
-            <button onclick="showResults()" id="voteButton" style="background: #28a745;">Revelar Impostor 🎭</button>
+            <div style="font-size: 100px; margin: 40px 0;">🤫</div>
+            
+            <div class="warning">
+                <strong>¡ATENCIÓN!</strong><br>
+                Pasa el teléfono al <span id="nextVoterName">Jugador X</span><br>
+                SIN que vea la pantalla
+            </div>
+            
+            <p style="font-size: 18px; margin: 20px 0;">
+                <strong id="receivingVoter">Jugador X</strong>: Cuando tengas el teléfono, presiona para votar en secreto.
+            </p>
+            
+            <button onclick="showVotingTurn()" style="background: #28a745;">🗳️ Votar en Secreto</button>
+        </div>
+
+        <!-- Pantalla de turno de votación -->
+        <div class="voting-turn-screen" id="votingTurnScreen">
+            <h2 id="voterTitle">Voto de Jugador 1</h2>
+            
+            <div class="warning">
+                Elige quién crees que es el impostor. ¡Tu voto es secreto!
+            </div>
+            
+            <div class="player-list" id="votingPlayerList"></div>
+            
+            <button onclick="confirmVote()" id="confirmVoteButton" style="background: #28a745;" disabled>✅ Confirmar Voto</button>
         </div>
 
         <!-- Pantalla de resultados -->
@@ -295,15 +323,17 @@
         let gameData = {
             theme: '',
             playerCount: 5,
-            currentPlayer: 1,
+            currentPlayer: 0, // Comienza en 0 para primer transfer
             impostorIndex: -1,
-            players: [],
-            gameTimer: null,
+            playerNames: [],
+            votes: [],
+            discussionTimer: null,
             timeLeft: 180, // 3 minutos
-            selectedPlayer: -1
+            selectedVote: -1,
+            currentVoter: 0 // Para votación
         };
 
-        function startGame() {
+        function setupPlayers() {
             const theme = document.getElementById('themeInput').value.trim();
             if (!theme) {
                 alert('¡Por favor ingresa un tema!');
@@ -312,24 +342,54 @@
             
             gameData.theme = theme;
             gameData.playerCount = parseInt(document.getElementById('playerCount').value);
-            gameData.currentPlayer = 1;
-            gameData.impostorIndex = Math.floor(Math.random() * gameData.playerCount) + 1;
-            gameData.players = [];
             
-            // Crear lista de jugadores
+            // Mostrar pantalla de nombres
+            document.getElementById('setupScreen').style.display = 'none';
+            document.getElementById('playerSetupScreen').style.display = 'block';
+            
+            const container = document.getElementById('playerNamesContainer');
+            container.innerHTML = '';
+            gameData.playerNames = new Array(gameData.playerCount + 1);
+            
             for (let i = 1; i <= gameData.playerCount; i++) {
-                gameData.players.push(`Jugador ${i}`);
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.id = `playerName${i}`;
+                input.placeholder = `Nombre del Jugador ${i} (opcional)`;
+                container.appendChild(input);
             }
-            
-            console.log(`Impostor secreto: Jugador ${gameData.impostorIndex}`);
-            
-            showGameScreen();
         }
 
-        function showGameScreen() {
-            document.getElementById('setupScreen').style.display = 'none';
+        function startGame() {
+            // Guardar nombres
+            for (let i = 1; i <= gameData.playerCount; i++) {
+                const name = document.getElementById(`playerName${i}`).value.trim();
+                gameData.playerNames[i] = name || `Jugador ${i}`;
+            }
             
-            // Mostrar directamente el rol del primer jugador
+            // Elegir impostor
+            gameData.impostorIndex = Math.floor(Math.random() * gameData.playerCount) + 1;
+            gameData.votes = new Array(gameData.playerCount + 1).fill(0);
+            
+            // Iniciar con transferencia al primer jugador
+            document.getElementById('playerSetupScreen').style.display = 'none';
+            showTransferScreenForRole();
+        }
+
+        function showTransferScreenForRole() {
+            if (gameData.currentPlayer < gameData.playerCount) {
+                const next = gameData.currentPlayer + 1;
+                document.getElementById('nextPlayerName').textContent = gameData.playerNames[next];
+                document.getElementById('receivingPlayer').textContent = gameData.playerNames[next];
+                document.getElementById('transferScreen').style.display = 'block';
+            } else {
+                startDiscussion();
+            }
+        }
+
+        function showPlayerRole() {
+            gameData.currentPlayer++;
+            document.getElementById('transferScreen').style.display = 'none';
             document.getElementById('gameScreen').style.display = 'block';
             updatePlayerScreen();
         }
@@ -341,129 +401,155 @@
             const themeText = document.getElementById('themeText');
             const finishButton = document.getElementById('finishButton');
             
-            playerTitle.textContent = `Jugador ${gameData.currentPlayer}`;
+            playerTitle.textContent = gameData.playerNames[gameData.currentPlayer];
             
             if (gameData.currentPlayer === gameData.impostorIndex) {
-                // Es el impostor
-                roleCard.className = 'role-card impostor-card';
+                roleCard.className = 'role-card impostor-card reveal';
                 roleText.textContent = '🎭 ERES EL IMPOSTOR';
-                themeText.textContent = '¡No sabes cuál es el tema! Trata de descubrirlo y que no te descubran.';
+                themeText.textContent = '¡No sabes el tema! Descúbrelo sin que te noten.';
             } else {
-                // Es inocente
-                roleCard.className = 'role-card innocent-card';
+                roleCard.className = 'role-card innocent-card reveal';
                 roleText.textContent = '👥 ERES INOCENTE';
-                themeText.textContent = `El tema es: ${gameData.theme.toUpperCase()}`;
+                themeText.textContent = `Tema: ${gameData.theme.toUpperCase()}`;
             }
             
-            if (gameData.currentPlayer === gameData.playerCount) {
-                finishButton.textContent = '✅ Listo - Iniciar Votación';
-            } else {
-                finishButton.textContent = '✅ Listo - Borrar y Continuar';
-            }
+            finishButton.textContent = gameData.currentPlayer === gameData.playerCount ? '✅ Listo - Iniciar Discusión' : '✅ Listo - Borrar y Continuar';
         }
 
         function finishPlayerTurn() {
-            if (gameData.currentPlayer < gameData.playerCount) {
-                // Ir a la pantalla de transferencia
-                showTransferScreen();
-            } else {
-                // Último jugador, iniciar votación
-                startVoting();
-            }
-        }
-
-        function showTransferScreen() {
+            // Reset animación
+            document.getElementById('roleCard').classList.remove('reveal');
             document.getElementById('gameScreen').style.display = 'none';
-            document.getElementById('transferScreen').style.display = 'block';
-            
-            const nextPlayer = gameData.currentPlayer + 1;
-            document.getElementById('nextPlayerName').textContent = `Jugador ${nextPlayer}`;
-            document.getElementById('receivingPlayer').textContent = `Jugador ${nextPlayer}`;
+            showTransferScreenForRole();
         }
 
-        function showPlayerRole() {
-            gameData.currentPlayer++;
-            document.getElementById('transferScreen').style.display = 'none';
-            document.getElementById('gameScreen').style.display = 'block';
-            updatePlayerScreen();
-        }
-
-        function nextPlayer() {
-            // Esta función ya no se usa, reemplazada por finishPlayerTurn
-            finishPlayerTurn();
-        }
-
-        function startVoting() {
-            document.getElementById('gameScreen').style.display = 'none';
-            document.getElementById('votingScreen').style.display = 'block';
-            
-            document.getElementById('votingTheme').textContent = gameData.theme;
-            
-            // Crear botones de votación
-            const playerList = document.getElementById('playerList');
-            playerList.innerHTML = '';
-            
-            for (let i = 1; i <= gameData.playerCount; i++) {
-                const playerDiv = document.createElement('div');
-                playerDiv.className = 'player-vote';
-                playerDiv.textContent = `Jugador ${i}`;
-                playerDiv.onclick = () => selectPlayer(i, playerDiv);
-                playerList.appendChild(playerDiv);
-            }
-            
-            // Iniciar temporizador
+        function startDiscussion() {
+            document.getElementById('discussionScreen').style.display = 'block';
             startTimer();
         }
 
-        function selectPlayer(playerNum, element) {
-            // Remover selección anterior
-            document.querySelectorAll('.player-vote').forEach(div => {
-                div.classList.remove('selected');
-            });
-            
-            // Seleccionar nuevo jugador
-            element.classList.add('selected');
-            gameData.selectedPlayer = playerNum;
-        }
-
         function startTimer() {
-            gameData.timeLeft = 180; // 3 minutos
-            const timerElement = document.getElementById('timer');
+            gameData.timeLeft = 180;
+            const timerElement = document.getElementById('discussionTimer');
             
-            gameData.gameTimer = setInterval(() => {
+            gameData.discussionTimer = setInterval(() => {
                 const minutes = Math.floor(gameData.timeLeft / 60);
                 const seconds = gameData.timeLeft % 60;
                 timerElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
                 
                 if (gameData.timeLeft <= 0) {
-                    clearInterval(gameData.gameTimer);
+                    clearInterval(gameData.discussionTimer);
                     timerElement.textContent = '¡TIEMPO!';
-                    setTimeout(showResults, 2000);
+                    startVotingPhase();
                 }
                 
                 gameData.timeLeft--;
             }, 1000);
         }
 
-        function showResults() {
-            clearInterval(gameData.gameTimer);
+        function startVotingPhase() {
+            clearInterval(gameData.discussionTimer);
+            document.getElementById('discussionScreen').style.display = 'none';
+            gameData.currentVoter = 0;
+            showTransferScreenForVote();
+        }
+
+        function showTransferScreenForVote() {
+            if (gameData.currentVoter < gameData.playerCount) {
+                const next = gameData.currentVoter + 1;
+                document.getElementById('nextVoterName').textContent = gameData.playerNames[next];
+                document.getElementById('receivingVoter').textContent = gameData.playerNames[next];
+                document.getElementById('votingTransferScreen').style.display = 'block';
+            } else {
+                showResults();
+            }
+        }
+
+        function showVotingTurn() {
+            gameData.currentVoter++;
+            document.getElementById('votingTransferScreen').style.display = 'none';
+            document.getElementById('votingTurnScreen').style.display = 'block';
+            updateVotingTurnScreen();
+        }
+
+        function updateVotingTurnScreen() {
+            const voterTitle = document.getElementById('voterTitle');
+            voterTitle.textContent = `Voto de ${gameData.playerNames[gameData.currentVoter]}`;
             
-            document.getElementById('votingScreen').style.display = 'none';
+            const playerList = document.getElementById('votingPlayerList');
+            playerList.innerHTML = '';
+            gameData.selectedVote = -1;
+            document.getElementById('confirmVoteButton').disabled = true;
+            
+            // Opción de saltar
+            const skipDiv = document.createElement('div');
+            skipDiv.className = 'player-vote';
+            skipDiv.textContent = 'Saltar (no votar)';
+            skipDiv.onclick = () => selectVote(0, skipDiv);
+            playerList.appendChild(skipDiv);
+            
+            for (let i = 1; i <= gameData.playerCount; i++) {
+                if (i === gameData.currentVoter) continue; // No votar por uno mismo
+                const playerDiv = document.createElement('div');
+                playerDiv.className = 'player-vote';
+                playerDiv.textContent = gameData.playerNames[i];
+                playerDiv.onclick = () => selectVote(i, playerDiv);
+                playerList.appendChild(playerDiv);
+            }
+        }
+
+        function selectVote(playerNum, element) {
+            document.querySelectorAll('.player-vote').forEach(div => div.classList.remove('selected'));
+            element.classList.add('selected');
+            gameData.selectedVote = playerNum;
+            document.getElementById('confirmVoteButton').disabled = false;
+        }
+
+        function confirmVote() {
+            if (gameData.selectedVote > 0) {
+                gameData.votes[gameData.selectedVote]++;
+            }
+            document.getElementById('votingTurnScreen').style.display = 'none';
+            showTransferScreenForVote();
+        }
+
+        function showResults() {
             document.getElementById('resultsScreen').style.display = 'block';
             
             const resultsContent = document.getElementById('resultsContent');
-            let html = `<h3>🎭 El impostor era: <span style="color: #ff4757;">Jugador ${gameData.impostorIndex}</span></h3>`;
+            let html = `<h3>🎭 El impostor era: <span style="color: #ff4757;">${gameData.playerNames[gameData.impostorIndex]}</span></h3>`;
             
-            if (gameData.selectedPlayer === gameData.impostorIndex) {
+            // Encontrar el más votado
+            let maxVotes = 0;
+            let mostVoted = [];
+            for (let i = 1; i <= gameData.playerCount; i++) {
+                if (gameData.votes[i] > maxVotes) {
+                    maxVotes = gameData.votes[i];
+                    mostVoted = [i];
+                } else if (gameData.votes[i] === maxVotes) {
+                    mostVoted.push(i);
+                }
+            }
+            
+            if (mostVoted.length === 1 && mostVoted[0] === gameData.impostorIndex) {
                 html += '<div class="success">🎉 ¡Los inocentes ganaron! Encontraron al impostor.</div>';
-            } else if (gameData.selectedPlayer === -1) {
-                html += '<div class="warning">⏰ ¡Se acabó el tiempo! El impostor ganó por defecto.</div>';
             } else {
                 html += '<div class="danger">😈 ¡El impostor ganó! No lo descubrieron.</div>';
-                html += `<p>Votaron por: <strong>Jugador ${gameData.selectedPlayer}</strong></p>`;
+                if (mostVoted.length > 0) {
+                    html += `<p>Más votados: ${mostVoted.map(i => gameData.playerNames[i]).join(', ')} (${maxVotes} votos)</p>`;
+                } else {
+                    html += '<p>No hubo votos suficientes.</p>';
+                }
             }
             
             html += `<p><strong>Tema:</strong> ${gameData.theme}</p>`;
+            
+            // Mostrar tally de votos
+            html += '<h4>Votos recibidos:</h4><ul>';
+            for (let i = 1; i <= gameData.playerCount; i++) {
+                html += `<li>${gameData.playerNames[i]}: ${gameData.votes[i]} votos</li>`;
+            }
+            html += '</ul>';
             
             resultsContent.innerHTML = html;
         }
@@ -473,12 +559,14 @@
             gameData = {
                 theme: '',
                 playerCount: 5,
-                currentPlayer: 1,
+                currentPlayer: 0,
                 impostorIndex: -1,
-                players: [],
-                gameTimer: null,
+                playerNames: [],
+                votes: [],
+                discussionTimer: null,
                 timeLeft: 180,
-                selectedPlayer: -1
+                selectedVote: -1,
+                currentVoter: 0
             };
             
             // Mostrar pantalla inicial
@@ -489,13 +577,6 @@
             document.getElementById('themeInput').value = '';
             document.getElementById('playerCount').value = '5';
         }
-
-        // Prevenir que se vea el contenido al cambiar de pestaña
-        document.addEventListener('visibilitychange', function() {
-            if (document.hidden) {
-                // Opcional: pausar el juego si se cambia de pestaña
-            }
-        });
     </script>
 </body>
 </html>
