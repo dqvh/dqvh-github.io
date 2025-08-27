@@ -215,29 +215,91 @@
     // --- Listas / Modos ---
     // ===========================
     // Base: "de todo" contiene la lista amplia usada previamente (acorde v2)
-    const allPlayers = [
-      "Pelé","Diego Maradona","Johan Cruyff","Franz Beckenbauer","Alfredo Di Stéfano","Ferenc Puskás","Eusébio","Lev Yashin","George Best","Bobby Charlton","Garrincha","Just Fontaine","Gerd Müller","Bobby Moore","Gordon Banks","Marco van Basten","Michel Platini","Roberto Baggio","Lothar Matthäus","Franco Baresi","Paolo Maldini","Ruud Gullit","Frank Rijkaard","Ronald Koeman","Hristo Stoichkov","Romário","Bebeto","Claudio Caniggia","Gabriel Batistuta","Salvatore Schillaci","Ronaldo Nazário","Ronaldinho","Kaká","Zinedine Zidane","Luis Figo","Thierry Henry","Raúl González","Francesco Totti","Alessandro Del Piero","Gianluigi Buffon","Iker Casillas","Oliver Kahn","Michael Ballack","Pavel Nedvěd","Andrés Iniesta","Xavi Hernández","Carles Puyol","Gerard Piqué","David Beckham","Steven Gerrard","Frank Lampard","Paul Scholes","Ryan Giggs","Roy Keane","Patrick Vieira","Claude Makélélé","Fabio Cannavaro","Alessandro Nesta","Jaap Stam","Rio Ferdinand","John Terry","Ashley Cole","Cafu","Roberto Carlos","Javier Zanetti","Lionel Messi","Cristiano Ronaldo","Neymar","Kylian Mbappé","Erling Haaland","Robert Lewandowski","Kevin De Bruyne","Mohamed Salah","Sadio Mané","Riyad Mahrez","Raheem Sterling","Harry Kane","Son Heung-min","Bruno Fernandes","Paul Pogba","N'Golo Kanté","Virgil van Dijk","Sergio Ramos","Raphaël Varane","Karim Benzema","Luka Modrić","Toni Kroos","Casemiro","Sergio Busquets","Pedri","Gavi","Frenkie de Jong","Ansu Fati","Ferran Torres","Dani Olmo","Vinícius Júnior","Jude Bellingham","Eduardo Camavinga","Aurélien Tchouaméni","Enzo Fernández","Jamal Musiala","Florian Wirtz","Bukayo Saka","Phil Foden","Mason Mount","Declan Rice","Martin Ødegaard","Alexander Isak","Darwin Núñez","Luis Díaz","Diogo Jota","Cody Gakpo","Antony","Marcus Rashford","Jadon Sancho","Jack Grealish","Rúben Dias","Joško Gvardiol","William Saliba","Gabriel Martinelli","Lamine Yamal","Alejandro Balde","Ronald Araújo","Jules Koundé","Ousmane Dembélé","Raphinha","Lautaro Martínez","Nico González","Julián Álvarez","Ángel Di María","Paulo Dybala","Leandro Paredes","Rodrigo De Paul","Manuel Neuer","Alisson Becker","Ederson","Jan Oblak","Thibaut Courtois","Hugo Lloris","Keylor Navas","Gianluigi Donnarumma","Yann Sommer","Emiliano Martínez","Marc-André ter Stegen","Claudio Bravo","David de Gea","Jordan Pickford","Aaron Ramsdale","Dani Alves","Marcelo","Jordi Alba","Andrew Robertson","Trent Alexander-Arnold","Kyle Walker","João Cancelo","Achraf Hakimi","Theo Hernández","Lucas Hernández","Dayot Upamecano","Ibrahima Konaté","Éder Militão","Antonio Rüdiger","Thiago Silva","Marquinhos","Presnel Kimpembe","Milan Škriniar","Alessandro Bastoni","Federico Dimarco","Giorgio Chiellini","Leonardo Bonucci","Francesco Acerbi","Kalidou Koulibaly","Aymeric Laporte","Pau Torres","Diego Carlos","José Giménez","Diego Godín","Stefan Savić","Joshua Kimmich","Leon Goretzka","Ilkay Gündogan","Thomas Müller","Marco Reus","Marco Verratti","Nicolo Barella","Lorenzo Pellegrini","Ciro Immobile","Federico Chiesa","Lorenzo Insigne","Domenico Berardi","Matteo Politano","Khvicha Kvaratskhelia","Victor Osimhen","Piotr Zielinski","Fabián Ruiz","Carlos Soler","Mikel Oyarzabal","Isco","Marco Asensio","Brahim Díaz","Federico Valverde","Rodrygo","Endrick","Sergio Agüero","Fernando Torres","David Villa","Álvaro Morata","Gerard Moreno","Dani Carvajal","Nacho Fernández","Jesús Navas","Marcos Llorente","Koke","Saúl Ñíguez","João Félix","Antoine Griezmann","Memphis Depay","Sergi Roberto","Fermín López","Pau Cubarsí","Héctor Fort","Marc Guiu","Vitor Roque","Romelu Lukaku","Eden Hazard","Yannick Carrasco","Jeremy Doku","Charles De Ketelaere","Amadou Onana","Arthur Theate","Wout Faes","Matthijs de Ligt","Denzel Dumfries","Steven Bergwijn","Wout Weghorst","Daley Blind","Stefan de Vrij","Wojciech Szczęsny","Jan Bednarek","Matty Cash","Krzysztof Piątek","Arkadiusz Milik","Kamil Glik","Grzegorz Krychowiak","Jakub Moder","Bernardo Silva","Rodri","John Stones","Diogo Dalot","Harry Maguire","Alexis Mac Allister","Ryan Gravenberch","Wataru Endo","James Maddison","Dejan Kulusevski","Brennan Johnson","Pape Matar Sarr","Yves Bissouma","Pedro Porro","Cristian Romero","Micky van de Ven","Destiny Udogie","Warren Zaïre-Emery","Bradley Barcola","Randal Kolo Muani","Vitinha","João Neves","Nuno Mendes","Arda Güler","Kenan Yildiz","Francisco Conceição","Samu Omorodion","Pau Prim","Dani Rodriguez","Takefusa Kubo","Kang-in Lee","Hwang Hee-chan",
-      // additions used in v2
-      "Mario Kempes","Daniel Passarella","Óscar Ruggeri","Juan Román Riquelme","Carlos Tevez","Diego Simeone","Enzo Francescoli","Ricardo Bochini","Hernán Crespo","Javier Saviola","Jorge Burruchaga","Ángel Labruna","Hugo Gatti","Juan Sebastián Verón","Diego Forlán","Fernando Redondo",
-      "Gianfranco Zola","Zlatan Ibrahimović","Andriy Shevchenko","Michael Owen","Paolo Rossi","Gaetano Scirea","Eric Cantona","Sergio Busquets","Luis Suárez","Juan Mata","Péter Schmeichel"
-    ];
+// ===== Pools completos =====
 
-    // Prebuilt specialist pools for the modes
-    const historicalPlayers = [
-      "Pelé","Diego Maradona","Johan Cruyff","Alfredo Di Stéfano","Ferenc Puskás","Eusébio","Lev Yashin","George Best","Garrincha","Gerd Müller","Bobby Charlton","Franz Beckenbauer","Marco van Basten","Michel Platini","Paolo Rossi","Paolo Maldini","Gaetano Scirea","Alessandro Del Piero","Paolo Rossi","Mario Kempes","Daniel Passarella","Ángel Labruna"
-    ];
+// ~340 jugadores, con 200 europeos + Argentina, Brasil, Uruguay, México, Colombia, Chile, etc.
+const allPlayers = [
+  // Argentina
+  "Diego Maradona","Lionel Messi","Gabriel Batistuta","Juan Román Riquelme","Ariel Ortega","Carlos Tevez","Hernán Crespo","Javier Zanetti","Fernando Redondo","Claudio Caniggia",
+  "Oscar Ruggeri","Roberto Ayala","Sergio Agüero","Ángel Di María","Javier Mascherano","Emiliano Martínez","Lisandro Martínez","Nicolás Otamendi","Diego Simeone","Pablo Aimar",
+  "Maxi Rodríguez","Esteban Cambiasso","Walter Samuel","Papu Gómez","Gonzalo Higuaín","Ezequiel Lavezzi","Leandro Paredes","Rodrigo De Paul","Alexis Mac Allister","Mario Kempes",
+  "Daniel Passarella","Ricardo Bochini","Javier Saviola","Jorge Burruchaga","Ángel Labruna","Hugo Gatti","Juan Sebastián Verón",
+  // Brasil
+  "Pelé","Garrincha","Zico","Sócrates","Tostão","Rivelino","Romário","Bebeto","Ronaldo Nazário","Ronaldinho","Kaká","Rivaldo",
+  "Cafu","Roberto Carlos","Dida","Gilberto Silva","Thiago Silva","Dani Alves","Casemiro","Neymar","Vinícius Júnior","Rodrygo",
+  "Gabriel Jesus","Raphinha","Adriano","Juninho Pernambucano","Fred","Edmundo","Dunga","Lucas Paquetá",
+  // Uruguay
+  "Obdulio Varela","Juan Alberto Schiaffino","Héctor Scarone","Enzo Francescoli","Diego Forlán","Luis Suárez","Edinson Cavani","Diego Godín","José Giménez","Fernando Muslera",
+  "Álvaro Recoba","Rúben Sosa","Darwin Núñez","Federico Valverde","Rodrigo Bentancur","Gastón Ramírez","Matías Vecino","Giorgian De Arrascaeta","Sebastián Abreu","Martín Cáceres",
+  // México
+  "Hugo Sánchez","Cuauhtémoc Blanco","Jared Borgetti","Claudio Suárez","Luis Hernández","Pável Pardo","Rafael Márquez","Andrés Guardado","Giovani dos Santos","Carlos Vela",
+  "Oribe Peralta","Guillermo Ochoa","Héctor Herrera","Raúl Jiménez","Jesús Corona","Jonathan dos Santos","Carlos Salcido","Francisco Fonseca","Luis García","Javier Hernández",
+  // Colombia
+  "Carlos Valderrama","René Higuita","Freddy Rincón","Faustino Asprilla","Iván Córdoba","Mario Yepes","Radamel Falcao","James Rodríguez","Juan Cuadrado","David Ospina",
+  "Luis Díaz","Teófilo Gutiérrez","Andrés Escobar","Adolfo Valencia","Leonel Álvarez","Jackson Martínez","Carlos Bacca","Yerry Mina","Mateus Uribe","Jeison Murillo",
+  // Chile y Andes
+  "Iván Zamorano","Marcelo Salas","Claudio Bravo","Alexis Sánchez","Arturo Vidal","Gary Medel","Charles Aránguiz","Jean Beausejour","Eduardo Vargas","Jorge Valdivia",
+  "Paolo Guerrero","Jefferson Farfán","Teófilo Cubillas","Nolberto Solano","Juan Reynoso","Roque Santa Cruz","José Luis Chilavert","Justo Villar","Miguel Almirón","Salvador Cabañas",
+  // Europa históricos
+  "Johan Cruyff","Marco van Basten","Ruud Gullit","Frank Rijkaard","Ronald Koeman","Dennis Bergkamp","Arjen Robben","Robin van Persie","Wesley Sneijder","Edwin van der Sar",
+  "Paolo Maldini","Franco Baresi","Alessandro Nesta","Fabio Cannavaro","Andrea Pirlo","Francesco Totti","Alessandro Del Piero","Gianluigi Buffon","Giorgio Chiellini","Daniele De Rossi",
+  "Roberto Baggio","Paolo Rossi","Gaetano Scirea","Gennaro Gattuso","Filippo Inzaghi","Christian Vieri","Luca Toni","Ciro Immobile","Federico Chiesa","Lorenzo Insigne","Nicolo Barella",
+  "Zinedine Zidane","Thierry Henry","Michel Platini","David Trezeguet","Didier Deschamps","Patrick Vieira","Claude Makélélé","Franck Ribéry","Laurent Blanc","Marcel Desailly",
+  "Cristiano Ronaldo","Luis Figo","Eusébio","Pepe","Bernardo Silva","Bruno Fernandes","João Félix","João Cancelo","Diogo Jota","Rui Costa","Juan Mata","Gianfranco Zola","Eric Cantona",
+  "Franz Beckenbauer","Gerd Müller","Lothar Matthäus","Oliver Kahn","Michael Ballack","Philipp Lahm","Bastian Schweinsteiger","Mesut Özil","Toni Kroos","Manuel Neuer",
+  "George Best","Bobby Charlton","Bobby Moore","Wayne Rooney","David Beckham","Paul Scholes","Steven Gerrard","Frank Lampard","John Terry","Rio Ferdinand",
+  "Alan Shearer","Michael Owen","Gary Lineker","Harry Kane","Marcus Rashford",
+  "Iker Casillas","Xavi Hernández","Andrés Iniesta","Carles Puyol","Sergio Ramos","Fernando Hierro","Raúl González","Fernando Torres","David Villa","Isco","Gerard Piqué","Sergio Busquets",
+  "Lev Yashin","Andriy Shevchenko","Oleksandr Zinchenko","Robert Lewandowski","Grzegorz Krychowiak","Wojciech Szczęsny","Miroslav Klose","Ilkay Gündogan","Joshua Kimmich","Mario Götze",
+  "Luka Modrić","Ivan Rakitić","Mario Mandžukić","Davor Šuker","Zvonimir Boban","Robert Prosinečki","Hristo Stoichkov","Dimitar Berbatov","Gheorghe Hagi",
+  "Henrik Larsson","Zlatan Ibrahimović","Jari Litmanen","Christian Eriksen","Michael Laudrup","Brian Laudrup","Peter Schmeichel",
+  "George Weah","Jay-Jay Okocha","Nwankwo Kanu","Samuel Eto’o","Roger Milla","Didier Drogba","Michael Essien","Yaya Touré","Kolo Touré",
+  // Europa actuales top
+  "Kylian Mbappé","Erling Haaland","Kevin De Bruyne","Karim Benzema","Mohamed Salah","Sadio Mané","Riyad Mahrez","Hakim Ziyech","Son Heung-min",
+  "Antoine Griezmann","Ousmane Dembélé","Kingsley Coman","Jamal Musiala","Kai Havertz","Mason Mount","Phil Foden","Bukayo Saka","Declan Rice","Jack Grealish",
+  "Bruno Fernandes","João Félix","João Cancelo","Rúben Dias","Virgil van Dijk","Andrew Robertson","Trent Alexander-Arnold","Alisson Becker","Ederson",
+  "Thibaut Courtois","Jan Oblak","Marc-André ter Stegen","Gianluigi Donnarumma","Achraf Hakimi","Theo Hernández","Raphaël Varane","Dayot Upamecano","Jules Koundé",
+  "Federico Valverde","Rodrygo","Lautaro Martínez","Paulo Dybala","Álvaro Morata","Gerard Moreno","Nico Williams","Mikel Oyarzabal","Ángel Correa"
+];
 
-    const currentPlayers = [
-      "Lionel Messi","Cristiano Ronaldo","Kylian Mbappé","Erling Haaland","Kevin De Bruyne","Robert Lewandowski","Mohamed Salah","Karim Benzema","Neymar","Jude Bellingham","Vinícius Júnior","Kylian Mbappé","Jamal Musiala","Bukayo Saka","Phil Foden","Julián Álvarez","Lautaro Martínez","Pedri","Rodrigo De Paul","João Félix","Trent Alexander-Arnold","Virgil van Dijk","Alisson Becker","Ederson","Jan Oblak","Thibaut Courtois","Gianluigi Donnarumma"
-    ];
+// 60 históricos
+const historicalPlayers = [
+  "Pelé","Diego Maradona","Johan Cruyff","Alfredo Di Stéfano","Ferenc Puskás","Eusébio","George Best","Bobby Charlton","Bobby Moore","Franz Beckenbauer",
+  "Paolo Maldini","Franco Baresi","Roberto Baggio","Marco van Basten","Ruud Gullit","Michel Platini","Zico","Sócrates","Rivelino","Mario Kempes","Daniel Passarella","Oscar Ruggeri",
+  "Hugo Gatti","Ubaldo Fillol","Garrincha","Lev Yashin","Just Fontaine","Gerd Müller","Paolo Rossi","Gaetano Scirea","Andriy Shevchenko","George Weah",
+  "Didier Drogba","Hristo Stoichkov","Henrik Larsson","David Beckham","Raúl González","Luis Figo","Thierry Henry","Zinedine Zidane","Ronaldo Nazário","Ronaldinho","Roberto Carlos",
+  "Cafu","Patrick Vieira","Claude Makélélé","Oliver Kahn","Michael Ballack","Lothar Matthäus","Matthias Sammer","Eric Cantona","Juan Sebastián Verón","Fernando Redondo"
+];
 
-    const retiredPlayers = [
-      "Diego Maradona","Ronaldo Nazário","Zinedine Zidane","Ronaldinho","Ronaldo Nazário","Thierry Henry","David Beckham","Steven Gerrard","Frank Lampard","Xavi Hernández","Andrés Iniesta","Roberto Baggio","Sergio Agüero","Fernando Torres","David Villa","Gianfranco Zola","Eric Cantona"
-    ];
+// 60 actuales
+const currentPlayers = [
+  "Lionel Messi","Cristiano Ronaldo","Kylian Mbappé","Erling Haaland","Kevin De Bruyne","Robert Lewandowski","Mohamed Salah","Harry Kane","Karim Benzema","Luka Modrić",
+  "Toni Kroos","Casemiro","Vinícius Júnior","Jude Bellingham","Pedri","Gavi","Frenkie de Jong","Phil Foden","Bukayo Saka","Declan Rice","Jack Grealish",
+  "Bruno Fernandes","Marcus Rashford","João Félix","João Cancelo","Rúben Dias","Bernardo Silva","Virgil van Dijk","Andrew Robertson","Trent Alexander-Arnold","Alisson Becker",
+  "Ederson","Thibaut Courtois","Jan Oblak","Marc-André ter Stegen","Manuel Neuer","Gianluigi Donnarumma","Achraf Hakimi","Theo Hernández","Raphaël Varane","Dayot Upamecano",
+  "Antoine Griezmann","Ousmane Dembélé","Kingsley Coman","Jamal Musiala","Kai Havertz","Joshua Kimmich","Leon Goretzka","Federico Valverde","Rodrygo","Lautaro Martínez",
+  "Ángel Di María","Paulo Dybala","Álvaro Morata","Gerard Moreno","Nico Williams","Mikel Oyarzabal","Dani Carvajal","Achraf Hakimi","João Cancelo","Jules Koundé"
+];
 
-    const superFamous = [
-      "Pelé","Diego Maradona","Lionel Messi","Cristiano Ronaldo","Johan Cruyff","Zinedine Zidane","Franz Beckenbauer","Ronaldo Nazário","Ronaldinho","Roberto Baggio","Eusébio","Lev Yashin","Pele","Maradona","Michel Platini"
-    ];
+// 60 retirados
+const retiredPlayers = [
+  "Diego Maradona","Ronaldo Nazário","Ronaldinho","Zinedine Zidane","Thierry Henry","David Beckham","Steven Gerrard","Frank Lampard","Xavi Hernández","Andrés Iniesta",
+  "Iker Casillas","Carles Puyol","Fernando Hierro","Fernando Torres","David Villa","Raúl González","Marco Materazzi","Alessandro Nesta","Fabio Cannavaro","Gianluca Zambrotta",
+  "Pavel Nedvěd","Miroslav Klose","Oliver Kahn","Michael Ballack","Claude Makélélé","Patrick Vieira","Didier Drogba","Samuel Eto’o","Francesco Totti","Alessandro Del Piero",
+  "Roberto Ayala","Pablo Aimar","Juan Román Riquelme","Gabriel Batistuta","Hernán Crespo","Claudio López","Ángel Labruna","Hugo Gatti","Oscar Ruggeri","Daniel Passarella",
+  "Hugo Sánchez","Carlos Valderrama","Iván Zamorano","Marcelo Salas","Álvaro Recoba","Diego Forlán","Enzo Francescoli","George Weah","Eric Cantona","Juan Sebastián Verón",
+  "Fernando Redondo","Gianfranco Zola","Michael Owen","Juan Mata","Ricardo Bochini","Jorge Burruchaga"
+];
+
+// 60 super famosos
+const superFamous = [
+  "Pelé","Diego Maradona","Lionel Messi","Cristiano Ronaldo","Johan Cruyff","Zinedine Zidane","Franz Beckenbauer","Ronaldinho","Ronaldo Nazário","David Beckham",
+  "Thierry Henry","Kylian Mbappé","Erling Haaland","Neymar","Andrés Iniesta","Xavi Hernández","Paolo Maldini","Roberto Baggio","Luis Figo","Iker Casillas",
+  "Gianluigi Buffon","George Best","Gabriel Batistuta","Juan Román Riquelme","Sergio Agüero","Ángel Di María","Karim Benzema","Robert Lewandowski","Kevin De Bruyne","Mohamed Salah",
+  "Virgil van Dijk","Manuel Neuer","Oliver Kahn","Miroslav Klose","Philipp Lahm","Wayne Rooney","Steven Gerrard","Frank Lampard","Raúl González","Sergio Ramos",
+  "Gerard Piqué","Ronald Koeman","Marco van Basten","Ruud Gullit","Patrick Vieira","Claude Makélélé","Luis Suárez","Edinson Cavani","Diego Forlán","Didier Drogba",
+  "Samuel Eto’o","George Weah","Eusébio","Andriy Shevchenko","Arjen Robben","Dennis Bergkamp","Eric Cantona","Zlatan Ibrahimović","Michael Owen","Peter Schmeichel"
+];
 
     // Normalizar y desduplicar pools
     function buildPlayerPool(mode){
