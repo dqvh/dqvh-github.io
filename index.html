@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Juego del Impostor - Fútbol (v3, stealth, multi-impostor)</title>
+  <title>Juego del Impostor - Fútbol (v4, localStorage, multi-impostor)</title>
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
     body{font-family:Arial,Helvetica,sans-serif;background:linear-gradient(135deg,#667eea,#764ba2);min-height:100vh;display:flex;justify-content:center;align-items:center;padding:20px}
@@ -31,6 +31,8 @@
     .triple-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
     .player-image{max-width:70%;border-radius:10px}
     .order-preview{text-align:left;margin-top:8px;border:1px dashed #ddd;border-radius:12px;padding:12px}
+
+    .mode-info{font-size:12px;color:#666;margin:5px 0;text-align:left}
 
     /* ===== Panel secreto: compacto y disimulado ===== */
     .secret-hints{position:absolute;right:12px;bottom:12px;width:320px;max-width:86vw;background:rgba(17,17,17,.92);color:#eee;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.35);padding:10px 12px;text-align:left;opacity:0;pointer-events:none;transform:translateY(8px) scale(.98);transition:opacity .15s ease,transform .15s ease;z-index:10}
@@ -61,6 +63,7 @@
         <option value="retired">Retirados</option>
         <option value="famous">Demasiado famosos</option>
       </select>
+      <div class="mode-info" id="modeInfo"></div>
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px">
         <div>
@@ -179,6 +182,43 @@
       recentRounds:[] // array de Sets de indices
     };
 
+    // ===== LocalStorage functions =====
+    function saveGameData() {
+      const dataToSave = {
+        playerNames: gameData.playerNames,
+        playerCount: gameData.playerCount,
+        impostorCount: gameData.impostorCount,
+        consecutiveImpostorCounts: gameData.consecutiveImpostorCounts,
+        usedThemes: Array.from(gameData.usedThemes),
+        recentRounds: gameData.recentRounds.map(set => Array.from(set))
+      };
+      localStorage.setItem('impostorGameData', JSON.stringify(dataToSave));
+    }
+
+    function loadGameData() {
+      try {
+        const saved = localStorage.getItem('impostorGameData');
+        if (saved) {
+          const data = JSON.parse(saved);
+          if (data.playerNames && Array.isArray(data.playerNames)) {
+            gameData.playerNames = data.playerNames;
+            gameData.playerCount = data.playerCount || 5;
+            gameData.impostorCount = data.impostorCount || 1;
+            gameData.consecutiveImpostorCounts = data.consecutiveImpostorCounts || {};
+            gameData.usedThemes = new Set(data.usedThemes || []);
+            gameData.recentRounds = (data.recentRounds || []).map(arr => new Set(arr));
+            
+            // Update UI
+            document.getElementById('playerCount').value = String(gameData.playerCount);
+            updateImpostorOptions(gameData.playerCount);
+            document.getElementById('impostorCount').value = String(gameData.impostorCount);
+          }
+        }
+      } catch (e) {
+        console.error('Error loading saved data:', e);
+      }
+    }
+
     // ===== UI =====
     const screens=['setupScreen','playerSetupScreen','orderScreen','transferScreen','gameScreen','discussionScreen','resultsScreen'];
     function showScreen(id){screens.forEach(s=>document.getElementById(s).style.display=(s===id?'block':'none'));if(id!=='gameScreen'){hideSecretHints();toggleStealthBtn(false);}}
@@ -201,9 +241,9 @@
       'Dennis Bergkamp','Ryan Giggs','Paul Scholes','Roy Keane','Alan Shearer','Gary Lineker','John Terry','Rio Ferdinand','Ashley Cole','Jamie Carragher',
       'Michael Owen','Wayne Rooney','Zlatan Ibrahimović','Andrea Pirlo','Gennaro Gattuso','Clarence Seedorf','Filippo Inzaghi','Rui Costa','Luís Figo',
       'Ricardo Quaresma','Deco','Simão Sabrosa','Pedro Pauleta','Pepe','José Fonte','João Moutinho','William Carvalho','André Silva','Diogo Jota',
-      'Bruno Fernandes','Bernardo Silva','Rafa Silva','Nelson Semedo','João Cancelo','Raphaël Guerreiro','Danilo Pereira','Renato Sanches','Gonçalo Ramos',
+      'Bruno Fernandes','Bernardo Silva','Rafa Silva','Nelson Semedo','Raphaël Guerreiro','Danilo Pereira','Renato Sanches','Gonçalo Ramos',
       'Rafael Leão','Ricardo Horta','Otávio','Matheus Nunes','Vitinha','Gonçalo Inácio','Rúben Neves','Diogo Costa','José Sá','Anthony Lopes',
-      'Pepe','Raphaël Varane','Dayot Upamecano','Jules Koundé','William Saliba','Ibrahima Konaté','Presnel Kimpembe','Lucas Hernández','Benjamin Pavard','Mike Maignan',
+      'Raphaël Varane','Dayot Upamecano','Jules Koundé','William Saliba','Ibrahima Konaté','Presnel Kimpembe','Lucas Hernández','Benjamin Pavard','Mike Maignan',
       'Hugo Lloris','Alphonse Areola','Ousmane Dembélé','Kingsley Coman','Christopher Nkunku','Randal Kolo Muani','Marcus Thuram','Olivier Giroud','Wissam Ben Yedder',
       'Florian Thauvin','Moussa Diaby','Yann M\'Vila','N\'Golo Kanté','Paul Pogba','Blaise Matuidi','Corentin Tolisso','Eduardo Camavinga','Aurélien Tchouaméni',
       'Youssouf Fofana','Matteo Guendouzi','Houssem Aouar','Rayan Cherki','Khéphren Thuram','Warren Zaïre-Emery','Bradley Barcola','Désiré Doué','Leny Yoro',
@@ -217,7 +257,7 @@
       'Raoul Bellanova','Mattia De Sciglio','Emerson Palmieri','Leonardo Spinazzola','Guglielmo Vicario','Ivan Provedel','Alex Meret','Mattia Perin','Michele Di Gregorio',
       'Álvaro Morata','Ferran Torres','Ansu Fati','Dani Olmo','Mikel Oyarzabal','Nico Williams','Yeremy Pino','Bryan Zaragoza','Ayoze Pérez',
       'Joselu','Borja Iglesias','Iago Aspas','Gerard Moreno','Carlos Soler','Fabián Ruiz','Martín Zubimendi','Mikel Merino','Rodri','Marcos Llorente',
-      'Koke','Gavi','Fermín López','Marc Cucurella','Alejandro Balde','Pedro Porro','Jesús Navas','Dani Carvajal','Robin Le Normand','Pau Cubarsí',
+      'Fermín López','Marc Cucurella','Alejandro Balde','Pedro Porro','Jesús Navas','Dani Carvajal','Robin Le Normand','Pau Cubarsí',
       'Aymeric Laporte','José María Giménez','Unai Simón','David Raya','Álex Remiro','Robert Sánchez','Kepa Arrizabalaga','Jan Oblak','Joško Gvardiol',
       'Dominik Livaković','Luka Sučić','Mateo Kovačić','Marcelo Brozović','Ivan Perišić','Andrej Kramarić','Bruno Petković','Mislav Oršić','Josip Juranović',
       'Borna Sosa','Domagoj Vida','Dejan Lovren','Martin Erlić','Josip Šutalo','Marin Pongračić','Ante Budimir','Marko Pjaca','Lovro Majer'
@@ -229,7 +269,8 @@
       'Hugo Gatti','Ubaldo Fillol','Garrinche','Lev Yashin','Just Fontaine','Gerd Müller','Paolo Rossi','Gaetano Scirea','Andriy Shevchenko','George Weah',
       'Didier Drogba','Hristo Stoichkov','Henrik Larsson','David Beckham','Raúl González','Luis Figo','Thierry Henry','Zinedine Zidane','Ronaldo Nazário','Ronaldinho','Roberto Carlos',
       'Cafu','Patrick Vieira','Claude Makélélé','Oliver Kahn','Michael Ballack','Lothar Matthäus','Matthias Sammer','Eric Cantona','Juan Sebastián Verón','Fernando Redondo',
-      'Dennis Bergkamp','Ryan Giggs','Paul Scholes','Roy Keane','Alan Shearer','Gary Lineker','Michael Owen','Clarence Seedorf','Andrea Pirlo','Gennaro Gattuso'
+      'Dennis Bergkamp','Ryan Giggs','Paul Scholes','Roy Keane','Alan Shearer','Gary Lineker','Michael Owen','Clarence Seedorf','Andrea Pirlo','Gennaro Gattuso',
+      'Carlos Roa','Thomas N\'Kono','Ángel Labruna','Jean-Pierre Papin','Hossam Hassan'
     ];
 
     const currentPlayers = [
@@ -238,7 +279,11 @@
       'Bruno Fernandes','Marcus Rashford','João Félix','João Cancelo','Rúben Dias','Bernardo Silva','Virgil van Dijk','Andrew Robertson','Trent Alexander-Arnold','Alisson Becker',
       'Ederson','Thibaut Courtois','Jan Oblak','Marc-André ter Stegen','Manuel Neuer','Gianluigi Donnarumma','Achraf Hakimi','Theo Hernández','Raphaël Varane','Dayot Upamecano',
       'Antoine Griezmann','Ousmane Dembélé','Kingsley Coman','Jamal Musiala','Kai Havertz','Joshua Kimmich','Leon Goretzka','Federico Valverde','Rodrygo','Lautaro Martínez',
-      'Ángel Di María','Paulo Dybala','Álvaro Morata','Gerard Moreno','Nico Williams','Mikel Oyarzabal','Dani Carvajal','Jules Koundé','Riyad Mahrez','Son Heung-min'
+      'Ángel Di María','Paulo Dybala','Álvaro Morata','Gerard Moreno','Nico Williams','Mikel Oyarzabal','Dani Carvajal','Jules Koundé','Riyad Mahrez','Son Heung-min',
+      'Julián Álvarez','Emiliano Martínez','Enzo Fernández','Alexis Mac Allister','Leandro Paredes','Rodrigo De Paul','Nahuel Molina','Nicolás Otamendi','Cristian Romero',
+      'Lisandro Martínez','Alejandro Garnacho','Giovani Lo Celso','Ángel Correa','Marcos Acuña','Gonzalo Montiel','Nicolás Tagliafico','Darwin Núñez','Ronald Araújo',
+      'Edinson Cavani','Kevin Zenón','Cristian Medina','Pol Fernández','Marcos Rojo','Franco Armani','Claudio Echeverri','Ignacio Fernández','Santiago Giménez',
+      'Hirving Lozano','Edson Álvarez','Gabriel Martinelli','Gabriel Jesus','André Onana','Sadio Mané','Paulo Díaz'
     ];
 
     const retiredPlayers = [
@@ -247,7 +292,10 @@
       'Pavel Nedvěd','Miroslav Klose','Oliver Kahn','Michael Ballack','Claude Makélélé','Patrick Vieira','Didier Drogba','Samuel Eto\'o','Francesco Totti','Alessandro Del Piero',
       'Roberto Ayala','Pablo Aimar','Juan Román Riquelme','Gabriel Batistuta','Hernán Crespo','Claudio López','Ángel Labruna','Hugo Gatti','Oscar Ruggeri','Daniel Passarella',
       'Hugo Sánchez','Carlos Valderrama','Iván Zamorano','Marcelo Salas','Álvaro Recoba','Diego Forlán','Enzo Francescoli','George Weah','Eric Cantona','Juan Sebastián Verón',
-      'Fernando Redondo','Gianfranco Zola','Michael Owen','Juan Mata','Ricardo Bochini','Jorge Burruchaga','Andrea Pirlo','Gennaro Gattuso','Clarence Seedorf','Filippo Inzaghi'
+      'Fernando Redondo','Gianfranco Zola','Michael Owen','Juan Mata','Ricardo Bochini','Jorge Burruchaga','Andrea Pirlo','Gennaro Gattuso','Clarence Seedorf','Filippo Inzaghi',
+      'Javier Saviola','Guillermo Barros Schelotto','Rolando Schiavi','Fernando Gago','Maxi Rodríguez','Gabriel Heinze','Jonás Gutiérrez','Mariano Andújar','Diego Milito',
+      'Esteban Cambiasso','Lucas Biglia','Ricardo Álvarez','Miguel Layún','Carlos Salcido','Oswaldo Sánchez','Emmanuel Eboué','Sebastián Abreu','Martín Cáceres',
+      'Egídio Arévalo Ríos','Jared Borgetti','Faustino Asprilla','Freddy Rincón','Roger Milla','Jay-Jay Okocha','Rashidi Yekini'
     ];
 
     const superFamous = [
@@ -256,17 +304,58 @@
       'Gianluigi Buffon','George Best','Gabriel Batistuta','Juan Román Riquelme','Sergio Agüero','Ángel Di María','Karim Benzema','Robert Lewandowski','Kevin De Bruyne','Mohamed Salah',
       'Virgil van Dijk','Manuel Neuer','Oliver Kahn','Miroslav Klose','Philipp Lahm','Wayne Rooney','Steven Gerrard','Frank Lampard','Raúl González','Sergio Ramos',
       'Gerard Piqué','Ronald Koeman','Marco van Basten','Ruud Gullit','Patrick Vieira','Claude Makélélé','Luis Suárez','Edinson Cavani','Diego Forlán','Didier Drogba',
-      'Samuel Eto\'o','George Weah','Eusébio','Andriy Shevchenko','Arjen Robben','Dennis Bergkamp','Eric Cantona','Zlatan Ibrahimović','Michael Owen','Peter Schmeichel'
+      'Samuel Eto\'o','George Weah','Eusébio','Andriy Shevchenko','Arjen Robben','Dennis Bergkamp','Eric Cantona','Zlatan Ibrahimović','Michael Owen','Peter Schmeichel',
+      'Martín Palermo','Ángel Labruna','Oscar Ruggeri','Carlos Tevez','Javier Mascherano','Pablo Aimar','René Higuita','Carlos Valderrama','Cuauhtémoc Blanco',
+      'Rafael Márquez','Chicharito Hernández','Edinson Cavani','Luis Suárez','James Rodríguez','Radamel Falcao','Diego Forlán','Arjen Robben','Andrea Pirlo',
+      'Gennaro Gattuso','Clarence Seedorf','David Villa','Fernando Torres','Marcelo Gallardo','Carlos Bianchi','Franck Ribéry','Zlatan Ibrahimović',
+      'Wayne Rooney','Rivaldo','Romário','Yaya Touré','Keylor Navas','Hristo Stoichkov','Paolo Rossi','Jean-Pierre Papin','Lev Yashin','Javier Saviola','Fernando Gago'
     ];
 
-    function buildPlayerPool(mode){const k=mode||document.getElementById('playerPoolMode')?.value||'all';let pool=k==='historical'?historicalPlayers:k==='current'?currentPlayers:k==='retired'?retiredPlayers:k==='famous'?superFamous:allPlayers;const out=[],seen=new Set();for(const p of pool){const key=(p||'').toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu,'').trim();if(!seen.has(key)){seen.add(key);out.push(p)}}return out}
-    function onModeChange(){gameData.usedThemes.clear()}
+    function buildPlayerPool(mode){
+      const k=mode||document.getElementById('playerPoolMode')?.value||'all';
+      let pool=k==='historical'?historicalPlayers:k==='current'?currentPlayers:k==='retired'?retiredPlayers:k==='famous'?superFamous:allPlayers;
+      const out=[],seen=new Set();
+      for(const p of pool){
+        const key=(p||'').toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu,'').trim();
+        if(!seen.has(key)){seen.add(key);out.push(p)}
+      }
+      return out
+    }
+    
+    function updateModeInfo() {
+      const mode = document.getElementById('playerPoolMode')?.value || 'all';
+      const info = document.getElementById('modeInfo');
+      const counts = {
+        all: allPlayers.length,
+        historical: historicalPlayers.length,
+        current: currentPlayers.length,
+        retired: retiredPlayers.length,
+        famous: superFamous.length
+      };
+      
+      const descriptions = {
+        all: `Todos los jugadores disponibles (${counts.all} jugadores)`,
+        historical: `Jugadores históricos y vintage (${counts.historical} jugadores)`,
+        current: `Jugadores activos y reconocibles (${counts.current} jugadores)`,
+        retired: `Jugadores retirados pero no súper famosos (${counts.retired} jugadores)`,
+        famous: `Los más famosos e icónicos del fútbol (${counts.famous} jugadores)`
+      };
+      
+      info.textContent = descriptions[mode] || descriptions.all;
+    }
+    
+    function onModeChange(){
+      gameData.usedThemes.clear();
+      updateModeInfo();
+      saveGameData();
+    }
 
     // ===== setup helpers =====
     function onPlayerCountChange(){
       const pc = parseInt(document.getElementById('playerCount').value);
       gameData.playerCount = pc;
       updateImpostorOptions(pc);
+      saveGameData();
     }
     function updateImpostorOptions(playerCount){
       const sel=document.getElementById('impostorCount');
@@ -297,10 +386,32 @@
       renderPlayerInputs();
       showScreen('playerSetupScreen');
     }
-    function renderPlayerInputs(){const c=document.getElementById('playerNamesContainer');c.innerHTML='';for(let i=1;i<=gameData.playerCount;i++){const inp=document.createElement('input');inp.id=`playerName${i}`;inp.placeholder=`Nombre del Jugador ${i} (opcional)`;if(gameData.playerNames[i])inp.value=gameData.playerNames[i];c.appendChild(inp)};document.getElementById('countLabel').textContent=`${gameData.playerCount} jugadores`}
-    function addPlayerInput(){if(gameData.playerCount>=10)return;gameData.playerCount++;document.getElementById('playerCount').value=String(gameData.playerCount);updateImpostorOptions(gameData.playerCount);renderPlayerInputs()}
-    function removePlayerInput(){if(gameData.playerCount<=3)return;gameData.playerCount--;document.getElementById('playerCount').value=String(gameData.playerCount);gameData.playerNames.length=gameData.playerCount+1;updateImpostorOptions(gameData.playerCount);renderPlayerInputs()}
-    function continueToOrderSelection(){for(let i=1;i<=gameData.playerCount;i++){const name=(document.getElementById(`playerName${i}`)?.value||'').trim();gameData.playerNames[i]=name||`Jugador ${i}`}buildDefaultOrder();populateStartSelect();updateOrderPreview(gameData.startingPlayerIndex);showScreen('orderScreen')}
+    function renderPlayerInputs(){
+      const c=document.getElementById('playerNamesContainer');
+      c.innerHTML='';
+      for(let i=1;i<=gameData.playerCount;i++){
+        const inp=document.createElement('input');
+        inp.id=`playerName${i}`;
+        inp.placeholder=`Nombre del Jugador ${i} (opcional)`;
+        if(gameData.playerNames[i])inp.value=gameData.playerNames[i];
+        inp.addEventListener('input', saveGameData);
+        c.appendChild(inp);
+      }
+      document.getElementById('countLabel').textContent=`${gameData.playerCount} jugadores`;
+    }
+    function addPlayerInput(){if(gameData.playerCount>=10)return;gameData.playerCount++;document.getElementById('playerCount').value=String(gameData.playerCount);updateImpostorOptions(gameData.playerCount);renderPlayerInputs();saveGameData();}
+    function removePlayerInput(){if(gameData.playerCount<=3)return;gameData.playerCount--;document.getElementById('playerCount').value=String(gameData.playerCount);gameData.playerNames.length=gameData.playerCount+1;updateImpostorOptions(gameData.playerCount);renderPlayerInputs();saveGameData();}
+    function continueToOrderSelection(){
+      for(let i=1;i<=gameData.playerCount;i++){
+        const name=(document.getElementById(`playerName${i}`)?.value||'').trim();
+        gameData.playerNames[i]=name||`Jugador ${i}`;
+      }
+      saveGameData();
+      buildDefaultOrder();
+      populateStartSelect();
+      updateOrderPreview(gameData.startingPlayerIndex);
+      showScreen('orderScreen');
+    }
 
     // ===== Orden =====
     function buildDefaultOrder(){gameData.playerOrder=Array.from({length:gameData.playerCount},(_,i)=>i+1)}
@@ -317,6 +428,7 @@
       // elegir impostores random (sin duplicados dentro de la misma ronda)
       pickImpostorsRandomly();
       showTransferScreenForRole();
+      saveGameData();
     }
 
     // ===== Selección de impostores (aleatoria, sin duplicados dentro de la ronda, con influencia para evitar repeats largos) =====
@@ -407,11 +519,10 @@
       gameData.recentRounds = gameData.recentRounds || [];
       gameData.recentRounds.unshift(new Set(Array.from(gameData.impostorIndices)));
       if(gameData.recentRounds.length > 10) gameData.recentRounds.pop();
-      // DEBUG
-      // console.log('Impostores elegidos:', Array.from(gameData.impostorIndices));
+      saveGameData();
     }
 
-    function pickNewThemeNoRepeat(){const pool=buildPlayerPool();let cands=pool.filter(p=>!gameData.usedThemes.has(p));if(!cands.length){gameData.usedThemes.clear();cands=pool.slice()}const choice=cands[Math.floor(Math.random()*cands.length)]||pool[0];gameData.theme=choice;gameData.usedThemes.add(choice)}
+    function pickNewThemeNoRepeat(){const pool=buildPlayerPool();let cands=pool.filter(p=>!gameData.usedThemes.has(p));if(!cands.length){gameData.usedThemes.clear();cands=pool.slice()}const choice=cands[Math.floor(Math.random()*cands.length)]||pool[0];gameData.theme=choice;gameData.usedThemes.add(choice);saveGameData()}
     function showTransferScreenForRole(){if(gameData.currentPlayer<gameData.playerCount){const nextAbs=gameData.playerOrder[gameData.currentPlayer];document.getElementById('nextPlayerName').textContent=gameData.playerNames[nextAbs];document.getElementById('receivingPlayer').textContent=gameData.playerNames[nextAbs];showScreen('transferScreen')}else startDiscussion()}
     function showPlayerRole(){gameData.currentPlayer++;showScreen('gameScreen');updatePlayerScreen()}
 
@@ -450,7 +561,7 @@
       usedThemes:new Set(),
       consecutiveImpostorCounts:{},
       recentRounds:[]
-    };document.getElementById('playerCount').value='5';document.getElementById('playerPoolMode').value='all';updateImpostorOptions(5);hideSecretHints();toggleStealthBtn(false);showScreen('setupScreen')}
+    };document.getElementById('playerCount').value='5';document.getElementById('playerPoolMode').value='all';updateImpostorOptions(5);updateModeInfo();hideSecretHints();toggleStealthBtn(false);localStorage.removeItem('impostorGameData');showScreen('setupScreen')}
 
     // ===== Modo secreto ultra-disimulado (toque simple) =====
     const SECRET=new Set(['feli','felipe']);
@@ -490,10 +601,18 @@
 
     // ===== Init =====
     (function init(){
+      // Load saved data first
+      loadGameData();
       // set initial impostor options based on initial player count
       updateImpostorOptions(gameData.playerCount);
+      // update mode info
+      updateModeInfo();
       // attach onchange for playerCount (in case user changes it directly)
       document.getElementById('playerCount').addEventListener('change', onPlayerCountChange);
+      document.getElementById('impostorCount').addEventListener('change', () => {
+        gameData.impostorCount = parseInt(document.getElementById('impostorCount').value);
+        saveGameData();
+      });
     })();
   </script>
 </body>
