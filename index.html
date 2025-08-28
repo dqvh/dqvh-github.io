@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Juego del Impostor - Fútbol (v3, stealth)</title>
+  <title>Juego del Impostor - 6sociales</title>
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
     body{font-family:Arial,Helvetica,sans-serif;background:linear-gradient(135deg,#667eea,#764ba2);min-height:100vh;display:flex;justify-content:center;align-items:center;padding:20px}
@@ -42,7 +42,7 @@
     .spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite}
     @keyframes spin{to{transform:rotate(360deg)}}
 
-    /* Botón completamente invisible (solo Feli/Felipe) */
+    /* Botón completamente invisible */
     .stealth-btn{position:absolute;right:10px;bottom:10px;width:14px;height:14px;border-radius:999px;background:transparent;opacity:0;border:none;cursor:pointer;user-select:none;touch-action:manipulation}
     .stealth-btn.hidden{display:none}
   </style>
@@ -51,7 +51,7 @@
   <div class="container">
     <!-- Setup -->
     <div class="setup-screen" id="setupScreen">
-      <h1>🕵️ Juego del Impostor - Fútbol</h1>
+      <h1>🕵️ Juego del Impostor - 6Sociales</h1>
       <p>Elegí el modo: De todo / Históricos / Actuales / Retirados / Demasiado famosos.</p>
       <label for="playerPoolMode" style="text-align:left;display:block;margin-top:12px;font-weight:700">Modo de jugadores</label>
       <select id="playerPoolMode" onchange="onModeChange()">
@@ -61,9 +61,20 @@
         <option value="retired">Retirados</option>
         <option value="famous">Demasiado famosos</option>
       </select>
-      <select id="playerCount" style="margin-top:14px">
-        <option value="3">3</option><option value="4">4</option><option value="5" selected>5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option>
-      </select>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px">
+        <div>
+          <label style="text-align:left;display:block;font-weight:700">Cantidad de jugadores</label>
+          <select id="playerCount" onchange="onPlayerCountChange()">
+            <option value="3">3</option><option value="4">4</option><option value="5" selected>5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option>
+          </select>
+        </div>
+        <div>
+          <label style="text-align:left;display:block;font-weight:700">Cantidad de impostores</label>
+          <select id="impostorCount"></select>
+        </div>
+      </div>
+
       <button onclick="setupPlayers()">🚀 Configurar Jugadores</button>
     </div>
 
@@ -132,7 +143,7 @@
     <div class="discussion-screen" id="discussionScreen">
       <h2>💬 Discusión</h2>
       <div class="timer" id="discussionTimer">3:00</div>
-      <div class="warning">Hablen del jugador secreto. El impostor intenta mezclarse.</div>
+      <div class="warning">Hablen del jugador secreto. Los impostores intentan mezclarse.</div>
       <button class="btn-warning" onclick="showResults()">🎭 Revelar Resultados</button>
     </div>
 
@@ -150,7 +161,23 @@
 
   <script>
     // ===== Estado =====
-    let gameData={theme:'',playerCount:5,playerNames:[],playerOrder:[],startingPlayerIndex:1,currentPlayer:0,impostorIndex:-1,discussionTimer:null,timeLeft:180,usedThemes:new Set()};
+    let gameData={
+      theme:'',
+      playerCount:5,
+      playerNames:[],
+      playerOrder:[],
+      startingPlayerIndex:1,
+      currentPlayer:0,
+      impostorCount:1,
+      impostorIndices:new Set(),
+      discussionTimer:null,
+      timeLeft:180,
+      usedThemes:new Set(),
+      // para controlar repeticiones: mapa index -> consecutivos que fue impostor
+      consecutiveImpostorCounts:{},
+      // historial de rondas (opcional)
+      recentRounds:[] // array de Sets de indices
+    };
 
     // ===== UI =====
     const screens=['setupScreen','playerSetupScreen','orderScreen','transferScreen','gameScreen','discussionScreen','resultsScreen'];
@@ -235,11 +262,44 @@
     function buildPlayerPool(mode){const k=mode||document.getElementById('playerPoolMode')?.value||'all';let pool=k==='historical'?historicalPlayers:k==='current'?currentPlayers:k==='retired'?retiredPlayers:k==='famous'?superFamous:allPlayers;const out=[],seen=new Set();for(const p of pool){const key=(p||'').toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu,'').trim();if(!seen.has(key)){seen.add(key);out.push(p)}}return out}
     function onModeChange(){gameData.usedThemes.clear()}
 
+    // ===== setup helpers =====
+    function onPlayerCountChange(){
+      const pc = parseInt(document.getElementById('playerCount').value);
+      gameData.playerCount = pc;
+      updateImpostorOptions(pc);
+    }
+    function updateImpostorOptions(playerCount){
+      const sel=document.getElementById('impostorCount');
+      sel.innerHTML='';
+      // max impostores: playerCount - 1 (no permitir que todos sean impostores)
+      const max=Math.max(1, playerCount-1);
+      // but realistically we keep max to Math.floor(playerCount/2) for balance, allow user to increase if desired:
+      const balancedMax = Math.max(1, Math.floor(playerCount/2));
+      // We'll default options up to balancedMax but allow user to choose up to max by enabling more options:
+      const finalMax = max; // allow full range but show reasonable defaults
+      for(let i=1;i<=finalMax;i++){
+        const o=document.createElement('option');o.value=String(i);o.textContent=String(i);
+        sel.appendChild(o);
+      }
+      // set default: 1
+      sel.value = String(Math.min(gameData.impostorCount||1, finalMax));
+    }
+
     // ===== Flujo inicial =====
-    function setupPlayers(){gameData.playerCount=parseInt(document.getElementById('playerCount').value);gameData.playerNames=new Array(gameData.playerCount+1);renderPlayerInputs();showScreen('playerSetupScreen')}
+    function setupPlayers(){
+      gameData.playerCount=parseInt(document.getElementById('playerCount').value);
+      gameData.impostorCount=parseInt(document.getElementById('impostorCount').value);
+      if(gameData.impostorCount >= gameData.playerCount){
+        alert('La cantidad de impostores debe ser menor que la cantidad de jugadores.');
+        return;
+      }
+      gameData.playerNames=new Array(gameData.playerCount+1);
+      renderPlayerInputs();
+      showScreen('playerSetupScreen');
+    }
     function renderPlayerInputs(){const c=document.getElementById('playerNamesContainer');c.innerHTML='';for(let i=1;i<=gameData.playerCount;i++){const inp=document.createElement('input');inp.id=`playerName${i}`;inp.placeholder=`Nombre del Jugador ${i} (opcional)`;if(gameData.playerNames[i])inp.value=gameData.playerNames[i];c.appendChild(inp)};document.getElementById('countLabel').textContent=`${gameData.playerCount} jugadores`}
-    function addPlayerInput(){if(gameData.playerCount>=10)return;gameData.playerCount++;renderPlayerInputs()}
-    function removePlayerInput(){if(gameData.playerCount<=3)return;gameData.playerCount--;gameData.playerNames.length=gameData.playerCount+1;renderPlayerInputs()}
+    function addPlayerInput(){if(gameData.playerCount>=10)return;gameData.playerCount++;document.getElementById('playerCount').value=String(gameData.playerCount);updateImpostorOptions(gameData.playerCount);renderPlayerInputs()}
+    function removePlayerInput(){if(gameData.playerCount<=3)return;gameData.playerCount--;document.getElementById('playerCount').value=String(gameData.playerCount);gameData.playerNames.length=gameData.playerCount+1;updateImpostorOptions(gameData.playerCount);renderPlayerInputs()}
     function continueToOrderSelection(){for(let i=1;i<=gameData.playerCount;i++){const name=(document.getElementById(`playerName${i}`)?.value||'').trim();gameData.playerNames[i]=name||`Jugador ${i}`}buildDefaultOrder();populateStartSelect();updateOrderPreview(gameData.startingPlayerIndex);showScreen('orderScreen')}
 
     // ===== Orden =====
@@ -251,7 +311,106 @@
     function startRoundFromOrder(){gameData.playerOrder=rotateOrderStartingAt(gameData.startingPlayerIndex);prepareRound()}
 
     // ===== Ronda =====
-    function prepareRound(){gameData.currentPlayer=0;pickNewThemeNoRepeat();gameData.impostorIndex=Math.floor(Math.random()*gameData.playerCount)+1;showTransferScreenForRole()}
+    function prepareRound(){
+      gameData.currentPlayer=0;
+      pickNewThemeNoRepeat();
+      // elegir impostores random (sin duplicados dentro de la misma ronda)
+      pickImpostorsRandomly();
+      showTransferScreenForRole();
+    }
+
+    // ===== Selección de impostores (aleatoria, sin duplicados dentro de la ronda, con influencia para evitar repeats largos) =====
+    function pickImpostorsRandomly(){
+      const n = gameData.impostorCount || 1;
+      const players = Array.from({length:gameData.playerCount},(_,i)=>i+1);
+      const consec = gameData.consecutiveImpostorCounts || {};
+      // calcular pesos base
+      let weights = players.map(idx=>{
+        const streak = consec[idx] || 0;
+        let w = 1.0;
+        // Si ya fue impostor 2 veces consecutivas, NO queremos 3ra vez (evitar 3 o más seguidas).
+        if(streak >= 2){
+          w = 0; // excluir preferentemente
+        } else if(streak === 1){
+          // se puede repetir una vez, pero menos probable
+          w = 0.35;
+        } else {
+          w = 1.0;
+        }
+        // añadir ligero jitter aleatorio para evitar patrones predecibles
+        const jitter = Math.random() * 0.15; // pequeño boost aleatorio
+        return Math.max(0, w + jitter);
+      });
+
+      // selección sin reemplazo ponderada
+      const selected = new Set();
+      let attempts = 0;
+      const maxAttempts = 10;
+      while(selected.size < n && attempts < maxAttempts){
+        // si todos pesos 0 (por restricciones), relajamos un poco
+        const totalWeight = weights.reduce((a,b)=>a+b,0);
+        if(totalWeight <= 0.000001){
+          // relajar: permitir aquellos con streak>=2 con peso muy bajo
+          weights = players.map(idx=>{
+            const streak = consec[idx] || 0;
+            if(streak >= 2) return 0.12; // permitir como último recurso
+            if(streak === 1) return 0.5;
+            return 1.0 + Math.random()*0.2;
+          });
+        }
+        // seleccionar uno según pesos
+        const tot = weights.reduce((a,b)=>a+b,0);
+        let r = Math.random() * tot;
+        let acc = 0;
+        let chosenIndex = -1;
+        for(let i=0;i<players.length;i++){
+          acc += weights[i];
+          if(r <= acc){
+            chosenIndex = players[i];
+            break;
+          }
+        }
+        if(chosenIndex === -1){
+          // fallback
+          const remaining = players.filter(p=>!selected.has(p));
+          chosenIndex = remaining[Math.floor(Math.random()*remaining.length)];
+        }
+        if(!selected.has(chosenIndex)){
+          selected.add(chosenIndex);
+          // set its weight to 0 to avoid picking again this round
+          const idxPos = players.indexOf(chosenIndex);
+          if(idxPos>=0) weights[idxPos]=0;
+        }
+        attempts++;
+      }
+
+      // si aún faltan (caso raro), completar aleatoriamente sin duplicados
+      const remainingPlayers = players.filter(p=>!selected.has(p));
+      while(selected.size < n && remainingPlayers.length>0){
+        selected.add(remainingPlayers.shift());
+      }
+
+      // asignar en gameData
+      gameData.impostorIndices = new Set(Array.from(selected));
+
+      // actualizar contadores consecutivos
+      // si fue impostor -> incrementa; si no -> reset a 0
+      for(const p of players){
+        if(gameData.impostorIndices.has(p)){
+          gameData.consecutiveImpostorCounts[p] = (gameData.consecutiveImpostorCounts[p] || 0) + 1;
+        } else {
+          gameData.consecutiveImpostorCounts[p] = 0;
+        }
+      }
+
+      // mantener historial (opcional, para futuras mejoras)
+      gameData.recentRounds = gameData.recentRounds || [];
+      gameData.recentRounds.unshift(new Set(Array.from(gameData.impostorIndices)));
+      if(gameData.recentRounds.length > 10) gameData.recentRounds.pop();
+      // DEBUG
+      // console.log('Impostores elegidos:', Array.from(gameData.impostorIndices));
+    }
+
     function pickNewThemeNoRepeat(){const pool=buildPlayerPool();let cands=pool.filter(p=>!gameData.usedThemes.has(p));if(!cands.length){gameData.usedThemes.clear();cands=pool.slice()}const choice=cands[Math.floor(Math.random()*cands.length)]||pool[0];gameData.theme=choice;gameData.usedThemes.add(choice)}
     function showTransferScreenForRole(){if(gameData.currentPlayer<gameData.playerCount){const nextAbs=gameData.playerOrder[gameData.currentPlayer];document.getElementById('nextPlayerName').textContent=gameData.playerNames[nextAbs];document.getElementById('receivingPlayer').textContent=gameData.playerNames[nextAbs];showScreen('transferScreen')}else startDiscussion()}
     function showPlayerRole(){gameData.currentPlayer++;showScreen('gameScreen');updatePlayerScreen()}
@@ -261,7 +420,7 @@
     async function fetchPlayerImage(title){for(const lang of ['en','es']){try{const url=`https://${lang}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`;const r=await fetchWithTimeout(url,{},5000).catch(()=>null);if(r&&r.ok){const j=await r.json();if(j?.thumbnail?.source)return j.thumbnail.source}}catch(_){}}return''}
 
     async function updatePlayerScreen(){const roleCard=document.getElementById('roleCard');const roleText=document.getElementById('roleText');const themeText=document.getElementById('themeText');const themeImage=document.getElementById('themeImage');const finishButton=document.getElementById('finishButton');const absIndex=gameData.playerOrder[gameData.currentPlayer-1];const currentName=gameData.playerNames[absIndex];document.getElementById('playerTitle').textContent=currentName;themeImage.innerHTML='';
-      if(absIndex===gameData.impostorIndex){roleCard.className='role-card impostor-card';roleText.textContent='🎭 ERES EL IMPOSTOR';themeText.textContent='No sabés quién es el jugador secreto.'}
+      if(gameData.impostorIndices && gameData.impostorIndices.has(absIndex)){roleCard.className='role-card impostor-card';roleText.textContent='🎭 ERES EL IMPOSTOR';themeText.textContent='No sabés quién es el jugador secreto.'}
       else{roleCard.className='role-card innocent-card';roleText.textContent='👥 ERES INOCENTE';themeText.textContent=`Jugador secreto: ${gameData.theme.toUpperCase()}`;const img=await fetchPlayerImage(gameData.theme);if(img)themeImage.innerHTML=`<img src="${img}" alt="${gameData.theme}" class="player-image">`}
       finishButton.textContent=(gameData.currentPlayer===gameData.playerCount)?'✅ Listo - Iniciar Discusión':'✅ Listo - Borrar y Continuar';
       attachSecretMode(currentName)
@@ -272,12 +431,26 @@
     function startDiscussion(){showScreen('discussionScreen');startTimer()}
     function startTimer(){gameData.timeLeft=180;const el=document.getElementById('discussionTimer');clearInterval(gameData.discussionTimer);gameData.discussionTimer=setInterval(()=>{const m=Math.floor(gameData.timeLeft/60),s=String(gameData.timeLeft%60).padStart(2,'0');el.textContent=`${m}:${s}`;if(gameData.timeLeft<=0){clearInterval(gameData.discussionTimer);el.textContent='¡TIEMPO!';showResults()}gameData.timeLeft--},1000)}
 
-    async function showResults(){clearInterval(gameData.discussionTimer);showScreen('resultsScreen');const c=document.getElementById('resultsContent');c.innerHTML=`<h3>🎭 El impostor era: <span style=\"color:#ff4757;\">${gameData.playerNames[gameData.impostorIndex]}</span></h3><p><strong>Jugador secreto:</strong> ${gameData.theme}</p><div id=\"resultsImage\" style=\"margin-top:12px\"></div>`;const img=await fetchPlayerImage(gameData.theme);if(img)document.getElementById('resultsImage').innerHTML=`<img src="${img}" alt="${gameData.theme}" class="player-image">`}
+    async function showResults(){clearInterval(gameData.discussionTimer);showScreen('resultsScreen');const c=document.getElementById('resultsContent');const impostorsArr=Array.from(gameData.impostorIndices||[]).map(i=>gameData.playerNames[i]);c.innerHTML=`<h3>🎭 El/Los impostor(es): <span style=\"color:#ff4757;\">${impostorsArr.join(', ')}</span></h3><p><strong>Jugador secreto:</strong> ${gameData.theme}</p><div id=\"resultsImage\" style=\"margin-top:12px\"></div>`;const img=await fetchPlayerImage(gameData.theme);if(img)document.getElementById('resultsImage').innerHTML=`<img src="${img}" alt="${gameData.theme}" class="player-image">`}
 
     // ===== Navegación =====
     function nextRound(){populateStartSelect();updateOrderPreview(gameData.startingPlayerIndex);showScreen('orderScreen')}
     function managePlayers(){renderPlayerInputs();showScreen('playerSetupScreen')}
-    function hardReset(){gameData={theme:'',playerCount:5,playerNames:[],playerOrder:[],startingPlayerIndex:1,currentPlayer:0,impostorIndex:-1,discussionTimer:null,timeLeft:180,usedThemes:new Set()};document.getElementById('playerCount').value='5';document.getElementById('playerPoolMode').value='all';hideSecretHints();toggleStealthBtn(false);showScreen('setupScreen')}
+    function hardReset(){gameData={
+      theme:'',
+      playerCount:5,
+      playerNames:[],
+      playerOrder:[],
+      startingPlayerIndex:1,
+      currentPlayer:0,
+      impostorCount:1,
+      impostorIndices:new Set(),
+      discussionTimer:null,
+      timeLeft:180,
+      usedThemes:new Set(),
+      consecutiveImpostorCounts:{},
+      recentRounds:[]
+    };document.getElementById('playerCount').value='5';document.getElementById('playerPoolMode').value='all';updateImpostorOptions(5);hideSecretHints();toggleStealthBtn(false);showScreen('setupScreen')}
 
     // ===== Modo secreto ultra-disimulado (toque simple) =====
     const SECRET=new Set(['feli','felipe']);
@@ -314,6 +487,14 @@
     function cap(s){return s.charAt(0).toUpperCase()+s.slice(1)}
     function natFrom(s){const m=(s||'').match(/\b(english|british|spanish|argentine|argentinian|portuguese|brazilian|french|german|italian|belgian|dutch|uruguayan|chilean|mexican|colombian|peruvian|ecuadorian)\b/i);const map={english:'Inglaterra',british:'Reino Unido',spanish:'España',argentine:'Argentina',argentinian:'Argentina',portuguese:'Portugal',brazilian:'Brasil',french:'Francia',german:'Alemania',italian:'Italia',belgian:'Bélgica',dutch:'Países Bajos',uruguayan:'Uruguay',chilean:'Chile',mexican:'México',colombian:'Colombia',peruvian:'Perú',ecuadorian:'Ecuador'};return m?map[m[1].toLowerCase()]||'':''}
     function posFrom(s){const r=(s||'').match(/play(?:s|ed) as an? ([a-z \-]+?)(?: for|\.|,)/i);const raw=r?r[1].toLowerCase():'';const dict=[['goalkeeper','Portero'],['striker','Delantero'],['forward','Delantero'],['winger','Extremo'],['midfielder','Mediocampista'],['attacking midfielder','Mediapunta'],['defensive midfielder','Mediocentro defensivo'],['defender','Defensor'],['centre-back','Defensor central'],['left-back','Lateral izquierdo'],['right-back','Lateral derecho'],['wing-back','Carrilero']];for(const [en,es] of dict){if(raw.includes(en))return es}return''}
+
+    // ===== Init =====
+    (function init(){
+      // set initial impostor options based on initial player count
+      updateImpostorOptions(gameData.playerCount);
+      // attach onchange for playerCount (in case user changes it directly)
+      document.getElementById('playerCount').addEventListener('change', onPlayerCountChange);
+    })();
   </script>
 </body>
 </html>
