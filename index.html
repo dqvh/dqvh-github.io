@@ -488,51 +488,90 @@
 
     // ===== Ronda y Evento Especial =====
     function prepareRound(){
-      // Incrementar el contador de ronda
-      gameData.roundNumber = (gameData.roundNumber || 0) + 1;
-      // Determinar si se activa un evento especial
-      const canSpecial = (!gameData.lastSpecialEventRound || (gameData.roundNumber - gameData.lastSpecialEventRound >= 3));
-      if(canSpecial && Math.random() < 0.1) {
-        // Se activa el evento especial, elegir aleatoriamente entre 3 tipos
-        const eventTypes = ["all_impostors", "all_but_first", "twist"];
-        const chosenEvent = eventTypes[Math.floor(Math.random() * eventTypes.length)];
-        if(chosenEvent === "all_impostors") {
-          // TODOS los jugadores son impostores
-          gameData.impostorIndices = new Set(Array.from({length: gameData.playerCount}, (_, i) => i + 1));
-        } else if(chosenEvent === "all_but_first") {
-          // Todos los jugadores a excepción del primero en el orden
-          const excluded = gameData.playerOrder[0];
-          const newSet = new Set();
-          for(let i = 1; i <= gameData.playerCount; i++){
-            if(i !== excluded) newSet.add(i);
-          }
-          gameData.impostorIndices = newSet;
-        } else if(chosenEvent === "twist") {
-          // Modo twist: se fuerza un único impostor y se intercambian los secretos
-          const impostor = gameData.playerOrder[Math.floor(Math.random() * gameData.playerCount)];
-          gameData.impostorIndices = new Set([impostor]);
-          let commonSecret = gameData.playerNames[Math.floor(Math.random() * gameData.playerNames.length)];
-          let impostorAlternate = commonSecret;
-          if(gameData.playerNames.length > 1){
-            do {
-              impostorAlternate = gameData.playerNames[Math.floor(Math.random() * gameData.playerNames.length)];
-            } while(impostorAlternate === commonSecret);
-          }
-          gameData.specialEventInfo = { eventType: "twist", commonSecret: commonSecret, impostorAlternate: impostorAlternate };
-          // Para este modo, todos (los inocentes) verán el secreto común
-          gameData.theme = commonSecret;
-        }
-        gameData.lastSpecialEventRound = gameData.roundNumber;
-      } else {
-        // Ronda normal
-        delete gameData.specialEventInfo;
-        pickNewThemeNoRepeat();
-        pickImpostorsRandomly();
+  // Incrementa contador de ronda.
+  gameData.roundNumber = (gameData.roundNumber || 0) + 1;
+  
+  // Determinar si se activa un evento especial (al menos 3 rondas desde el último).
+  const canSpecial = (!gameData.lastSpecialEventRound || (gameData.roundNumber - gameData.lastSpecialEventRound >= 3));
+  if(canSpecial && Math.random() < 0.1) {
+    // Se activa un evento especial y se elige aleatoriamente entre tres tipos:
+    const eventTypes = ["all_impostors", "all_but_first", "twist"];
+    const chosenEvent = eventTypes[Math.floor(Math.random() * eventTypes.length)];
+    if(chosenEvent === "all_impostors") {
+      // TODOS son impostores.
+      gameData.impostorIndices = new Set(Array.from({length: gameData.playerCount}, (_, i) => i + 1));
+    } else if(chosenEvent === "all_but_first") {
+      // Todos salvo el primer jugador.
+      const excluded = gameData.playerOrder[0];
+      const newSet = new Set();
+      for(let i = 1; i <= gameData.playerCount; i++){
+        if(i !== excluded) newSet.add(i);
       }
-      gameData.currentPlayer = 0;
-      showTransferScreenForRole();
-      saveGameData();
+      gameData.impostorIndices = newSet;
+    } else if(chosenEvent === "twist") {
+      // Evento twist: se elige entre dos variantes de acuerdo a lo que pide el cliente.
+      // Se fuerza un único evento especial en el que se “cambia” la forma de asignar el secreto.
+      // Se elegirán dos variantes aleatorias:
+      // Variante 1 ("first_innocent"):
+      //   - El primer jugador en el orden es INOCENTE y se le asigna un jugador (commonSecret)
+      //   - Los demás se muestran como IMPOSTORES y reciben otro jugador distinto (impostorAlternate)
+      // Variante 2 ("one_different"):
+      //   - A todos les sale IMPOSTOR y se asigna un jugador común (allSecret)
+      //   - Pero uno aleatorio (diferente) recibirá otro jugador (alternateSecret).
+      let twistVariant = (Math.random() < 0.5) ? "first_innocent" : "one_different";
+      
+      if(twistVariant === "first_innocent") {
+        // Para evitar coincidencias, el secreto no puede ser el nombre real del jugador.
+        const firstIndex = gameData.playerOrder[0];
+        // Seleccionar commonSecret que no coincida con el nombre del primer jugador.
+        let commonSecret = gameData.playerNames[Math.floor(Math.random() * gameData.playerNames.length)];
+        while(commonSecret === gameData.playerNames[firstIndex]) {
+          commonSecret = gameData.playerNames[Math.floor(Math.random() * gameData.playerNames.length)];
+        }
+        // Seleccionar impostorAlternate para los demás (diferente al commonSecret y al nombre del jugador si llegara a aparecer)
+        let impostorAlternate = gameData.playerNames[Math.floor(Math.random() * gameData.playerNames.length)];
+        while(impostorAlternate === commonSecret || impostorAlternate === gameData.playerNames[firstIndex]) {
+          impostorAlternate = gameData.playerNames[Math.floor(Math.random() * gameData.playerNames.length)];
+        }
+        // Configuramos el evento: el primer jugador se tratará de forma especial.
+        gameData.specialEventInfo = { eventType: "twist", variant: "first_innocent", commonSecret: commonSecret, impostorAlternate: impostorAlternate };
+        // Para este modo, asignamos el rol: el primer jugador NO es impostor.
+        const impostors = [];
+        for(let i = 1; i < gameData.playerCount; i++){
+          impostors.push(gameData.playerOrder[i]);
+        }
+        gameData.impostorIndices = new Set(impostors);
+        // La propiedad gameData.theme se usa para los inocentes; aquí el único inocente (primer jugador) ve el commonSecret.
+        gameData.theme = commonSecret;
+      } else if(twistVariant === "one_different") {
+        // Variante 2: a todos se les asigna el rol de IMPOSTOR.
+        gameData.impostorIndices = new Set(Array.from({length: gameData.playerCount}, (_, i) => i+1));
+        // Seleccionar allSecret asegurándose de no usar el nombre real del jugador.
+        let allSecret = gameData.playerNames[Math.floor(Math.random() * gameData.playerNames.length)];
+        // Seleccionar alternateSecret diferente a allSecret.
+        let alternateSecret = gameData.playerNames[Math.floor(Math.random() * gameData.playerNames.length)];
+        while(alternateSecret === allSecret) {
+          alternateSecret = gameData.playerNames[Math.floor(Math.random() * gameData.playerNames.length)];
+        }
+        gameData.specialEventInfo = { eventType: "twist", variant: "one_different", allSecret: allSecret, alternateSecret: alternateSecret };
+        // Para este modo, mostramos como "Jugador secreto" el allSecret para la mayoría, salvo para el jugador que resulte especial (elegido aleatoriamente).
+        // Se marcará en specialEventInfo cuál jugador tendrá el alternative.
+        const randomIndex = gameData.playerOrder[Math.floor(Math.random() * gameData.playerCount)];
+        gameData.specialEventInfo.alternateIndex = randomIndex;
+        gameData.theme = allSecret;
+      }
     }
+    gameData.lastSpecialEventRound = gameData.roundNumber;
+  } else {
+    // Ronda normal.
+    delete gameData.specialEventInfo;
+    pickNewThemeNoRepeat();
+    pickImpostorsRandomly();
+  }
+  gameData.currentPlayer = 0;
+  showTransferScreenForRole();
+  saveGameData();
+}
 
     // ===== Selección de impostores (normal) =====
     function pickImpostorsRandomly(){
@@ -635,39 +674,57 @@
 
     // ===== Actualización de la pantalla de juego =====
     async function updatePlayerScreen(){
-      const roleCard = document.getElementById('roleCard');
-      const roleText = document.getElementById('roleText');
-      const themeText = document.getElementById('themeText');
-      const themeImage = document.getElementById('themeImage');
-      const finishButton = document.getElementById('finishButton');
-      const absIndex = gameData.playerOrder[gameData.currentPlayer - 1];
-      const currentName = gameData.playerNames[absIndex];
-      document.getElementById('playerTitle').textContent = currentName;
-      themeImage.innerHTML = '';
-      if(gameData.impostorIndices && gameData.impostorIndices.has(absIndex)){
-        if(gameData.specialEventInfo && gameData.specialEventInfo.eventType === "twist"){
-          roleCard.className = 'role-card innocent-card';
-          roleText.textContent = '👥 ERES INOCENTE';
-          themeText.textContent = 'Jugador secreto: ' + gameData.specialEventInfo.impostorAlternate.toUpperCase();
-        } else {
-          roleCard.className = 'role-card impostor-card';
-          roleText.textContent = '🎭 ERES EL IMPOSTOR';
-          themeText.textContent = 'No sabés quién es el jugador secreto.';
-        }
-      } else {
+  const roleCard = document.getElementById('roleCard');
+  const roleText = document.getElementById('roleText');
+  const themeText = document.getElementById('themeText');
+  const themeImage = document.getElementById('themeImage');
+  const finishButton = document.getElementById('finishButton');
+  const absIndex = gameData.playerOrder[gameData.currentPlayer - 1];
+  const currentName = gameData.playerNames[absIndex];
+  document.getElementById('playerTitle').textContent = currentName;
+  themeImage.innerHTML = '';
+
+  // Si hay evento twist, se diferencia según variante.
+  if(gameData.specialEventInfo && gameData.specialEventInfo.eventType === "twist"){
+    if(gameData.specialEventInfo.variant === "first_innocent"){
+      // El primer jugador (en el orden) es inocente.
+      if(absIndex === gameData.playerOrder[0]){
         roleCard.className = 'role-card innocent-card';
         roleText.textContent = '👥 ERES INOCENTE';
-        if(gameData.specialEventInfo && gameData.specialEventInfo.eventType === "twist"){
-          themeText.textContent = 'Jugador secreto: ' + gameData.specialEventInfo.commonSecret.toUpperCase();
-        } else {
-          themeText.textContent = 'Jugador secreto: ' + gameData.theme.toUpperCase();
-        }
-        const img = await fetchPlayerImage(gameData.theme);
-        if(img) themeImage.innerHTML = `<img src="${img}" alt="${gameData.theme}" class="player-image">`;
+        themeText.textContent = 'Jugador secreto: ' + gameData.specialEventInfo.commonSecret.toUpperCase();
+      } else {
+        roleCard.className = 'role-card impostor-card';
+        roleText.textContent = '🎭 ERES EL IMPOSTOR';
+        themeText.textContent = 'Jugador secreto: ' + gameData.specialEventInfo.impostorAlternate.toUpperCase();
       }
-      finishButton.textContent = (gameData.currentPlayer === gameData.playerCount) ? '✅ Listo - Iniciar Discusión' : '✅ Listo - Borrar y Continuar';
-      attachSecretMode(currentName);
+    } else if(gameData.specialEventInfo.variant === "one_different"){
+      // En esta variante todos son impostores.
+      roleCard.className = 'role-card impostor-card';
+      roleText.textContent = '🎭 ERES EL IMPOSTOR';
+      // Si el jugador es el elegido para recibir el secreto distinto, se le muestra el alternateSecret.
+      if(absIndex === gameData.specialEventInfo.alternateIndex){
+        themeText.textContent = 'Jugador secreto: ' + gameData.specialEventInfo.alternateSecret.toUpperCase();
+      } else {
+        themeText.textContent = 'Jugador secreto: ' + gameData.specialEventInfo.allSecret.toUpperCase();
+      }
     }
+  } else {
+    // Ronda normal.
+    if(gameData.impostorIndices && gameData.impostorIndices.has(absIndex)){
+      roleCard.className = 'role-card impostor-card';
+      roleText.textContent = '🎭 ERES EL IMPOSTOR';
+      themeText.textContent = 'No sabés quién es el jugador secreto.';
+    } else {
+      roleCard.className = 'role-card innocent-card';
+      roleText.textContent = '👥 ERES INOCENTE';
+      themeText.textContent = 'Jugador secreto: ' + gameData.theme.toUpperCase();
+      const img = await fetchPlayerImage(gameData.theme);
+      if(img) themeImage.innerHTML = `<img src="${img}" alt="${gameData.theme}" class="player-image">`;
+    }
+  }
+  finishButton.textContent = (gameData.currentPlayer === gameData.playerCount) ? '✅ Listo - Iniciar Discusión' : '✅ Listo - Borrar y Continuar';
+  attachSecretMode(currentName);
+}
 
     // ===== Fetch =====
     async function fetchWithTimeout(url, opts = {}, ms = 6000){
