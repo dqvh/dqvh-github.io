@@ -3,29 +3,37 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Juego del Impostor - Futból </title>
+  <title>Juego del Impostor - Fútbol (v4, localStorage, multi-impostor)</title>
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
     body{font-family:Arial,Helvetica,sans-serif;background:linear-gradient(135deg,#667eea,#764ba2);min-height:100vh;display:flex;justify-content:center;align-items:center;padding:20px}
     .container{background:#fff;border-radius:20px;padding:40px;box-shadow:0 20px 40px rgba(0,0,0,.1);text-align:center;max-width:720px;width:100%;min-height:560px;display:flex;flex-direction:column;justify-content:center;position:relative}
     h1,h2{color:#333;margin-bottom:22px;font-size:2.1rem}
+
     .setup-screen,.player-setup-screen,.order-screen,.transfer-screen,.game-screen,.discussion-screen,.results-screen{display:none}
     .setup-screen{display:block}
+
     input,select{width:100%;padding:12px;margin:10px 0;border:2px solid #ddd;border-radius:10px;font-size:16px}
     input:focus,select:focus{outline:none;border-color:#667eea;box-shadow:0 0 8px rgba(102,126,234,.25)}
+
     button{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border:none;padding:14px 24px;border-radius:24px;font-weight:700;cursor:pointer;margin:8px 0;width:100%;box-shadow:0 5px 15px rgba(0,0,0,.2)}
     .btn-secondary{background:#6c757d}.btn-warning{background:#ffc107;color:#111}.btn-success{background:#28a745}.btn-danger{background:#dc3545}
+
     .role-card{background:#f8f9fa;border:3px solid #ddd;border-radius:14px;padding:28px;margin:14px 0;font-size:20px;font-weight:700;min-height:200px;display:flex;flex-direction:column;justify-content:center;align-items:center;user-select:none}
     .impostor-card{background:linear-gradient(135deg,#ff6b6b,#ee5a52);color:#fff;border-color:#ff4757}
     .innocent-card{background:linear-gradient(135deg,#51cf66,#40c057);color:#fff;border-color:#37b24d}
+
     .timer{font-size:42px;font-weight:800;color:#ff4757;margin:12px 0}
     .warning{padding:12px;border-radius:10px;margin:10px 0;font-weight:700;background:#fff3cd;border:1px solid #ffeaa7;color:#856404}
+
     .player-names-container{max-height:300px;overflow-y:auto;margin:12px 0;text-align:left}
     .actions-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
     .triple-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
     .player-image{max-width:70%;border-radius:10px}
     .order-preview{text-align:left;margin-top:8px;border:1px dashed #ddd;border-radius:12px;padding:12px}
+
     .mode-info{font-size:12px;color:#666;margin:5px 0;text-align:left}
+
     /* ===== Panel secreto: compacto y disimulado ===== */
     .secret-hints{position:absolute;right:12px;bottom:12px;width:320px;max-width:86vw;background:rgba(17,17,17,.92);color:#eee;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.35);padding:10px 12px;text-align:left;opacity:0;pointer-events:none;transform:translateY(8px) scale(.98);transition:opacity .15s ease,transform .15s ease;z-index:10}
     .secret-hints.visible{opacity:1;pointer-events:auto;transform:translateY(0) scale(1)}
@@ -35,6 +43,7 @@
     .btn-ghost{background:#1b1b1b;color:#fff;border-radius:8px;padding:6px 10px;width:auto;font-size:12px}
     .spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite}
     @keyframes spin{to{transform:rotate(360deg)}}
+
     /* Botón completamente invisible (solo Feli/Felipe) */
     .stealth-btn{position:absolute;right:10px;bottom:10px;width:14px;height:14px;border-radius:999px;background:transparent;opacity:0;border:none;cursor:pointer;user-select:none;touch-action:manipulation}
     .stealth-btn.hidden{display:none}
@@ -44,7 +53,7 @@
   <div class="container">
     <!-- Setup -->
     <div class="setup-screen" id="setupScreen">
-      <h1>🕵️ Juego del Impostor - 6Soc</h1>
+      <h1>🕵️ Juego del Impostor - Fútbol</h1>
       <p>Elegí el modo: De todo / Históricos / Actuales / Retirados / Demasiado famosos.</p>
       <label for="playerPoolMode" style="text-align:left;display:block;margin-top:12px;font-weight:700">Modo de jugadores</label>
       <select id="playerPoolMode" onchange="onModeChange()">
@@ -55,6 +64,7 @@
         <option value="famous">Demasiado famosos</option>
       </select>
       <div class="mode-info" id="modeInfo"></div>
+
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px">
         <div>
           <label style="text-align:left;display:block;font-weight:700">Cantidad de jugadores</label>
@@ -67,8 +77,10 @@
           <select id="impostorCount"></select>
         </div>
       </div>
+
       <button onclick="setupPlayers()">🚀 Configurar Jugadores</button>
     </div>
+
     <!-- Nombres -->
     <div class="player-setup-screen" id="playerSetupScreen">
       <h2>📝 Nombres</h2>
@@ -84,6 +96,7 @@
         <button class="btn-secondary" onclick="goHome()">🏠 Inicio</button>
       </div>
     </div>
+
     <!-- Orden -->
     <div class="order-screen" id="orderScreen">
       <h2>🧭 Quién empieza</h2>
@@ -95,6 +108,7 @@
         <button class="btn-secondary" onclick="managePlayers()">👤 Cambiar</button>
       </div>
     </div>
+
     <!-- Transferencia -->
     <div class="transfer-screen" id="transferScreen">
       <h2>📱 Pasar el Teléfono</h2>
@@ -103,6 +117,7 @@
       <p><strong id="receivingPlayer">Jugador X</strong>: tocá para ver tu rol.</p>
       <button class="btn-success" onclick="showPlayerRole()">🔍 Descubrir Mi Rol</button>
     </div>
+
     <!-- Juego -->
     <div class="game-screen" id="gameScreen">
       <h2 id="playerTitle">Jugador 1</h2>
@@ -113,6 +128,7 @@
       </div>
       <div class="warning"><strong>¡Memorizá tu rol!</strong> Luego "Listo".</div>
       <button class="btn-danger" onclick="finishPlayerTurn()" id="finishButton">✅ Listo - Borrar y Continuar</button>
+
       <!-- Panel secreto compacto -->
       <div id="secretHints" class="secret-hints" aria-hidden="true">
         <h3 id="secretTitle">🔍 Pistas</h3>
@@ -125,6 +141,7 @@
       </div>
       <button id="stealthBtn" class="stealth-btn hidden" aria-label="Opciones" title=""></button>
     </div>
+
     <!-- Discusión -->
     <div class="discussion-screen" id="discussionScreen">
       <h2>💬 Discusión</h2>
@@ -132,6 +149,7 @@
       <div class="warning">Hablen del jugador secreto. Los impostores intentan mezclarse.</div>
       <button class="btn-warning" onclick="showResults()">🎭 Revelar Resultados</button>
     </div>
+
     <!-- Resultados -->
     <div class="results-screen" id="resultsScreen">
       <h2>🎭 Resultados</h2>
@@ -143,6 +161,7 @@
       <button class="btn-danger" onclick="hardReset()">🧹 Reinicio Total</button>
     </div>
   </div>
+
   <script>
     // ===== Estado =====
     let gameData={
@@ -163,8 +182,50 @@
       recentRounds:[] // array de Sets de indices
     };
 
+    // ===== LocalStorage functions =====
+    function saveGameData() {
+      const dataToSave = {
+        playerNames: gameData.playerNames,
+        playerCount: gameData.playerCount,
+        impostorCount: gameData.impostorCount,
+        consecutiveImpostorCounts: gameData.consecutiveImpostorCounts,
+        usedThemes: Array.from(gameData.usedThemes),
+        recentRounds: gameData.recentRounds.map(set => Array.from(set))
+      };
+      localStorage.setItem('impostorGameData', JSON.stringify(dataToSave));
+    }
+
+    function loadGameData() {
+      try {
+        const saved = localStorage.getItem('impostorGameData');
+        if (saved) {
+          const data = JSON.parse(saved);
+          if (data.playerNames && Array.isArray(data.playerNames)) {
+            gameData.playerNames = data.playerNames;
+            gameData.playerCount = data.playerCount || 5;
+            gameData.impostorCount = data.impostorCount || 1;
+            gameData.consecutiveImpostorCounts = data.consecutiveImpostorCounts || {};
+            gameData.usedThemes = new Set(data.usedThemes || []);
+            gameData.recentRounds = (data.recentRounds || []).map(arr => new Set(arr));
+            
+            // Update UI
+            document.getElementById('playerCount').value = String(gameData.playerCount);
+            updateImpostorOptions(gameData.playerCount);
+            document.getElementById('impostorCount').value = String(gameData.impostorCount);
+          }
+        }
+      } catch (e) {
+        console.error('Error loading saved data:', e);
+      }
+    }
+
+    // ===== UI =====
+    const screens=['setupScreen','playerSetupScreen','orderScreen','transferScreen','gameScreen','discussionScreen','resultsScreen'];
+    function showScreen(id){screens.forEach(s=>document.getElementById(s).style.display=(s===id?'block':'none'));if(id!=='gameScreen'){hideSecretHints();toggleStealthBtn(false);}}
+    function goHome(){showScreen('setupScreen')}
+
     // ===== Pools ampliados =====
-    const allPlayers = [
+    const allPlayers=[
       'Pelé','Diego Maradona','Johan Cruyff','Franz Beckenbauer','Alfredo Di Stéfano','Ferenc Puskás','Eusébio','Lev Yashin','George Best','Bobby Charlton',
       'Garrincha','Gerd Müller','Paolo Maldini','Zinedine Zidane','Ronaldo Nazário','Ronaldinho','Kaká','Roberto Baggio','Lionel Messi','Cristiano Ronaldo',
       'Neymar','Kylian Mbappé','Erling Haaland','Robert Lewandowski','Kevin De Bruyne','Mohamed Salah','Harry Kane','Karim Benzema','Luka Modrić','Toni Kroos',
@@ -199,29 +260,44 @@
       'Fermín López','Marc Cucurella','Alejandro Balde','Pedro Porro','Jesús Navas','Dani Carvajal','Robin Le Normand','Pau Cubarsí',
       'Aymeric Laporte','José María Giménez','Unai Simón','David Raya','Álex Remiro','Robert Sánchez','Kepa Arrizabalaga','Jan Oblak','Joško Gvardiol',
       'Dominik Livaković','Luka Sučić','Mateo Kovačić','Marcelo Brozović','Ivan Perišić','Andrej Kramarić','Bruno Petković','Mislav Oršić','Josip Juranović',
-      'Borna Sosa','Domagoj Vida','Dejan Lovren','Martin Erlić','Josip Šutalo','Marin Pongračić','Ante Budimir','Marko Pjaca','Lovro Majer','Miguel Merentiel','Alejandro Garnacho'
+      'Borna Sosa','Domagoj Vida','Dejan Lovren','Martin Erlić','Josip Šutalo','Marin Pongračić','Ante Budimir','Marko Pjaca','Lovro Majer','Alejandro Garnacho',
+      'Miguel Merentiel','Martin Ødegaard','Federico Chiesa','Alessandro Bastoni','Nicolò Barella','Lamine Yamal','Ansu Fati','Sergio Ramos','Federico Dimarco',
+      'Valentín Barco','Thiago Almada','Facundo Buonanotte','Lucas Beltrán','Matías Soulé','Nehuén Pérez','Emiliano Buendía',
+      'Marco Verratti','Ciro Immobile','Gianluca Scamacca','Leonardo Spinazzola','Sandro Tonali',
+      'Matteo Darmian','Domenico Berardi','Álvaro Negredo','Iago Aspas','Gerard Deulofeu',
+      'David Raya','Aymeric Laporte','Lucas Hernández','Benjamin Pavard','Adrien Rabiot',
+      'Eduardo Camavinga','Aurélien Tchouaméni','Theo Walcott','Jadon Sancho','Mason Mount'
     ];
+
     const historicalPlayers = [
       'Pelé','Diego Maradona','Johan Cruyff','Alfredo Di Stéfano','Ferenc Puskás','Eusébio','George Best','Bobby Charlton','Bobby Moore','Franz Beckenbauer',
       'Paolo Maldini','Franco Baresi','Roberto Baggio','Marco van Basten','Ruud Gullit','Michel Platini','Zico','Sócrates','Rivelino','Mario Kempes','Daniel Passarella','Oscar Ruggeri',
-      'Hugo Gatti','Ubaldo Fillol','Garrincha','Lev Yashin','Just Fontaine','Gerd Müller','Paolo Rossi','Gaetano Scirea','Andriy Shevchenko','George Weah',
+      'Hugo Gatti','Ubaldo Fillol','Garrinche','Lev Yashin','Just Fontaine','Gerd Müller','Paolo Rossi','Gaetano Scirea','Andriy Shevchenko','George Weah',
       'Didier Drogba','Hristo Stoichkov','Henrik Larsson','David Beckham','Raúl González','Luis Figo','Thierry Henry','Zinedine Zidane','Ronaldo Nazário','Ronaldinho','Roberto Carlos',
       'Cafu','Patrick Vieira','Claude Makélélé','Oliver Kahn','Michael Ballack','Lothar Matthäus','Matthias Sammer','Eric Cantona','Juan Sebastián Verón','Fernando Redondo',
       'Dennis Bergkamp','Ryan Giggs','Paul Scholes','Roy Keane','Alan Shearer','Gary Lineker','Michael Owen','Clarence Seedorf','Andrea Pirlo','Gennaro Gattuso',
       'Carlos Roa','Thomas N\'Kono','Ángel Labruna','Jean-Pierre Papin','Hossam Hassan'
     ];
+    
+    
     const currentPlayers = [
-      'Lionel Messi','Cristiano Ronaldo','Kylian Mbappé','Erling Haaland','Kevin De Bruyne','Robert Lewandowski','Mohamed Salah','Harry Kane','Karim Benzema','Luka Modrić',
-      'Toni Kroos','Casemiro','Vinícius Júnior','Jude Bellingham','Pedri','Gavi','Frenkie de Jong','Phil Foden','Bukayo Saka','Declan Rice','Jack Grealish',
-      'Bruno Fernandes','Marcus Rashford','João Félix','João Cancelo','Rúben Dias','Bernardo Silva','Virgil van Dijk','Andrew Robertson','Trent Alexander-Arnold','Alisson Becker',
-      'Ederson','Thibaut Courtois','Jan Oblak','Marc-André ter Stegen','Manuel Neuer','Gianluigi Donnarumma','Achraf Hakimi','Theo Hernández','Raphaël Varane','Dayot Upamecano',
-      'Antoine Griezmann','Ousmane Dembélé','Kingsley Coman','Jamal Musiala','Kai Havertz','Joshua Kimmich','Leon Goretzka','Federico Valverde','Rodrygo','Lautaro Martínez',
-      'Ángel Di María','Paulo Dybala','Álvaro Morata','Gerard Moreno','Nico Williams','Mikel Oyarzabal','Dani Carvajal','Jules Koundé','Riyad Mahrez','Son Heung-min',
-      'Julián Álvarez','Emiliano Martínez','Enzo Fernández','Alexis Mac Allister','Leandro Paredes','Rodrigo De Paul','Nahuel Molina','Nicolás Otamendi','Cristian Romero',
-      'Lisandro Martínez','Alejandro Garnacho','Giovani Lo Celso','Ángel Correa','Marcos Acuña','Gonzalo Montiel','Nicolás Tagliafico','Darwin Núñez','Ronald Araújo',
-      'Edinson Cavani','Kevin Zenón','Cristian Medina','Pol Fernández','Marcos Rojo','Franco Armani','Claudio Echeverri','Ignacio Fernández','Santiago Giménez',
-      'Hirving Lozano','Edson Álvarez','Gabriel Martinelli','Gabriel Jesus','André Onana','Sadio Mané','Paulo Díaz','Miguel Merentiel','Alejandro Garnacho'
+  'Lionel Messi','Cristiano Ronaldo','Kylian Mbappé','Erling Haaland','Kevin De Bruyne','Robert Lewandowski','Mohamed Salah','Harry Kane','Karim Benzema','Luka Modrić',
+  'Toni Kroos','Casemiro','Vinícius Júnior','Jude Bellingham','Pedri','Gavi','Frenkie de Jong','Phil Foden','Bukayo Saka','Declan Rice','Jack Grealish',
+  'Bruno Fernandes','Marcus Rashford','João Félix','João Cancelo','Rúben Dias','Bernardo Silva','Virgil van Dijk','Andrew Robertson','Trent Alexander-Arnold','Alisson Becker',
+  'Ederson','Thibaut Courtois','Jan Oblak','Marc-André ter Stegen','Manuel Neuer','Gianluigi Donnarumma','Achraf Hakimi','Theo Hernández','Raphaël Varane','Dayot Upamecano',
+  'Antoine Griezmann','Ousmane Dembélé','Kingsley Coman','Jamal Musiala','Kai Havertz','Joshua Kimmich','Leon Goretzka','Federico Valverde','Rodrygo Goes','Lautaro Martínez',
+  'Ángel Di María','Paulo Dybala','Álvaro Morata','Gerard Moreno','Nico Williams','Mikel Oyarzabal','Dani Carvajal','Jules Koundé','Riyad Mahrez','Son Heung-min',
+  'Julián Álvarez','Emiliano Martínez','Enzo Fernández','Alexis Mac Allister','Leandro Paredes','Rodrigo De Paul','Nahuel Molina','Nicolás Otamendi','Cristian Romero',
+  'Lisandro Martínez','Alejandro Garnacho','Giovani Lo Celso','Ángel Correa','Marcos Acuña','Gonzalo Montiel','Nicolás Tagliafico','Darwin Núñez','Ronald Araújo',
+  'Edinson Cavani','Kevin Zenón','Cristian Medina','Pol Fernández','Marcos Rojo','Franco Armani','Claudio Echeverri','Ignacio Fernández','Santiago Giménez',
+  'Hirving Lozano','Edson Álvarez','Gabriel Martinelli','Gabriel Jesus','André Onana','Sadio Mané','Paulo Díaz','Alejandro Garnacho','Miguel Merentiel',
+  'Martin Ødegaard','Federico Chiesa','Alessandro Bastoni','Nicolò Barella','Lamine Yamal','Ansu Fati','Sergio Ramos','Federico Dimarco',
+  'Valentín Barco','Thiago Almada','Facundo Buonanotte','Lucas Beltrán','Matías Soulé','Nehuén Pérez','Emiliano Buendía',
+  'Marco Verratti','Ciro Immobile','Gianluca Scamacca','Leonardo Spinazzola','Sandro Tonali','Matteo Darmian','Domenico Berardi',
+  'Álvaro Negredo','Iago Aspas','Gerard Deulofeu','David Raya','Aymeric Laporte','Lucas Hernández','Benjamin Pavard',
+  'Adrien Rabiot','Eduardo Camavinga','Aurélien Tchouaméni','Theo Walcott','Jadon Sancho','Mason Mount'
     ];
+
     const retiredPlayers = [
       'Diego Maradona','Ronaldo Nazário','Ronaldinho','Zinedine Zidane','Thierry Henry','David Beckham','Steven Gerrard','Frank Lampard','Xavi Hernández','Andrés Iniesta',
       'Iker Casillas','Carles Puyol','Fernando Hierro','Fernando Torres','David Villa','Raúl González','Marco Materazzi','Alessandro Nesta','Fabio Cannavaro','Gianluca Zambrotta',
@@ -233,6 +309,7 @@
       'Esteban Cambiasso','Lucas Biglia','Ricardo Álvarez','Miguel Layún','Carlos Salcido','Oswaldo Sánchez','Emmanuel Eboué','Sebastián Abreu','Martín Cáceres',
       'Egídio Arévalo Ríos','Jared Borgetti','Faustino Asprilla','Freddy Rincón','Roger Milla','Jay-Jay Okocha','Rashidi Yekini'
     ];
+
     const superFamous = [
       'Pelé','Diego Maradona','Lionel Messi','Cristiano Ronaldo','Johan Cruyff','Zinedine Zidane','Franz Beckenbauer','Ronaldinho','Ronaldo Nazário','David Beckham',
       'Thierry Henry','Kylian Mbappé','Erling Haaland','Neymar','Andrés Iniesta','Xavi Hernández','Paolo Maldini','Roberto Baggio','Luis Figo','Iker Casillas',
@@ -243,71 +320,20 @@
       'Martín Palermo','Ángel Labruna','Oscar Ruggeri','Carlos Tevez','Javier Mascherano','Pablo Aimar','René Higuita','Carlos Valderrama','Cuauhtémoc Blanco',
       'Rafael Márquez','Chicharito Hernández','Edinson Cavani','Luis Suárez','James Rodríguez','Radamel Falcao','Diego Forlán','Arjen Robben','Andrea Pirlo',
       'Gennaro Gattuso','Clarence Seedorf','David Villa','Fernando Torres','Marcelo Gallardo','Carlos Bianchi','Franck Ribéry','Zlatan Ibrahimović',
-      'Wayne Rooney','Rivaldo','Romário','Yaya Touré','Keylor Navas','Hristo Stoichkov','Paolo Rossi','Jean-Pierre Papin','Lev Yashin','Javier Saviola','Fernando Gago','Miguel Merentiel','Alejandro Garnacho'
+      'Wayne Rooney','Rivaldo','Romário','Yaya Touré','Keylor Navas','Hristo Stoichkov','Paolo Rossi','Jean-Pierre Papin','Lev Yashin','Javier Saviola','Fernando Gago','Alejandro Garnacho','Miguel Merentiel'
     ];
 
-    // ===== LocalStorage functions =====
-    function saveGameData() {
-      const dataToSave = {
-        playerNames: gameData.playerNames,
-        playerCount: gameData.playerCount,
-        impostorCount: gameData.impostorCount,
-        consecutiveImpostorCounts: gameData.consecutiveImpostorCounts,
-        usedThemes: Array.from(gameData.usedThemes),
-        recentRounds: gameData.recentRounds.map(set => Array.from(set))
-      };
-      localStorage.setItem('impostorGameData', JSON.stringify(dataToSave));
-    }
-
-    let saveTimeout;
-    function debouncedSave() {
-      clearTimeout(saveTimeout);
-      saveTimeout = setTimeout(saveGameData, 500);
-    }
-
-    function loadGameData() {
-      try {
-        const saved = localStorage.getItem('impostorGameData');
-        if (saved) {
-          const data = JSON.parse(saved);
-          if (data.playerNames && Array.isArray(data.playerNames)) {
-            gameData.playerNames = data.playerNames;
-            gameData.playerCount = data.playerCount || 5;
-            gameData.impostorCount = data.impostorCount || 1;
-            gameData.consecutiveImpostorCounts = data.consecutiveImpostorCounts || {};
-            gameData.usedThemes = new Set(data.usedThemes || []);
-            gameData.recentRounds = (data.recentRounds || []).map(arr => new Set(arr));
-            // Update UI
-            document.getElementById('playerCount').value = String(gameData.playerCount);
-            updateImpostorOptions(gameData.playerCount);
-            document.getElementById('impostorCount').value = String(gameData.impostorCount);
-          }
-        }
-      } catch (e) {
-        console.error('Error loading saved data:', e);
-      }
-    }
-
-    // ===== UI =====
-    const screens=['setupScreen','playerSetupScreen','orderScreen','transferScreen','gameScreen','discussionScreen','resultsScreen'];
-    function showScreen(id){screens.forEach(s=>document.getElementById(s).style.display=(s===id?'block':'none'));if(id!=='gameScreen'){hideSecretHints();toggleStealthBtn(false);}}
-    function goHome(){showScreen('setupScreen')}
-
-    // ===== Construcción de pools sin duplicados =====
     function buildPlayerPool(mode){
       const k=mode||document.getElementById('playerPoolMode')?.value||'all';
       let pool=k==='historical'?historicalPlayers:k==='current'?currentPlayers:k==='retired'?retiredPlayers:k==='famous'?superFamous:allPlayers;
       const out=[],seen=new Set();
       for(const p of pool){
         const key=(p||'').toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu,'').trim();
-        if(!seen.has(key)){
-          seen.add(key);
-          out.push(p);
-        }
+        if(!seen.has(key)){seen.add(key);out.push(p)}
       }
-      return out;
+      return out
     }
-
+    
     function updateModeInfo() {
       const mode = document.getElementById('playerPoolMode')?.value || 'all';
       const info = document.getElementById('modeInfo');
@@ -318,6 +344,7 @@
         retired: retiredPlayers.length,
         famous: superFamous.length
       };
+      
       const descriptions = {
         all: `Todos los jugadores disponibles (${counts.all} jugadores)`,
         historical: `Jugadores históricos y vintage (${counts.historical} jugadores)`,
@@ -325,9 +352,10 @@
         retired: `Jugadores retirados pero no súper famosos (${counts.retired} jugadores)`,
         famous: `Los más famosos e icónicos del fútbol (${counts.famous} jugadores)`
       };
+      
       info.textContent = descriptions[mode] || descriptions.all;
     }
-
+    
     function onModeChange(){
       gameData.usedThemes.clear();
       updateModeInfo();
@@ -341,7 +369,6 @@
       updateImpostorOptions(pc);
       saveGameData();
     }
-
     function updateImpostorOptions(playerCount){
       const sel=document.getElementById('impostorCount');
       sel.innerHTML='';
@@ -371,27 +398,21 @@
       renderPlayerInputs();
       showScreen('playerSetupScreen');
     }
-
-    // ===== Optimización: Reducir manipulación del DOM usando DocumentFragment =====
     function renderPlayerInputs(){
       const c=document.getElementById('playerNamesContainer');
-      const fragment = document.createDocumentFragment();
+      c.innerHTML='';
       for(let i=1;i<=gameData.playerCount;i++){
         const inp=document.createElement('input');
         inp.id=`playerName${i}`;
         inp.placeholder=`Nombre del Jugador ${i} (opcional)`;
         if(gameData.playerNames[i])inp.value=gameData.playerNames[i];
-        inp.addEventListener('input', debouncedSave);
-        fragment.appendChild(inp);
+        inp.addEventListener('input', saveGameData);
+        c.appendChild(inp);
       }
-      c.innerHTML='';
-      c.appendChild(fragment);
       document.getElementById('countLabel').textContent=`${gameData.playerCount} jugadores`;
     }
-
     function addPlayerInput(){if(gameData.playerCount>=10)return;gameData.playerCount++;document.getElementById('playerCount').value=String(gameData.playerCount);updateImpostorOptions(gameData.playerCount);renderPlayerInputs();saveGameData();}
     function removePlayerInput(){if(gameData.playerCount<=3)return;gameData.playerCount--;document.getElementById('playerCount').value=String(gameData.playerCount);gameData.playerNames.length=gameData.playerCount+1;updateImpostorOptions(gameData.playerCount);renderPlayerInputs();saveGameData();}
-
     function continueToOrderSelection(){
       for(let i=1;i<=gameData.playerCount;i++){
         const name=(document.getElementById(`playerName${i}`)?.value||'').trim();
@@ -422,40 +443,52 @@
       saveGameData();
     }
 
-    // ===== Optimización: Simplificar el algoritmo de selección de impostores =====
+    // ===== Selección de impostores (aleatoria, sin duplicados dentro de la ronda, con influencia para evitar repeats largos) =====
     function pickImpostorsRandomly(){
       const n = gameData.impostorCount || 1;
       const players = Array.from({length:gameData.playerCount},(_,i)=>i+1);
       const consec = gameData.consecutiveImpostorCounts || {};
-
-      // Calcular pesos basados en la frecuencia de ser impostor
-      const weights = players.map(idx => {
+      // calcular pesos base
+      let weights = players.map(idx=>{
         const streak = consec[idx] || 0;
-        return streak >= 2 ? 0.1 : streak === 1 ? 0.4 : 1.0;
+        let w = 1.0;
+        // Si ya fue impostor 2 veces consecutivas, NO queremos 3ra vez (evitar 3 o más seguidas).
+        if(streak >= 2){
+          w = 0; // excluir preferentemente
+        } else if(streak === 1){
+          // se puede repetir una vez, pero menos probable
+          w = 0.35;
+        } else {
+          w = 1.0;
+        }
+        // añadir ligero jitter aleatorio para evitar patrones predecibles
+        const jitter = Math.random() * 0.15; // pequeño boost aleatorio
+        return Math.max(0, w + jitter);
       });
 
-      // Selección con pesos (simplificada)
+      // selección sin reemplazo ponderada
       const selected = new Set();
-      const availableWeights = [...weights];
       let attempts = 0;
       const maxAttempts = 10;
-
       while(selected.size < n && attempts < maxAttempts){
-        const totalWeight = availableWeights.reduce((a,b)=>a+b,0);
+        // si todos pesos 0 (por restricciones), relajamos un poco
+        const totalWeight = weights.reduce((a,b)=>a+b,0);
         if(totalWeight <= 0.000001){
-          // Si todos tienen peso 0, relajar las restricciones
-          for(let i = 0; i < availableWeights.length; i++) {
-            if(availableWeights[i] === 0) {
-              availableWeights[i] = 0.1; // Dar algo de probabilidad
-            }
-          }
+          // relajar: permitir aquellos con streak>=2 con peso muy bajo
+          weights = players.map(idx=>{
+            const streak = consec[idx] || 0;
+            if(streak >= 2) return 0.12; // permitir como último recurso
+            if(streak === 1) return 0.5;
+            return 1.0 + Math.random()*0.2;
+          });
         }
-        const tot = availableWeights.reduce((a,b)=>a+b,0);
+        // seleccionar uno según pesos
+        const tot = weights.reduce((a,b)=>a+b,0);
         let r = Math.random() * tot;
         let acc = 0;
         let chosenIndex = -1;
         for(let i=0;i<players.length;i++){
-          acc += availableWeights[i];
+          acc += weights[i];
           if(r <= acc){
             chosenIndex = players[i];
             break;
@@ -468,22 +501,24 @@
         }
         if(!selected.has(chosenIndex)){
           selected.add(chosenIndex);
-          // Desactivar el índice seleccionado para evitar repetición en esta ronda
+          // set its weight to 0 to avoid picking again this round
           const idxPos = players.indexOf(chosenIndex);
-          if(idxPos>=0) availableWeights[idxPos]=0;
+          if(idxPos>=0) weights[idxPos]=0;
         }
         attempts++;
       }
 
-      // Si aún faltan, completar aleatoriamente
+      // si aún faltan (caso raro), completar aleatoriamente sin duplicados
       const remainingPlayers = players.filter(p=>!selected.has(p));
       while(selected.size < n && remainingPlayers.length>0){
         selected.add(remainingPlayers.shift());
       }
 
-      // Asignar en gameData
+      // asignar en gameData
       gameData.impostorIndices = new Set(Array.from(selected));
-      // Actualizar contadores consecutivos
+
+      // actualizar contadores consecutivos
+      // si fue impostor -> incrementa; si no -> reset a 0
       for(const p of players){
         if(gameData.impostorIndices.has(p)){
           gameData.consecutiveImpostorCounts[p] = (gameData.consecutiveImpostorCounts[p] || 0) + 1;
@@ -491,7 +526,8 @@
           gameData.consecutiveImpostorCounts[p] = 0;
         }
       }
-      // Mantener historial (opcional)
+
+      // mantener historial (opcional, para futuras mejoras)
       gameData.recentRounds = gameData.recentRounds || [];
       gameData.recentRounds.unshift(new Set(Array.from(gameData.impostorIndices)));
       if(gameData.recentRounds.length > 10) gameData.recentRounds.pop();
@@ -499,39 +535,12 @@
     }
 
     function pickNewThemeNoRepeat(){const pool=buildPlayerPool();let cands=pool.filter(p=>!gameData.usedThemes.has(p));if(!cands.length){gameData.usedThemes.clear();cands=pool.slice()}const choice=cands[Math.floor(Math.random()*cands.length)]||pool[0];gameData.theme=choice;gameData.usedThemes.add(choice);saveGameData()}
-
     function showTransferScreenForRole(){if(gameData.currentPlayer<gameData.playerCount){const nextAbs=gameData.playerOrder[gameData.currentPlayer];document.getElementById('nextPlayerName').textContent=gameData.playerNames[nextAbs];document.getElementById('receivingPlayer').textContent=gameData.playerNames[nextAbs];showScreen('transferScreen')}else startDiscussion()}
-
     function showPlayerRole(){gameData.currentPlayer++;showScreen('gameScreen');updatePlayerScreen()}
-
-    // ===== Optimización: Cache de imágenes =====
-    const imageCache = new Map();
-    async function fetchPlayerImage(title){
-      // Primero verificar en cache
-      const cached = imageCache.get(title);
-      if (cached) {
-        return cached;
-      }
-
-      for(const lang of ['en','es']){
-        try{
-          const url=`https://${lang}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`;
-          const r=await fetchWithTimeout(url,{},5000).catch(()=>null);
-          if(r&&r.ok){
-            const j=await r.json();
-            if(j?.thumbnail?.source){
-              // Guardar en cache
-              imageCache.set(title, j.thumbnail.source);
-              return j.thumbnail.source;
-            }
-          }
-        }catch(_){}
-      }
-      return '';
-    }
 
     // ===== Fetch =====
     async function fetchWithTimeout(url,opts={},ms=6000){const ctl=new AbortController();const id=setTimeout(()=>ctl.abort(),ms);try{const res=await fetch(url,{...opts,signal:ctl.signal});clearTimeout(id);return res}catch(e){clearTimeout(id);throw e}}
+    async function fetchPlayerImage(title){for(const lang of ['en','es']){try{const url=`https://${lang}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`;const r=await fetchWithTimeout(url,{},5000).catch(()=>null);if(r&&r.ok){const j=await r.json();if(j?.thumbnail?.source)return j.thumbnail.source}}catch(_){}}return''}
 
     async function updatePlayerScreen(){const roleCard=document.getElementById('roleCard');const roleText=document.getElementById('roleText');const themeText=document.getElementById('themeText');const themeImage=document.getElementById('themeImage');const finishButton=document.getElementById('finishButton');const absIndex=gameData.playerOrder[gameData.currentPlayer-1];const currentName=gameData.playerNames[absIndex];document.getElementById('playerTitle').textContent=currentName;themeImage.innerHTML='';
       if(gameData.impostorIndices && gameData.impostorIndices.has(absIndex)){roleCard.className='role-card impostor-card';roleText.textContent='🎭 ERES EL IMPOSTOR';themeText.textContent='No sabés quién es el jugador secreto.'}
@@ -539,14 +548,13 @@
       finishButton.textContent=(gameData.currentPlayer===gameData.playerCount)?'✅ Listo - Iniciar Discusión':'✅ Listo - Borrar y Continuar';
       attachSecretMode(currentName)
     }
-
     function finishPlayerTurn(){hideSecretHints();toggleStealthBtn(false);showTransferScreenForRole()}
 
     // ===== Discusión =====
     function startDiscussion(){showScreen('discussionScreen');startTimer()}
     function startTimer(){gameData.timeLeft=180;const el=document.getElementById('discussionTimer');clearInterval(gameData.discussionTimer);gameData.discussionTimer=setInterval(()=>{const m=Math.floor(gameData.timeLeft/60),s=String(gameData.timeLeft%60).padStart(2,'0');el.textContent=`${m}:${s}`;if(gameData.timeLeft<=0){clearInterval(gameData.discussionTimer);el.textContent='¡TIEMPO!';showResults()}gameData.timeLeft--},1000)}
 
-    async function showResults(){clearInterval(gameData.discussionTimer);showScreen('resultsScreen');const c=document.getElementById('resultsContent');const impostorsArr=Array.from(gameData.impostorIndices||[]).map(i=>gameData.playerNames[i]);c.innerHTML=`<h3>🎭 El/Los impostor(es): <span style="color:#ff4757;">${impostorsArr.join(', ')}</span></h3><p><strong>Jugador secreto:</strong> ${gameData.theme}</p><div id="resultsImage" style="margin-top:12px"></div>`;const img=await fetchPlayerImage(gameData.theme);if(img)document.getElementById('resultsImage').innerHTML=`<img src="${img}" alt="${gameData.theme}" class="player-image">`}
+    async function showResults(){clearInterval(gameData.discussionTimer);showScreen('resultsScreen');const c=document.getElementById('resultsContent');const impostorsArr=Array.from(gameData.impostorIndices||[]).map(i=>gameData.playerNames[i]);c.innerHTML=`<h3>🎭 El/Los impostor(es): <span style=\"color:#ff4757;\">${impostorsArr.join(', ')}</span></h3><p><strong>Jugador secreto:</strong> ${gameData.theme}</p><div id=\"resultsImage\" style=\"margin-top:12px\"></div>`;const img=await fetchPlayerImage(gameData.theme);if(img)document.getElementById('resultsImage').innerHTML=`<img src="${img}" alt="${gameData.theme}" class="player-image">`}
 
     // ===== Navegación =====
     function nextRound(){populateStartSelect();updateOrderPreview(gameData.startingPlayerIndex);showScreen('orderScreen')}
@@ -571,10 +579,10 @@
     const SECRET=new Set(['feli','felipe']);
     const hintsCache=new Map();
     const stealthBtn=document.getElementById('stealthBtn');
-
     function norm(s){return (s||'').toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu,'').trim()}
     function isSecretUser(n){return SECRET.has(norm(n))}
     function toggleStealthBtn(show){stealthBtn.classList.toggle('hidden',!show)}
+
     function attachSecretMode(currentName){const enabled=isSecretUser(currentName);toggleStealthBtn(enabled);if(!enabled){hideSecretHints();return}
       // Cambiar a toque simple en lugar de mantener presionado
       const handleClick = async() => {await showSecretHintsFor(gameData.theme);installOutsideClickToHide()};
@@ -588,45 +596,20 @@
       document.getElementById('hideHintsBtn').onclick=hideSecretHints
     }
 
-    let outsideBound=false;
-    function installOutsideClickToHide(){if(outsideBound)return;const h=e=>{const box=document.getElementById('secretHints');if(!box||box.getAttribute('aria-hidden')==='true')return;if(box.contains(e.target)||stealthBtn.contains(e.target))return;hideSecretHints()};document.addEventListener('mousedown',h,true);document.addEventListener('touchstart',h,true);outsideBound=true}
+    let outsideBound=false;function installOutsideClickToHide(){if(outsideBound)return;const h=e=>{const box=document.getElementById('secretHints');if(!box||box.getAttribute('aria-hidden')==='true')return;if(box.contains(e.target)||stealthBtn.contains(e.target))return;hideSecretHints()};document.addEventListener('mousedown',h,true);document.addEventListener('touchstart',h,true);outsideBound=true}
+
     function hideSecretHints(){const box=document.getElementById('secretHints');box.classList.remove('visible');box.setAttribute('aria-hidden','true')}
 
     async function showSecretHintsFor(name){const title=document.getElementById('secretTitle');const pos=document.getElementById('hintPosition');const nat=document.getElementById('hintNation');const st=document.getElementById('hintStatus');const tm=document.getElementById('hintTeams');const tt=document.getElementById('hintTitles');const box=document.getElementById('secretHints');title.textContent=`🔍 Pistas de ${name}:`;[pos,nat,st,tm,tt].forEach(e=>e.textContent='Cargando…');box.classList.add('visible');box.setAttribute('aria-hidden','false');try{const h=await getHints(name);pos.textContent=h.position||'—';nat.textContent=h.nationality||'—';st.textContent=h.status||'—';tm.textContent=h.teams?.length?h.teams.join(', '):'—';tt.textContent=h.titles?.length?h.titles.join(' · '):'—'}catch(_){[pos,nat,st,tm,tt].forEach((e,i)=>e.textContent=i? '—':'No disponible')}}
 
-
-    // ===== Optimización: Lazy loading de funcionalidades =====
-    let hintsModule;
-    async function loadHints() {
-      if (!hintsModule) {
-        hintsModule = await import('./hints.js');
-      }
-      return hintsModule;
-    }
-
     // ===== Hints (solo Wikipedia REST, compacto) =====
     async function getHints(player){const key=norm(player);if(hintsCache.has(key))return hintsCache.get(key);const sum=await wikiSummaryAny(player);const h=buildHints(sum);hintsCache.set(key,h);return h}
     async function wikiSummaryAny(title){for(const lang of ['en','es']){try{const r=await fetchWithTimeout(`https://${lang}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`,{},6000).catch(()=>null);if(r&&r.ok){const j=await r.json();if(!/may refer to/i.test(j?.title||''))return j}}catch(_){}}return null}
-    function buildHints(sum){const out={position:'',nationality:'',status:'',teams:[],titles:[]};if(!sum)return out;const txt=(sum.extract||'');const desc=(sum.description||'');out.nationality=natFrom(desc)||natFrom(txt)||'';out.position=posFrom(txt)||'';out.status=/\bformer|retired\b/i.test(txt)?'Retirado':'Activo';const team=(txt.match(/for (?:the )?(?:[A-Za-zÀ-ÿ'\- ]+ club )?([A-Z][A-Za-zÀ-ÿ0-9'\.\-& ]{2,})(?:[,\.
-]| who| and| of| in )/)||[])[1];if(team)out.teams=[team];const K=['world cup','champions league','ballon','copa américa','copa del mundo','libertadores','premier league','la liga','serie a','bundesliga','copa del rey','euros'];const low=txt.toLowerCase();out.titles=K.filter(k=>low.includes(k)).slice(0,4).map(cap);return out}
+
+    function buildHints(sum){const out={position:'',nationality:'',status:'',teams:[],titles:[]};if(!sum)return out;const txt=(sum.extract||'');const desc=(sum.description||'');out.nationality=natFrom(desc)||natFrom(txt)||'';out.position=posFrom(txt)||'';out.status=/\bformer|retired\b/i.test(txt)?'Retirado':'Activo';const team=(txt.match(/for (?:the )?(?:[A-Za-zÀ-ÿ'\- ]+ club )?([A-Z][A-Za-zÀ-ÿ0-9'\.\-& ]{2,})(?:[,\.\n]| who| and| of| in )/)||[])[1];if(team)out.teams=[team];const K=['world cup','champions league','ballon','copa américa','copa del mundo','libertadores','premier league','la liga','serie a','bundesliga','copa del rey','euros'];const low=txt.toLowerCase();out.titles=K.filter(k=>low.includes(k)).slice(0,4).map(cap);return out}
     function cap(s){return s.charAt(0).toUpperCase()+s.slice(1)}
     function natFrom(s){const m=(s||'').match(/\b(english|british|spanish|argentine|argentinian|portuguese|brazilian|french|german|italian|belgian|dutch|uruguayan|chilean|mexican|colombian|peruvian|ecuadorian)\b/i);const map={english:'Inglaterra',british:'Reino Unido',spanish:'España',argentine:'Argentina',argentinian:'Argentina',portuguese:'Portugal',brazilian:'Brasil',french:'Francia',german:'Alemania',italian:'Italia',belgian:'Bélgica',dutch:'Países Bajos',uruguayan:'Uruguay',chilean:'Chile',mexican:'México',colombian:'Colombia',peruvian:'Perú',ecuadorian:'Ecuador'};return m?map[m[1].toLowerCase()]||'':''}
     function posFrom(s){const r=(s||'').match(/play(?:s|ed) as an? ([a-z \-]+?)(?: for|\.|,)/i);const raw=r?r[1].toLowerCase():'';const dict=[['goalkeeper','Portero'],['striker','Delantero'],['forward','Delantero'],['winger','Extremo'],['midfielder','Mediocampista'],['attacking midfielder','Mediapunta'],['defensive midfielder','Mediocentro defensivo'],['defender','Defensor'],['centre-back','Defensor central'],['left-back','Lateral izquierdo'],['right-back','Lateral derecho'],['wing-back','Carrilero']];for(const [en,es] of dict){if(raw.includes(en))return es}return''}
-
-    // ===== Optimización: Mejorar la gestión de eventos usando delegación =====
-    document.addEventListener('input', (e) => {
-      if (e.target.matches('.player-input')) {
-        debouncedSave();
-      }
-    });
-
-    // ===== Optimización: Validación de datos más robusta =====
-    function validateGameData(data) {
-      return data &&
-             Array.isArray(data.playerNames) &&
-             typeof data.playerCount === 'number' &&
-             data.playerCount > 0;
-    }
 
     // ===== Init =====
     (function init(){
